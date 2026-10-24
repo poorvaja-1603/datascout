@@ -48,9 +48,11 @@ divided by the selected case count. Scalar values must match exactly; arrays
 must match exactly and in order. Explicit year ranges in expected
 `time_coverage` are normalized to `YYYY-YYYY`, matching A2; no other
 normalization, semantic equivalence, evidence quality, precision/recall, or
-annotation correctness is inferred. A non-`ok` extraction has no actual field
+annotation correctness is inferred. A `clarification` result is compared as the
+canonical empty requirements object; this matches underspecified cases only
+when all expected fields are empty. A `refused` result has no actual field
 values and counts as a mismatch for every field. See `report.schema.json` for
-the versioned output contract.
+the report contract and `EVALUATOR_VERSION` in `runner.ts` for metric semantics.
 
 Held-out examples are excluded by default. To run their prompts through the
 deterministic fake provider, explicitly pass `--heldout --provider fake`. A

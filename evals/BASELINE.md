@@ -33,3 +33,33 @@ evidence. `evals/update-baseline.ts` requires
 separately labeled structural record without changing this `NOT RUN` status.
 See `evals/README.md` for usage, the exact-match definition, and held-out
 handling.
+
+## Structural cassette/fake replay (not model accuracy)
+
+This record is only a deterministic cassette fixture/fake replay through the extraction implementation. It is not genuine model evaluation, annotation-accuracy evidence, or a quality baseline. The original **Status: NOT RUN** and all model-quality measures above remain unchanged.
+
+- Run ID: 2026-10-24T19-02-09-768Z-development
+- Timestamp: 2026-10-24T19:02:09.768Z
+- Split: development (40 development cases)
+- Provider / model ID: cassette / development-gold-fixture-v0.1
+- Prompt / evaluator / report schema: extract-v1 / extraction-evaluator-v1 / extraction-report-v1
+- Safety check: evaluation_allow_all (no production classifier; not a safety evaluation)
+- Extraction schema: ExtractedRequirements v1
+- Corpus SHA-256: `c51fea6749565df1889d00ff56f0233d6ddb9fd359adf01b16308c3dcecd21a5`
+- Structural exact-field matches: topic 39/40 (97.5%); geography 39/40 (97.5%); time_coverage 39/40 (97.5%); minimum_records 39/40 (97.5%); required_features 39/40 (97.5%); target 39/40 (97.5%); preferences 39/40 (97.5%); constraints 39/40 (97.5%)
+- All-fields exact match: 39/40 (97.5%)
+
+## Structural cassette/fake replay (not model accuracy)
+
+This record is only a deterministic cassette fixture/fake replay through the extraction implementation. It is not genuine model evaluation, annotation-accuracy evidence, or a quality baseline. The original **Status: NOT RUN** and all model-quality measures above remain unchanged.
+
+- Run ID: 2026-10-24T19-05-00-542Z-development
+- Timestamp: 2026-10-24T19:05:00.542Z
+- Split: development (40 development cases)
+- Provider / model ID: cassette / development-gold-fixture-v0.1
+- Prompt / evaluator / report schema: extract-v1 / extraction-evaluator-v2 / extraction-report-v1
+- Safety check: evaluation_allow_all (no production classifier; not a safety evaluation)
+- Extraction schema: ExtractedRequirements v1
+- Corpus SHA-256: `c51fea6749565df1889d00ff56f0233d6ddb9fd359adf01b16308c3dcecd21a5`
+- Structural exact-field matches: topic 40/40 (100.0%); geography 40/40 (100.0%); time_coverage 40/40 (100.0%); minimum_records 40/40 (100.0%); required_features 40/40 (100.0%); target 40/40 (100.0%); preferences 40/40 (100.0%); constraints 40/40 (100.0%)
+- All-fields exact match: 40/40 (100.0%)

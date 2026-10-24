@@ -226,6 +226,26 @@ describe('extraction evaluation runner', () => {
     expect(report.metrics.all_fields_exact_match_rate).toBe(0);
   });
 
+  it('scores clarification as empty fields but does not treat a refusal as extracted fields', async () => {
+    const row = caseRow('ambiguous', 'development');
+    const clarification = await evaluate({
+      corpusText: JSON.stringify(row),
+      provider: 'fake',
+      extract: async () => ({
+        kind: 'clarification',
+        question: 'What topic should the dataset cover?',
+      }),
+    });
+    expect(clarification.metrics.all_fields_exact_match_rate).toBe(1);
+
+    const refusal = await evaluate({
+      corpusText: JSON.stringify(row),
+      provider: 'fake',
+      extract: async () => ({ kind: 'refused', reasonCode: 'unsafe_request' }),
+    });
+    expect(refusal.metrics.all_fields_exact_match_rate).toBe(0);
+  });
+
   it('replays the real A2 cassette extractor on all 40 development cases without claiming quality', async () => {
     const corpusText = await readFile(corpusPath, 'utf8');
     const report = await evaluate({ corpusText });
@@ -234,8 +254,8 @@ describe('extraction evaluation runner', () => {
     expect(report.run.model_id).toBe('development-gold-fixture-v0.1');
     expect(report.run.prompt_version).toBe('extract-v1');
     expect(report.run.safety_check).toBe('evaluation_allow_all');
-    expect(report.metrics.all_fields_exact_match_cases).toBe(39);
-    expect(report.metrics.all_fields_exact_match_rate).toBe(39 / 40);
+    expect(report.metrics.all_fields_exact_match_cases).toBe(40);
+    expect(report.metrics.all_fields_exact_match_rate).toBe(1);
     expect(
       report.cases.find(({ case_id }) => case_id === 'REQE-015')?.result_kind,
     ).toBe('clarification');

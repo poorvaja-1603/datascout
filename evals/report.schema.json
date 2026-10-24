@@ -15,7 +15,7 @@
   ],
   "properties": {
     "report_schema": { "const": "extraction-report-v1" },
-    "evaluator_version": { "const": "extraction-evaluator-v1" },
+    "evaluator_version": { "const": "extraction-evaluator-v2" },
     "evaluation_kind": { "const": "structural_fixture_replay" },
     "quality_claim": { "const": "none_structural_replay_only" },
     "run": {
