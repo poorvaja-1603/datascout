@@ -11,14 +11,18 @@
     }
   },
   "scripts": {
-    "build": "tsc --noEmit -p tsconfig.json && npm run export:json-schema",
+    "build": "tsc --noEmit -p tsconfig.json && npm run export:json-schema && npm run bundle:openapi",
     "export:json-schema": "tsx scripts/export-json-schema.ts",
-    "test": "vitest run && tsx scripts/validate-corpus-contract.mjs",
-    "lint": "eslint . --ext .ts,.js",
+    "bundle:openapi": "redocly bundle openapi.yaml --config redocly.yaml --output dist/openapi.yaml",
+    "test": "npm run bundle:openapi && vitest run && tsx scripts/validate-corpus-contract.mjs && tsx scripts/check-sam-api-contract.ts",
+    "lint": "eslint . --ext .ts,.js && redocly lint openapi.yaml --config redocly.yaml",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
   },
   "dependencies": {
     "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "yaml": "2.9.1"
   }
 }

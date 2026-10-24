@@ -16,18 +16,22 @@
     "build": "npm run build --workspaces --if-present",
     "test": "npm run test --workspaces --if-present",
     "lint": "npm run lint --workspaces --if-present",
+    "lint:openapi": "redocly lint contracts/openapi.yaml --config contracts/redocly.yaml",
     "format": "npm run format --workspaces --if-present",
     "format:check": "npm run format:check --workspaces --if-present",
     "validate:corpus": "python evals/validate_dataset.py"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",
+    "@redocly/cli": "2.71.0",
+    "@types/node": "^22.20.5",
     "eslint": "10.13.0",
     "globals": "17.13.0",
     "prettier": "3.9.10",
     "tsx": "4.23.15",
     "typescript": "6.0.3",
     "typescript-eslint": "8.72.0",
-    "vitest": "5.0.5"
+    "vitest": "5.0.5",
+    "yaml": "2.9.1"
   }
 }

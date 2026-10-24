@@ -1,0 +1,313 @@
+openapi: 3.1.0
+info:
+  title: DataScout API
+  version: 1.0.0
+  summary: Search, inspect, and compare public datasets.
+  description: |
+    Contract v1 for the DataScout MVP. All routes require a Cognito access
+    token with the operation-specific `datascout-api` scope. Search results
+    are owned by the authenticated Cognito subject; dataset detail is public
+    metadata available to authenticated users.
+
+    This OpenAPI 3.1 document is the canonical contract for the mock server,
+    generated frontend types, and documentation. It is not imported into API
+    Gateway. The SAM template defines deployed routes and Cognito authorization;
+    contract parity is checked in CI.
+servers:
+  - url: /
+    description: Relative API base; deployment environments provide the origin and stage.
+tags:
+  - name: Search
+    description: Dataset search and cached result retrieval.
+  - name: Datasets
+    description: Public normalized dataset detail.
+  - name: Compare
+    description: Side-by-side comparison of known public datasets.
+paths:
+  /search:
+    post:
+      operationId: searchDatasets
+      tags: [Search]
+      summary: Search public dataset catalogs
+      description: |
+        Extracts requirements from the query, searches enabled sources, and
+        returns ranked results with evidence and deterministic score details.
+        A source failure is reported as partial coverage where other sources
+        return results. The query is limited to 1,000 characters after trimming.
+      security:
+        - cognito:
+            - datascout-api/search
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SearchRequest'
+      responses:
+        '200':
+          description: Search completed, including any partial source status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '413':
+          $ref: '#/components/responses/ContentTooLarge'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+  /results/{request_id}:
+    get:
+      operationId: getSearchResult
+      tags: [Search]
+      summary: Retrieve an owned cached search result
+      description: |
+        Returns a cached search response only to its owner. A request ID owned
+        by another user returns the same 404 response as a missing request.
+      security:
+        - cognito:
+            - datascout-api/read
+      parameters:
+        - name: request_id
+          in: path
+          required: true
+          description: Opaque search request identifier.
+          schema:
+            type: string
+            minLength: 1
+      responses:
+        '200':
+          description: Cached search response owned by the caller.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SearchResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /dataset/{dataset_id}:
+    get:
+      operationId: getDatasetDetail
+      tags: [Datasets]
+      summary: Retrieve public dataset details
+      description: |
+        Returns normalized public metadata, provenance, validation evidence,
+        access guidance, and next steps. The complete dataset ID must be
+        percent-encoded as a single path parameter by clients; deployment
+        testing must confirm encoded source IDs (including slash characters)
+        are routed correctly.
+      security:
+        - cognito:
+            - datascout-api/read
+      parameters:
+        - name: dataset_id
+          in: path
+          required: true
+          description: |
+            Canonical `{source}:{native_id}`. Percent-encode the entire value
+            as one path segment; for example, encode `/` in a Hugging Face ID.
+          schema:
+            type: string
+            pattern: '^[a-z][a-z0-9_-]*:[A-Za-z0-9][A-Za-z0-9._/-]*$'
+      responses:
+        '200':
+          description: Normalized public dataset details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DatasetDetail'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+  /compare:
+    post:
+      operationId: compareDatasets
+      tags: [Compare]
+      summary: Compare two to four public datasets
+      description: |
+        Returns side-by-side normalized metadata and evidence for two to four
+        known public dataset IDs. The response does not declare a winner.
+      security:
+        - cognito:
+            - datascout-api/compare
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CompareRequest'
+      responses:
+        '200':
+          description: Side-by-side dataset details and evidence.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CompareResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '413':
+          $ref: '#/components/responses/ContentTooLarge'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+        '500':
+          $ref: '#/components/responses/InternalError'
+
+components:
+  securitySchemes:
+    cognito:
+      type: oauth2
+      description: |
+        Cognito User Pool access token obtained by Authorization Code with
+        PKCE. Replace `{cognitoDomain}` with the configured User Pool domain
+        before generating environment-specific client configuration.
+      flows:
+        authorizationCode:
+          authorizationUrl: https://{cognitoDomain}/oauth2/authorize
+          tokenUrl: https://{cognitoDomain}/oauth2/token
+          scopes:
+            datascout-api/search: Submit dataset searches.
+            datascout-api/read: Read owned search results and public dataset details.
+            datascout-api/compare: Compare known public dataset IDs.
+
+  schemas:
+    ExtractedRequirements:
+      $ref: ./json-schema/ExtractedRequirements.schema.json
+    RequirementType:
+      $ref: ./json-schema/RequirementType.schema.json
+    RequirementPriority:
+      $ref: ./json-schema/RequirementPriority.schema.json
+    SourceSpan:
+      $ref: ./json-schema/SourceSpan.schema.json
+    Requirement:
+      $ref: ./json-schema/Requirement.schema.json
+    VerificationLevel:
+      $ref: ./json-schema/VerificationLevel.schema.json
+    DatasetProvenance:
+      $ref: ./json-schema/DatasetProvenance.schema.json
+    Dataset:
+      $ref: ./json-schema/Dataset.schema.json
+    Evidence:
+      $ref: ./json-schema/Evidence.schema.json
+    RequirementMatchStatus:
+      $ref: ./json-schema/RequirementMatchStatus.schema.json
+    RequirementMatch:
+      $ref: ./json-schema/RequirementMatch.schema.json
+    ScoreComponentName:
+      $ref: ./json-schema/ScoreComponentName.schema.json
+    ScoreComponent:
+      $ref: ./json-schema/ScoreComponent.schema.json
+    ScoreBreakdown:
+      $ref: ./json-schema/ScoreBreakdown.schema.json
+    ContractVersions:
+      $ref: ./json-schema/ContractVersions.schema.json
+    SourceStatus:
+      $ref: ./json-schema/SourceStatus.schema.json
+    QualityCheck:
+      $ref: ./json-schema/QualityCheck.schema.json
+    SearchRequest:
+      $ref: ./json-schema/SearchRequest.schema.json
+    SearchResult:
+      $ref: ./json-schema/SearchResult.schema.json
+    SearchResponse:
+      $ref: ./json-schema/SearchResponse.schema.json
+    CompareRequest:
+      $ref: ./json-schema/CompareRequest.schema.json
+    CompareDataset:
+      $ref: ./json-schema/CompareDataset.schema.json
+    CompareResponse:
+      $ref: ./json-schema/CompareResponse.schema.json
+    ComplementaryDatasetSuggestion:
+      $ref: ./json-schema/ComplementaryDatasetSuggestion.schema.json
+    DatasetDetail:
+      $ref: ./json-schema/DatasetDetail.schema.json
+    ErrorObject:
+      $ref: ./json-schema/ErrorObject.schema.json
+
+  responses:
+    BadRequest:
+      description: Request body or path parameter does not meet contract v1.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+    Unauthorized:
+      description: Missing, expired, malformed, or invalid Cognito access token.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+    Forbidden:
+      description: Cognito access token does not include the required route scope.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+    NotFound:
+      description: Resource does not exist, is expired, or is not owned by caller.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+    ContentTooLarge:
+      description: Request body exceeds a configured API Gateway limit.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+    TooManyRequests:
+      description: Request was throttled.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying, when supplied.
+          schema:
+            type: integer
+            minimum: 0
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+    InternalError:
+      description: Unexpected internal failure; details are not exposed.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+    ServiceUnavailable:
+      description: Required service is temporarily unavailable.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'

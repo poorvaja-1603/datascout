@@ -8,7 +8,20 @@ same definitions in `src/schemas.ts`.
 
 Import the named schemas and types from `@datascout/contracts`. Run
 `npm run build --workspace=@datascout/contracts` after changing a schema; this
-type-checks the package and regenerates `json-schema/*.schema.json`.
+type-checks the package, regenerates `json-schema/*.schema.json`, and bundles
+the OpenAPI document at `dist/openapi.yaml`. Consumers such as mock servers,
+frontend type generators, and documentation tools should use the bundle so
+they do not need to resolve external schema files. Lint the source contract
+with `npm run lint:openapi`.
+
+The canonical OpenAPI 3.1 document is not imported into API Gateway. The B1
+SAM template defines deployed routes and Cognito authorization directly. CI
+compares each SAM API event's path, method, and `AuthorizationScopes` with
+`openapi.yaml`; the contract test reports a clear skip until
+`backend/template.yaml` exists. Request bodies are validated by Lambda using
+the shared Zod schemas; API Gateway is limited to basic required-body and
+payload-size checks. Each environment supplies its own API origin and stage
+to clients.
 
 ## Contract v1 decisions
 
@@ -43,6 +56,9 @@ type-checks the package and regenerates `json-schema/*.schema.json`.
   do not coerce or truncate invalid values.
 - The `POST /search` query is limited to 1,000 characters (trimmed before the
   limit check); this is the API query cap, separate from extraction-field caps.
+- The OpenAPI document references generated JSON Schemas instead of
+  duplicating the contract definitions. Regenerate schemas before publishing
+  an OpenAPI update.
 - Standard JSON Schema cannot express every relational refinement. Runtime
   consumers must validate with the Zod schemas, which additionally enforce
   source-span offset/text consistency, unique compare IDs, and component

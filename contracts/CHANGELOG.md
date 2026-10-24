@@ -16,3 +16,9 @@
 - Dataset provenance records the source field path and ISO 8601 retrieval time.
 - `POST /search` query length is limited to 1,000 characters after trimming;
   this API request cap is separate from the extraction-field caps.
+- `openapi.yaml` is the canonical OpenAPI 3.1 contract for mocks, generated
+  frontend types, and documentation, with Draft 2020-12 schemas. API Gateway
+  REST does not import this document: B1 defines routes, Cognito authorization,
+  and scopes directly in SAM, and CI checks SAM route/method/scope parity.
+  Lambdas validate request bodies using the shared Zod schemas; API Gateway
+  performs only basic required-body and payload-size checks.

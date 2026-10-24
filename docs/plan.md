@@ -346,6 +346,8 @@ Stable error objects, input size limits, ID validation, pagination limits.
 
 - Cognito User Pool with verified email, public SPA app client (no secret), Authorization Code with PKCE, resource server `datascout-api` with scopes `search`, `read`, `compare`.
 - API Gateway REST API with Cognito authorizer and per-method scopes; Lambda reads `sub` from authorizer context.
+- `contracts/openapi.yaml` is canonical OpenAPI 3.1 for the mock server, generated frontend types, and docs; do not import it into API Gateway REST, which supports OpenAPI 2.0/3.0 and has schema/import limitations. B1 defines API routes, Cognito authorizer, and per-route scopes directly in `backend/template.yaml`. CI compares each SAM API event's `Path`, `Method`, and `Auth.AuthorizationScopes` with the OpenAPI contract.
+- Lambda handlers validate request bodies with the shared Zod schemas. API Gateway request validation is limited to basic required-body and payload-size checks; it does not replace Zod validation.
 - CORS restricted to the Amplify origin(s). Throttling and request validation complement, not replace, authentication.
 - Document whether sign-up is open or invite-only for the demo.
 - EventBridge refresh uses its own service permission path, not the public API.
