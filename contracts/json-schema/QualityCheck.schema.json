@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "check": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["PASS", "PARTIAL", "FAIL", "NOT_CHECKED"]
+    },
+    "summary": { "type": "string", "minLength": 1 },
+    "evidence_ids": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    }
+  },
+  "required": ["check", "status", "summary", "evidence_ids"],
+  "additionalProperties": false
+}

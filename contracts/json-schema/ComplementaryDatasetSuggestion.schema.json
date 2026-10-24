@@ -1,0 +1,23 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "dataset_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*:[A-Za-z0-9][A-Za-z0-9._/-]*$"
+    },
+    "reason": { "type": "string", "minLength": 1 },
+    "join_keys": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "manual_verification_required": { "type": "boolean", "const": true }
+  },
+  "required": [
+    "dataset_id",
+    "reason",
+    "join_keys",
+    "manual_verification_required"
+  ],
+  "additionalProperties": false
+}

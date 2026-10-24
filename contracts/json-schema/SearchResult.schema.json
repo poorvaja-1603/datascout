@@ -1,0 +1,174 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "dataset_id": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_-]*:[A-Za-z0-9][A-Za-z0-9._/-]*$"
+    },
+    "score": { "type": "number", "minimum": 0, "maximum": 100 },
+    "score_breakdown": {
+      "type": "object",
+      "properties": {
+        "scoring_version": { "type": "string", "minLength": 1 },
+        "total": { "type": "number", "minimum": 0, "maximum": 100 },
+        "components": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "name": {
+                "type": "string",
+                "enum": [
+                  "requirement_satisfaction",
+                  "validation_access",
+                  "metadata_completeness",
+                  "license_source_clarity",
+                  "freshness"
+                ]
+              },
+              "weight": { "type": "number", "minimum": 0 },
+              "points": { "type": "number", "minimum": 0 }
+            },
+            "required": ["name", "weight", "points"],
+            "additionalProperties": false
+          }
+        },
+        "evidence_coverage": { "type": "number", "minimum": 0, "maximum": 1 }
+      },
+      "required": [
+        "scoring_version",
+        "total",
+        "components",
+        "evidence_coverage"
+      ],
+      "additionalProperties": false
+    },
+    "matches": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "requirement_id": { "type": "string", "minLength": 1 },
+          "status": {
+            "type": "string",
+            "enum": ["PASS", "PARTIAL", "FAIL", "UNKNOWN"]
+          },
+          "reason": { "type": "string", "minLength": 1 },
+          "evidence_ids": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          },
+          "verification_level": {
+            "type": "string",
+            "enum": ["metadata_only", "sample_checked", "full_dataset"]
+          },
+          "measured_value": { "$ref": "#/$defs/__schema0" }
+        },
+        "required": [
+          "requirement_id",
+          "status",
+          "reason",
+          "evidence_ids",
+          "verification_level"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "evidence": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "evidence_id": { "type": "string", "minLength": 1 },
+          "dataset_id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9_-]*:[A-Za-z0-9][A-Za-z0-9._/-]*$"
+          },
+          "field": { "type": "string", "minLength": 1 },
+          "value": { "$ref": "#/$defs/__schema0" },
+          "provenance": {
+            "type": "object",
+            "properties": {
+              "source_field_path": { "type": "string", "minLength": 1 },
+              "retrieved_at": {
+                "type": "string",
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d:[0-5]\\d(?:\\.\\d+)?(?:Z|([+-](?:[01]\\d|2[0-3]):[0-5]\\d)))$"
+              }
+            },
+            "required": ["source_field_path", "retrieved_at"],
+            "additionalProperties": false
+          }
+        },
+        "required": [
+          "evidence_id",
+          "dataset_id",
+          "field",
+          "value",
+          "provenance"
+        ],
+        "additionalProperties": false
+      }
+    },
+    "quality_checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "check": { "type": "string", "minLength": 1 },
+          "status": {
+            "type": "string",
+            "enum": ["PASS", "PARTIAL", "FAIL", "NOT_CHECKED"]
+          },
+          "summary": { "type": "string", "minLength": 1 },
+          "evidence_ids": {
+            "type": "array",
+            "items": { "type": "string", "minLength": 1 }
+          }
+        },
+        "required": ["check", "status", "summary", "evidence_ids"],
+        "additionalProperties": false
+      }
+    },
+    "verification_level": {
+      "type": "string",
+      "enum": ["metadata_only", "sample_checked", "full_dataset"]
+    },
+    "warnings": {
+      "type": "array",
+      "items": { "type": "string", "minLength": 1 }
+    },
+    "explanation": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    }
+  },
+  "required": [
+    "dataset_id",
+    "score",
+    "score_breakdown",
+    "matches",
+    "evidence",
+    "quality_checks",
+    "verification_level",
+    "warnings",
+    "explanation"
+  ],
+  "additionalProperties": false,
+  "$defs": {
+    "__schema0": {
+      "anyOf": [
+        { "type": "string" },
+        { "type": "number" },
+        { "type": "boolean" },
+        { "type": "null" },
+        { "type": "array", "items": { "$ref": "#/$defs/__schema0" } },
+        {
+          "type": "object",
+          "propertyNames": { "type": "string" },
+          "additionalProperties": { "$ref": "#/$defs/__schema0" }
+        }
+      ]
+    }
+  }
+}

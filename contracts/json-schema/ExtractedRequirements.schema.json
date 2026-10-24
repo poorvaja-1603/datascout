@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "topic": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Trim surrounding whitespace before measuring length; maximum 200 characters.",
+          "x-trim-before-length-validation": true
+        },
+        { "type": "null" }
+      ]
+    },
+    "geography": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Trim surrounding whitespace before measuring length; maximum 200 characters.",
+          "x-trim-before-length-validation": true
+        },
+        { "type": "null" }
+      ]
+    },
+    "time_coverage": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Trim surrounding whitespace before measuring length; maximum 200 characters.",
+          "x-trim-before-length-validation": true
+        },
+        { "type": "null" }
+      ]
+    },
+    "minimum_records": {
+      "anyOf": [
+        { "type": "integer", "minimum": 1, "maximum": 1000000000 },
+        { "type": "null" }
+      ]
+    },
+    "required_features": {
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "description": "Trim surrounding whitespace before measuring length; maximum 100 characters.",
+        "x-trim-before-length-validation": true
+      },
+      "description": "Maximum 20 non-empty entries; reject rather than truncate."
+    },
+    "target": {
+      "anyOf": [
+        {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200,
+          "description": "Trim surrounding whitespace before measuring length; maximum 200 characters.",
+          "x-trim-before-length-validation": true
+        },
+        { "type": "null" }
+      ]
+    },
+    "preferences": {
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "description": "Trim surrounding whitespace before measuring length; maximum 100 characters.",
+        "x-trim-before-length-validation": true
+      },
+      "description": "Maximum 20 non-empty entries; reject rather than truncate."
+    },
+    "constraints": {
+      "maxItems": 20,
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 100,
+        "description": "Trim surrounding whitespace before measuring length; maximum 100 characters.",
+        "x-trim-before-length-validation": true
+      },
+      "description": "Maximum 20 non-empty entries; reject rather than truncate."
+    }
+  },
+  "required": [
+    "topic",
+    "geography",
+    "time_coverage",
+    "minimum_records",
+    "required_features",
+    "target",
+    "preferences",
+    "constraints"
+  ],
+  "additionalProperties": false
+}

@@ -1,0 +1,21 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "source": { "type": "string", "minLength": 1 },
+    "status": {
+      "type": "string",
+      "enum": ["success", "partial", "failed", "disabled"]
+    },
+    "result_count": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 9007199254740991
+    },
+    "warning": {
+      "anyOf": [{ "type": "string", "minLength": 1 }, { "type": "null" }]
+    }
+  },
+  "required": ["source", "status", "result_count", "warning"],
+  "additionalProperties": false
+}

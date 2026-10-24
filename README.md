@@ -6,8 +6,9 @@ DataScout helps users find public datasets that fit a data science or machine-le
 
 - Product requirements: [`docs/PRD.md`](docs/PRD.md)
 - End-to-end MVP development plan: [`docs/plan.md`](docs/plan.md)
+- Provisional LLM evaluation corpus and baseline status: [`evals/README.md`](evals/README.md)
 
-The repository is intentionally reset to documentation and planning. The earlier starter application has been removed so implementation can begin against the current PRD and plan.
+The implementation is organized as npm workspaces following the streams and contract-first milestones in the development plan.
 
 ## Planned Stack
 
@@ -25,7 +26,11 @@ Planned dataset sources: data.gov.in, Hugging Face Datasets, OpenML, and the Wor
 ## Repository
 
 ```text
-docs/PRD.md    Product requirements
-docs/plan.md   End-to-end implementation plan
-README.md      Project overview
+contracts/               Shared contracts and API schemas (Stream A)
+packages/ai/              LLM clients and extraction (Stream A)
+packages/verify/          Deterministic matching and scoring (Stream A)
+packages/observability/   Langfuse tracing and redaction (Stream A)
+evals/                    Evaluation corpus and runners (Stream A)
+docs/                     Product requirements and implementation plan
+README.md                 Project overview
 ```

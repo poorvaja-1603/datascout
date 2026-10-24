@@ -1,0 +1,26 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "code": { "type": "string", "minLength": 1 },
+    "message": { "type": "string", "minLength": 1 },
+    "request_id": { "type": "string", "minLength": 1 },
+    "retryable": { "type": "boolean" },
+    "contract_version": { "type": "string", "minLength": 1 },
+    "prompt_version": { "type": "string", "minLength": 1 },
+    "schema_version": { "type": "string", "minLength": 1 },
+    "scoring_version": { "type": "string", "minLength": 1 },
+    "model_id": { "type": "string", "minLength": 1 }
+  },
+  "required": [
+    "code",
+    "message",
+    "request_id",
+    "contract_version",
+    "prompt_version",
+    "schema_version",
+    "scoring_version",
+    "model_id"
+  ],
+  "additionalProperties": false
+}

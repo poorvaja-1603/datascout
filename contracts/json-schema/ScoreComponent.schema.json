@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "enum": [
+        "requirement_satisfaction",
+        "validation_access",
+        "metadata_completeness",
+        "license_source_clarity",
+        "freshness"
+      ]
+    },
+    "weight": { "type": "number", "minimum": 0 },
+    "points": { "type": "number", "minimum": 0 }
+  },
+  "required": ["name", "weight", "points"],
+  "additionalProperties": false
+}

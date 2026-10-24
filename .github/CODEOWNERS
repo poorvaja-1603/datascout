@@ -1,0 +1,7 @@
+# Stream A is currently the only stream with a named owner. Add Stream B and C
+# directory-specific owners when those team members are assigned.
+* @poorvaja-1603
+/contracts/ @poorvaja-1603
+/packages/ @poorvaja-1603
+/evals/ @poorvaja-1603
+/.github/ @poorvaja-1603

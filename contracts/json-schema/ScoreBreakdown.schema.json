@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "object",
+  "properties": {
+    "scoring_version": { "type": "string", "minLength": 1 },
+    "total": { "type": "number", "minimum": 0, "maximum": 100 },
+    "components": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "enum": [
+              "requirement_satisfaction",
+              "validation_access",
+              "metadata_completeness",
+              "license_source_clarity",
+              "freshness"
+            ]
+          },
+          "weight": { "type": "number", "minimum": 0 },
+          "points": { "type": "number", "minimum": 0 }
+        },
+        "required": ["name", "weight", "points"],
+        "additionalProperties": false
+      }
+    },
+    "evidence_coverage": { "type": "number", "minimum": 0, "maximum": 1 }
+  },
+  "required": ["scoring_version", "total", "components", "evidence_coverage"],
+  "additionalProperties": false
+}

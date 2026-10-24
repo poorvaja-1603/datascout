@@ -1,0 +1,11 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "type": "string",
+  "enum": [
+    "requirement_satisfaction",
+    "validation_access",
+    "metadata_completeness",
+    "license_source_clarity",
+    "freshness"
+  ]
+}
