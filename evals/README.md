@@ -70,13 +70,44 @@ npx tsx evals\update-baseline.ts --accept-structural-replay evals\reports\<repor
 ```
 
 It accepts development-only fake/cassette structural reports and appends a
-separately labeled record. It refuses held-out reports, requires the explicit
-opt-in flag, and never changes the `NOT RUN` model-quality status or its
-unmeasured quality rows. Do not use it to claim accuracy.
+separately labeled record. It refuses held-out reports and requires the
+explicit opt-in flag. Structural records never change the model-quality status
+or quality rows. Do not use them to claim accuracy.
+
+## Local Ollama model evaluation
+
+After the extraction prompt and schema are frozen, run the real development
+split against local Ollama:
+
+```powershell
+npx tsx evals\model-runner.ts --model qwen3:8b --timeout-ms 120000
+```
+
+This makes local inference calls only; it does not use Gemini or AWS. The
+runner enables the application safety gate with an in-memory evaluation budget,
+uses the reviewed development split by default, and writes a report under
+`evals/reports/`. Reports contain field comparisons and safe error codes, not
+raw request text. Clarifications compare as empty requirements; refusals and
+failed calls count as extraction mismatches. The output measures this
+model/prompt run and is not by itself a release approval. Do not tune against
+held-out examples; select them only with `--heldout` after freezing the prompt,
+schema, and evaluator.
+
+To append a verified development-only model report to `BASELINE.md`:
+
+```powershell
+npx tsx evals\update-baseline.ts --accept-model-evaluation evals\reports\<model-report>.json
+```
+
+The updater rejects held-out reports and validates the recorded metrics before
+changing the baseline status.
 
 ## Baseline status
 
-The shared extraction schema and implementation are present. The updated plan uses an external provider, but no provider has yet been selected/configured and no live model-quality baseline has been measured. See `BASELINE.md`; do not replace `NOT RUN` with invented or structure-only metrics.
+The shared extraction schema and implementation are present. A local Ollama
+development baseline has been recorded; held-out quality and release gates
+remain unrun. See `BASELINE.md`; structural replay metrics are not model-quality
+evidence.
 
 ## Langfuse status and redaction
 

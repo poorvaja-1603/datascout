@@ -9,7 +9,8 @@ import {
   REPORT_SCHEMA_VERSION,
   type CorpusCase,
 } from './runner.js';
-import { appendStructuralReplay } from './update-baseline.js';
+import { appendModelEvaluation, appendStructuralReplay } from './update-baseline.js';
+import { evaluateModel } from './model-runner.js';
 
 const corpusPath = fileURLToPath(
   new URL('./requirements-v0.1.jsonl', import.meta.url),
@@ -299,6 +300,42 @@ describe('extraction evaluation runner', () => {
     report.metrics.per_field.topic.exact_matches += 1;
     expect(() => appendStructuralReplay('# Baseline', report, true)).toThrow(
       'metrics do not match',
+    );
+  });
+
+  it('records only verified development model reports and keeps held-out pending', async () => {
+    const corpusText = JSON.stringify(caseRow('dev', 'development'));
+    const report = await evaluateModel({
+      corpusText,
+      modelId: 'qwen3:8b',
+      timeoutMs: 120_000,
+      extract: async () => noRequirements,
+    });
+    const baseline = [
+      '# Baseline',
+      '',
+      '**Status: NOT RUN.**',
+      '',
+      'The v1 requirement contract and extraction implementation exist. No live model-quality baseline has been measured.',
+      '',
+      '| Measure | Status | Evidence needed |',
+      '| --- | --- | --- |',
+      '| Requirement extraction accuracy | Not run | Predictions needed |',
+    ].join('\n');
+    const updated = appendModelEvaluation(baseline, report, 'evals/reports/model.json');
+    expect(updated).toContain('DEVELOPMENT BASELINE RECORDED; HELD-OUT NOT RUN');
+    expect(updated).toContain('Development measured; held-out not run');
+    expect(updated).toContain('held-out quality and release gates remain unrun');
+
+    const heldOut = await evaluateModel({
+      corpusText: JSON.stringify(caseRow('held', 'held_out')),
+      split: 'held_out',
+      modelId: 'qwen3:8b',
+      timeoutMs: 120_000,
+      extract: async () => noRequirements,
+    });
+    expect(() => appendModelEvaluation(baseline, heldOut, 'held.json')).toThrow(
+      'development-only Ollama model evaluation',
     );
   });
 
