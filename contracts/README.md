@@ -14,6 +14,24 @@ frontend type generators, and documentation tools should use the bundle so
 they do not need to resolve external schema files. Lint the source contract
 with `npm run lint:openapi`.
 
+## Shared ports and fakes
+
+The package exports the shared `Connector`, `LlmClient`, `RequirementExtractor`,
+`Inspector`, `Scorer`, `ExplanationService`, and `Tracer` interfaces together
+with `CallContext` and the canonical contract types. Async operation methods
+receive a `CallContext`; expected outcomes such as clarification, refusal, and
+source failure stay represented as values. Operational failures use
+`DataScoutError` with an `ErrorObject`-compatible code, safe message, and
+retryability flag.
+
+Fixture adapters (`FixtureConnector`, `FakeInspector`, `FakeExtractor`, and
+`FakeExplainer`) allow pipeline work without production integrations. The
+`FakeLlmClient` has canned extraction responses only for development corpus
+cases REQE-001, REQE-002, and REQE-015; other inputs fail explicitly. Its
+simulation modes support timeout, throttling, malformed JSON, and
+injection-style output tests. `NoopTracer` and `InMemoryTracer` implement the
+tracing port without sending data externally.
+
 The canonical OpenAPI 3.1 document is not imported into API Gateway. The B1
 SAM template defines deployed routes and Cognito authorization directly. CI
 compares each SAM API event's path, method, and `AuthorizationScopes` with
