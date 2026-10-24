@@ -113,6 +113,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SearchResponse'
+              examples:
+                search-results:
+                  summary: Cached search response with matching datasets.
+                  externalValue: ./fixtures/search-results.json
+                search-partial:
+                  summary: Cached search response with partial source coverage.
+                  externalValue: ./fixtures/search-partial.json
+                search-no-match:
+                  summary: Cached search response with no matches.
+                  externalValue: ./fixtures/search-no-match.json
+                search-clarification:
+                  summary: Cached search response requiring clarification.
+                  externalValue: ./fixtures/search-clarification.json
+                search-refused:
+                  summary: Cached refused search response.
+                  externalValue: ./fixtures/search-refused.json
         '401':
           $ref: '#/components/responses/Unauthorized'
         '403':
@@ -155,6 +171,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/DatasetDetail'
+              examples:
+                dataset-detail:
+                  summary: Synthetic sample-checked dataset details.
+                  externalValue: ./fixtures/dataset-detail.json
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -192,6 +212,10 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/CompareResponse'
+              examples:
+                compare-synthetic:
+                  summary: Comparison of two synthetic fixture datasets.
+                  externalValue: ./fixtures/compare-synthetic.json
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':

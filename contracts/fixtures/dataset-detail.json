@@ -1,0 +1,75 @@
+{
+  "dataset": {
+    "dataset_id": "datagovin:fixture-rainfall-monthly",
+    "source": "datagovin",
+    "source_url": "https://example.invalid/fixtures/rainfall-monthly",
+    "title": "Synthetic monthly rainfall by district",
+    "description": "Synthetic fixture metadata; not a real upstream dataset.",
+    "license": "CC-BY-4.0",
+    "access_type": "download",
+    "api_endpoint": null,
+    "file_formats": ["csv"],
+    "record_count": 480,
+    "columns": ["district", "year", "month", "rainfall_mm"],
+    "geography": "Maharashtra, India",
+    "time_coverage": "2010-2024",
+    "tags": ["synthetic", "rainfall"],
+    "last_updated": "2025-12-31T00:00:00Z",
+    "retrieved_at": "2026-01-15T00:00:00Z",
+    "raw_snapshot_key": null,
+    "verification_level": "sample_checked",
+    "provenance": {
+      "title": {
+        "source_field_path": "fixture.title",
+        "retrieved_at": "2026-01-15T00:00:00Z"
+      },
+      "columns": {
+        "source_field_path": "sample.header",
+        "retrieved_at": "2026-01-15T00:00:00Z"
+      }
+    }
+  },
+  "evidence": [
+    {
+      "evidence_id": "fixture-detail-rainfall-columns",
+      "dataset_id": "datagovin:fixture-rainfall-monthly",
+      "field": "columns",
+      "value": ["district", "year", "month", "rainfall_mm"],
+      "provenance": {
+        "source_field_path": "sample.header",
+        "retrieved_at": "2026-01-15T00:00:00Z"
+      }
+    }
+  ],
+  "matches": [
+    {
+      "requirement_id": "fixture-detail-rainfall",
+      "status": "PASS",
+      "reason": "The inspected synthetic sample contains a rainfall measurement column.",
+      "evidence_ids": ["fixture-detail-rainfall-columns"],
+      "verification_level": "sample_checked"
+    }
+  ],
+  "quality_checks": [
+    {
+      "check": "sample_inspection",
+      "status": "PASS",
+      "summary": "A bounded synthetic sample was inspected.",
+      "evidence_ids": ["fixture-detail-rainfall-columns"]
+    }
+  ],
+  "access_instructions": [
+    "This synthetic fixture has no downloadable data; use it only to exercise the mock API."
+  ],
+  "starter_code": null,
+  "preprocessing": [],
+  "next_steps": [
+    "Replace this mock response with a real API response when B1 is available."
+  ],
+  "complementary_datasets": [],
+  "contract_version": "1.0.0",
+  "prompt_version": "extract-v1",
+  "schema_version": "1.0.0",
+  "scoring_version": "score-v1",
+  "model_id": "fake-datascout-v0.1"
+}

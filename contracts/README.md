@@ -49,7 +49,25 @@ status and retryability. `fixtures/datasets.json` contains ten synthetic,
 hand-built fixtures with expected requirement verdicts; their `.invalid`
 URLs and labels are test oracles, not real catalog records or owner-reviewed
 claims. Search and error response examples are selectable by their named
-OpenAPI examples (for Prism, use `Prefer: example=<example-name>`).
+OpenAPI examples. The mock server accepts `Prefer: example=<example-name>`.
+
+## Local mock API
+
+Run `npm run mock` from the repository root to serve the four OpenAPI routes
+on `http://127.0.0.1:4010`. Set `HOST` or `PORT` to override the bind address
+and port. The server is built from MSW request handlers and returns only
+schema-validated fixtures; it does not call upstream catalogs or perform real
+authentication.
+
+Use `Authorization: Bearer mock-access-token` for all scopes,
+`mock-search-token` for search only, `mock-read-token` for result and dataset
+reads, or `mock-compare-token` for compare. Missing or unknown tokens return
+the `unauthorized` ErrorObject; a known token without the route scope returns
+the `forbidden` ErrorObject. Search and cached-result responses accept
+`Prefer: example=<name>` using the named OpenAPI examples. For example,
+`GET /results/fixture-search-clarification` returns the clarification fixture.
+Dataset detail and compare use `dataset-detail` and `compare-synthetic`
+examples respectively; compare requires the two fixture dataset IDs.
 
 The canonical OpenAPI 3.1 document is not imported into API Gateway. The B1
 SAM template defines deployed routes and Cognito authorization directly. CI

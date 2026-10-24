@@ -36,3 +36,7 @@
 - B1 must configure API Gateway GatewayResponses for `401`, `403`, `413`,
   `429`, and `504` to return the shared `ErrorObject`; otherwise API Gateway
   returns its default `{"message": ...}` body.
+- `npm run mock` serves all four contract routes from MSW handlers and
+  schema-validated local fixtures. The mock uses documented local test tokens
+  and example names; it is not a Cognito substitute and never calls upstream
+  catalog services.

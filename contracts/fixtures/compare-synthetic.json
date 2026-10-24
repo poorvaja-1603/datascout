@@ -1,0 +1,133 @@
+{
+  "datasets": [
+    {
+      "dataset": {
+        "dataset_id": "datagovin:fixture-rainfall-monthly",
+        "source": "datagovin",
+        "source_url": "https://example.invalid/fixtures/rainfall-monthly",
+        "title": "Synthetic monthly rainfall by district",
+        "description": "Synthetic fixture metadata; not a real upstream dataset.",
+        "license": "CC-BY-4.0",
+        "access_type": "download",
+        "api_endpoint": null,
+        "file_formats": ["csv"],
+        "record_count": 480,
+        "columns": ["district", "year", "month", "rainfall_mm"],
+        "geography": "Maharashtra, India",
+        "time_coverage": "2010-2024",
+        "tags": ["synthetic", "rainfall"],
+        "last_updated": "2025-12-31T00:00:00Z",
+        "retrieved_at": "2026-01-15T00:00:00Z",
+        "raw_snapshot_key": null,
+        "verification_level": "sample_checked",
+        "provenance": {
+          "columns": {
+            "source_field_path": "sample.header",
+            "retrieved_at": "2026-01-15T00:00:00Z"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "evidence_id": "fixture-compare-rainfall-columns",
+          "dataset_id": "datagovin:fixture-rainfall-monthly",
+          "field": "columns",
+          "value": ["district", "year", "month", "rainfall_mm"],
+          "provenance": {
+            "source_field_path": "sample.header",
+            "retrieved_at": "2026-01-15T00:00:00Z"
+          }
+        }
+      ],
+      "matches": [
+        {
+          "requirement_id": "fixture-compare-rainfall",
+          "status": "PASS",
+          "reason": "The synthetic sample contains the rainfall measurement field.",
+          "evidence_ids": ["fixture-compare-rainfall-columns"],
+          "verification_level": "sample_checked"
+        }
+      ],
+      "score": 80,
+      "score_breakdown": {
+        "scoring_version": "score-v1",
+        "total": 80,
+        "components": [
+          { "name": "requirement_satisfaction", "weight": 50, "points": 42 },
+          { "name": "validation_access", "weight": 20, "points": 15 },
+          { "name": "metadata_completeness", "weight": 15, "points": 12 },
+          { "name": "license_source_clarity", "weight": 10, "points": 8 },
+          { "name": "freshness", "weight": 5, "points": 3 }
+        ],
+        "evidence_coverage": 1
+      }
+    },
+    {
+      "dataset": {
+        "dataset_id": "openml:datascout-fixtures/diagnosis-table",
+        "source": "openml",
+        "source_url": "https://example.invalid/fixtures/diagnosis-table",
+        "title": "Synthetic diagnosis classification table",
+        "description": "Synthetic fixture with a bounded sample checked.",
+        "license": "CC-BY-4.0",
+        "access_type": "download",
+        "api_endpoint": null,
+        "file_formats": ["arff"],
+        "record_count": 500,
+        "columns": ["age", "feature_a", "diagnosis"],
+        "geography": null,
+        "time_coverage": null,
+        "tags": ["synthetic", "classification"],
+        "last_updated": "2025-10-01T00:00:00Z",
+        "retrieved_at": "2026-01-15T00:00:00Z",
+        "raw_snapshot_key": null,
+        "verification_level": "sample_checked",
+        "provenance": {
+          "columns": {
+            "source_field_path": "sample.data_dictionary",
+            "retrieved_at": "2026-01-15T00:00:00Z"
+          }
+        }
+      },
+      "evidence": [
+        {
+          "evidence_id": "fixture-compare-diagnosis-columns",
+          "dataset_id": "openml:datascout-fixtures/diagnosis-table",
+          "field": "columns",
+          "value": ["age", "feature_a", "diagnosis"],
+          "provenance": {
+            "source_field_path": "sample.data_dictionary",
+            "retrieved_at": "2026-01-15T00:00:00Z"
+          }
+        }
+      ],
+      "matches": [
+        {
+          "requirement_id": "fixture-compare-diagnosis",
+          "status": "PASS",
+          "reason": "The synthetic sample contains the diagnosis target field.",
+          "evidence_ids": ["fixture-compare-diagnosis-columns"],
+          "verification_level": "sample_checked"
+        }
+      ],
+      "score": 72,
+      "score_breakdown": {
+        "scoring_version": "score-v1",
+        "total": 72,
+        "components": [
+          { "name": "requirement_satisfaction", "weight": 50, "points": 38 },
+          { "name": "validation_access", "weight": 20, "points": 13 },
+          { "name": "metadata_completeness", "weight": 15, "points": 10 },
+          { "name": "license_source_clarity", "weight": 10, "points": 8 },
+          { "name": "freshness", "weight": 5, "points": 3 }
+        ],
+        "evidence_coverage": 1
+      }
+    }
+  ],
+  "contract_version": "1.0.0",
+  "prompt_version": "extract-v1",
+  "schema_version": "1.0.0",
+  "scoring_version": "score-v1",
+  "model_id": "fake-datascout-v0.1"
+}

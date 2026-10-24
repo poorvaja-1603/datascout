@@ -6,10 +6,12 @@ import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import {
   CLARIFICATION_QUESTION_TEMPLATES,
+  CompareResponseSchema,
   CONTRACT_VERSION,
   createClarification,
   createRefusal,
   DatasetSchema,
+  DatasetDetailSchema,
   ERROR_HTTP_STATUS,
   ERROR_RETRYABLE,
   ErrorCodeSchema,
@@ -121,6 +123,8 @@ describe('P0-5 contract fixtures', () => {
       'search-no-match.json',
       'search-clarification.json',
       'search-refused.json',
+      'dataset-detail.json',
+      'compare-synthetic.json',
       ...ErrorCodeSchema.options.map((code) => `errors/error-${code}.json`),
     ];
     const fixtureText = (
@@ -216,6 +220,30 @@ describe('P0-5 contract fixtures', () => {
     expect(SearchResponseSchema.safeParse(refusal).success).toBe(false);
   });
 
+  it('validates the dataset-detail and compare endpoint fixtures', async () => {
+    const detail: unknown = JSON.parse(
+      await readFile(resolve(fixturesDirectory, 'dataset-detail.json'), 'utf8'),
+    );
+    const compare: unknown = JSON.parse(
+      await readFile(
+        resolve(fixturesDirectory, 'compare-synthetic.json'),
+        'utf8',
+      ),
+    );
+
+    expect(DatasetDetailSchema.parse(detail).dataset.dataset_id).toBe(
+      'datagovin:fixture-rainfall-monthly',
+    );
+    expect(
+      CompareResponseSchema.parse(compare).datasets.map(
+        ({ dataset }) => dataset.dataset_id,
+      ),
+    ).toEqual([
+      'datagovin:fixture-rainfall-monthly',
+      'openml:datascout-fixtures/diagnosis-table',
+    ]);
+  });
+
   it('validates every error fixture against the canonical code/status/retryability catalog', async () => {
     const codes = ErrorCodeSchema.options;
     expect(Object.keys(ERROR_HTTP_STATUS).sort()).toEqual([...codes].sort());
@@ -254,7 +282,7 @@ describe('P0-5 contract fixtures', () => {
     });
   });
 
-  it('uses fixed clarification/refusal copy and exposes each fixture by its Prism example name', async () => {
+  it('uses fixed clarification/refusal copy and exposes named OpenAPI examples', async () => {
     expect(createClarification('missing_topic').question).toBe(
       CLARIFICATION_QUESTION_TEMPLATES.missing_topic,
     );
@@ -276,18 +304,25 @@ describe('P0-5 contract fixtures', () => {
       'search-no-match',
       'search-clarification',
       'search-refused',
+      'dataset-detail',
+      'compare-synthetic',
       ...ErrorCodeSchema.options.map((code) => `error-${code}`),
     ];
-
-    expect(examples.map(({ name }) => name).sort()).toEqual(
-      [...expectedNames].sort(),
-    );
-    for (const { name, externalValue } of examples) {
-      expect(externalValue).toBe(
+    const externalValues = new Map<string, string>();
+    for (const name of expectedNames) {
+      externalValues.set(
+        name,
         name.startsWith('error-')
           ? `./fixtures/errors/${name}.json`
           : `./fixtures/${name}.json`,
       );
+    }
+
+    expect([...new Set(examples.map(({ name }) => name))].sort()).toEqual(
+      [...expectedNames].sort(),
+    );
+    for (const { name, externalValue } of examples) {
+      expect(externalValue).toBe(externalValues.get(name));
       await expect(
         readFile(resolve(contractsDirectory, externalValue), 'utf8'),
       ).resolves.toBeTruthy();
