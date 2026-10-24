@@ -111,7 +111,9 @@ class ConfiguredLlmClient implements LlmClient {
   ): Promise<LlmJsonResponse> {
     throwIfAborted(ctx.signal);
     const maxOutputTokens = validateRequest(req, this.config);
-    const timeoutMs = Math.min(req.timeoutMs, this.config.timeoutMs);
+    const timeoutMs = this.provider === 'ollama' && req.task !== 'safety_triage'
+      ? this.config.timeoutMs
+      : Math.min(req.timeoutMs, this.config.timeoutMs);
     if (!Number.isFinite(ctx.deadlineMs)) {
       throw new DataScoutError(
         'invalid_request',
@@ -384,6 +386,7 @@ function createRemoteClient(
           : {
               model: modelId,
               stream: false,
+              think: false,
               messages: [
                 { role: 'system', content: `${system}\n\nReturn JSON matching this schema: ${JSON.stringify(req.jsonSchema)}` },
                 { role: 'user', content: redactSensitiveText(req.user) },

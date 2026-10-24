@@ -90,10 +90,27 @@ describe('LLM client providers', () => {
     expect(client.provider).toBe('ollama');
     expect(String(url)).toBe('http://127.0.0.1:11434/api/chat');
     expect(body['stream']).toBe(false);
+    expect(body['think']).toBe(false);
     expect(body['format']).toEqual(request.jsonSchema);
     expect(init?.headers).not.toHaveProperty('authorization');
     expect(response.output).toEqual({ value: 'from-ollama' });
     expect(response.usage).toEqual({ inputTokens: 7, outputTokens: 3 });
+  });
+
+  it('uses the configured timeout for slower Ollama extraction calls', async () => {
+    const send = vi.fn(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 30));
+      return Response.json({ message: { content: '{"value":"from-ollama"}' } });
+    });
+    const client = createLlmClient(
+      loadLlmConfig({ ...ollamaEnv, LLM_TIMEOUT_MS: '100' }),
+      { fetch: send as typeof fetch },
+    );
+    const response = await client.generateJson(
+      { ...request, timeoutMs: 10 },
+      context(),
+    );
+    expect(response.output).toEqual({ value: 'from-ollama' });
   });
 
   it('maps Gemini throttling to a safe retryable error', async () => {

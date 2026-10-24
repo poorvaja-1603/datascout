@@ -7,7 +7,7 @@ use `generateJson(req, ctx)` for every provider.
 | Setting                 | Default              | Validation and behavior                                                                        |
 | ----------------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
 | `LLM_PROVIDER`          | `fake`               | Must be `fake`, `cassette`, `gemini`, or `ollama`.                                             |
-| `LLM_TIMEOUT_MS`        | `30000`              | Integer from 1 to 300000; the smaller request or config timeout and the context deadline wins. |
+| `LLM_TIMEOUT_MS`        | `30000`              | Integer from 1 to 300000; bounds provider calls. Ollama extraction/explanation use this configured limit to accommodate local inference speed; safety triage and Gemini keep their shorter request-specific caps. |
 | `LLM_MAX_OUTPUT_TOKENS` | `1024`               | Integer from 1 to 8192; request output is capped to this value.                                |
 | `LLM_CASSETTE_DIR`      | package `cassettes/` | Directory containing deterministic `<request-sha256>.json` replay files.                       |
 | `GEMINI_MODEL_ID`       | —                    | Required for Gemini; pin the chosen model ID after checking pricing and terms.                  |
@@ -21,8 +21,9 @@ use `generateJson(req, ctx)` for every provider.
 | `LLM_GLOBAL_DAILY_LIMIT` | `300`               | Daily global cap passed to the atomic budget store.                                            |
 
 Gemini calls use its native JSON response schema; Ollama calls use the native
-`/api/chat` JSON-schema format. Gemini is the hosted provider; Ollama is for
-local development and is not automatically reachable from Lambda. Real Gemini
+`/api/chat` JSON-schema format with thinking disabled to reduce latency and
+unneeded reasoning tokens for structured extraction. Gemini is the hosted
+provider; Ollama is for local development and is not automatically reachable from Lambda. Real Gemini
 and Ollama extractors/explainers require a `SafetyAdmission` instance; the API
 must provide an atomic daily-budget store and authenticated `principalId`.
 Hosted calls are never required for package tests. Cassette files
