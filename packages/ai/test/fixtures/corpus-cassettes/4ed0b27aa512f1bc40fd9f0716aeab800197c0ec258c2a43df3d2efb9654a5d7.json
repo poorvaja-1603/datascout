@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "inflation",
+    "geography": "Peru",
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": [],
+    "target": null,
+    "preferences": [],
+    "constraints": ["World Bank Indicators"]
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

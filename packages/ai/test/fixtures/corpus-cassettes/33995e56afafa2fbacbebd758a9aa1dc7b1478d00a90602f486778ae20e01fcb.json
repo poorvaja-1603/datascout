@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "electricity consumption",
+    "geography": "Germany",
+    "time_coverage": "2010 through 2020",
+    "minimum_records": null,
+    "required_features": ["monthly measurements", "households"],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

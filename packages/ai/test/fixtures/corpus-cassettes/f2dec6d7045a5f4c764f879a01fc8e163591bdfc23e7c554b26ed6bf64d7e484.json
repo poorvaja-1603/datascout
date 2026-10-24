@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "exchange rates",
+    "geography": null,
+    "time_coverage": "2012-2024",
+    "minimum_records": 2000,
+    "required_features": ["daily observations"],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "customer churn",
+    "geography": null,
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": [],
+    "target": "cancellation outcome",
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

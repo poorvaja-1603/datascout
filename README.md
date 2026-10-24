@@ -34,3 +34,22 @@ evals/                    Evaluation corpus and runners (Stream A)
 docs/                     Product requirements and implementation plan
 README.md                 Project overview
 ```
+
+## Langfuse observability
+
+The observability package uses Langfuse JS/TS SDK v6 with OpenTelemetry. Set
+`LANGFUSE_PUBLIC_KEY`, `LANGFUSE_SECRET_KEY`, and the region-specific
+`LANGFUSE_BASE_URL` in an untracked local `.env` (or inject them from the
+deployment secret store). Optional `LANGFUSE_TRACING_ENVIRONMENT` and
+`LANGFUSE_RELEASE` label traces. Missing or malformed configuration disables
+tracing; telemetry exporter failures are logged without failing the
+application. Do not add prompts, queries, request bodies, or credentials to
+span attributes.
+
+Create the tracer once after loading environment variables with
+`createLangfuseTracer()`. Flush it with a bounded timeout after short-lived
+work; Lambda handlers should flush before returning. Run
+`npm run langfuse:smoke` with credentials configured to send a trace and
+`observability_smoke` score, then verify `datascout.observability.smoke` in
+the Langfuse project. This live smoke step requires project credentials and
+network access and is not replaced by unit tests.

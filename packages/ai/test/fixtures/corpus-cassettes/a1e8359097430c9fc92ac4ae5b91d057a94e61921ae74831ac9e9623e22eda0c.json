@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "wholesale prices",
+    "geography": null,
+    "time_coverage": "2021",
+    "minimum_records": null,
+    "required_features": ["daily measurements", "onions"],
+    "target": null,
+    "preferences": [],
+    "constraints": ["data.gov.in"]
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

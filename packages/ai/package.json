@@ -9,5 +9,9 @@
     "lint": "eslint . --ext .ts,.js",
     "format": "prettier --write .",
     "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@datascout/contracts": "0.1.0",
+    "@aws-sdk/client-bedrock-runtime": "3.1156.0"
   }
 }

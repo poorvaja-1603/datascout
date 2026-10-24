@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "night-time lights",
+    "geography": null,
+    "time_coverage": "2016-2022",
+    "minimum_records": null,
+    "required_features": ["coordinates", "brightness values"],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

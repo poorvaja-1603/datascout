@@ -20,7 +20,11 @@
     "format": "npm run format --workspaces --if-present",
     "format:check": "npm run format:check --workspaces --if-present",
     "mock": "npm run mock --workspace=@datascout/contracts",
+    "langfuse:smoke": "npm run smoke --workspace=@datascout/observability",
     "validate:corpus": "python evals/validate_dataset.py"
+  },
+  "dependencies": {
+    "@opentelemetry/api": "1.10.0"
   },
   "devDependencies": {
     "@eslint/js": "10.0.1",

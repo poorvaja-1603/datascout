@@ -1,0 +1,10 @@
+{
+  "output": {
+    "value": "replayed"
+  },
+  "modelId": "recorded-test-model",
+  "usage": {
+    "inputTokens": 11,
+    "outputTokens": 3
+  }
+}

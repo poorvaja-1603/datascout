@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "urban heat islands",
+    "geography": "Phoenix",
+    "time_coverage": "summer 2019",
+    "minimum_records": null,
+    "required_features": ["daily temperature"],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "rainfall",
+    "geography": "Queensland, Australia",
+    "time_coverage": "1980-2020",
+    "minimum_records": null,
+    "required_features": ["monthly measurements"],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

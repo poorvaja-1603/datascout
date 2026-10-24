@@ -1,0 +1,162 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://datascout.example/schemas/extraction-report-v1.json",
+  "title": "DataScout extraction evaluation report v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "report_schema",
+    "evaluator_version",
+    "evaluation_kind",
+    "quality_claim",
+    "run",
+    "metrics",
+    "cases"
+  ],
+  "properties": {
+    "report_schema": { "const": "extraction-report-v1" },
+    "evaluator_version": { "const": "extraction-evaluator-v1" },
+    "evaluation_kind": { "const": "structural_fixture_replay" },
+    "quality_claim": { "const": "none_structural_replay_only" },
+    "run": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "run_id",
+        "started_at",
+        "split",
+        "provider",
+        "model_id",
+        "configured_model_id",
+        "prompt_version",
+        "safety_check",
+        "extraction_schema",
+        "extraction_schema_version",
+        "corpus_sha256",
+        "case_count",
+        "cassette_directory"
+      ],
+      "properties": {
+        "run_id": { "type": "string", "minLength": 1 },
+        "started_at": { "type": "string", "format": "date-time" },
+        "split": { "enum": ["development", "held_out"] },
+        "provider": { "enum": ["fake", "cassette"] },
+        "model_id": { "type": "string", "minLength": 1 },
+        "configured_model_id": { "type": "string", "minLength": 1 },
+        "prompt_version": { "type": "string", "minLength": 1 },
+        "safety_check": { "const": "evaluation_allow_all" },
+        "extraction_schema": { "const": "ExtractedRequirements" },
+        "extraction_schema_version": { "const": "1" },
+        "corpus_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
+        "case_count": { "type": "integer", "minimum": 1 },
+        "cassette_directory": { "type": ["string", "null"] }
+      }
+    },
+    "metrics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "cases",
+        "all_fields_exact_match_cases",
+        "all_fields_exact_match_rate",
+        "per_field"
+      ],
+      "properties": {
+        "cases": { "type": "integer", "minimum": 1 },
+        "all_fields_exact_match_cases": { "type": "integer", "minimum": 0 },
+        "all_fields_exact_match_rate": { "type": "number", "minimum": 0, "maximum": 1 },
+        "per_field": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "topic",
+            "geography",
+            "time_coverage",
+            "minimum_records",
+            "required_features",
+            "target",
+            "preferences",
+            "constraints"
+          ],
+          "properties": {
+            "topic": { "$ref": "#/$defs/fieldMetric" },
+            "geography": { "$ref": "#/$defs/fieldMetric" },
+            "time_coverage": { "$ref": "#/$defs/fieldMetric" },
+            "minimum_records": { "$ref": "#/$defs/fieldMetric" },
+            "required_features": { "$ref": "#/$defs/fieldMetric" },
+            "target": { "$ref": "#/$defs/fieldMetric" },
+            "preferences": { "$ref": "#/$defs/fieldMetric" },
+            "constraints": { "$ref": "#/$defs/fieldMetric" }
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["case_id", "split", "result_kind", "fields"],
+        "properties": {
+          "case_id": { "type": "string", "minLength": 1 },
+          "split": { "enum": ["development", "held_out"] },
+          "result_kind": { "enum": ["ok", "clarification", "refused"] },
+          "fields": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "topic",
+              "geography",
+              "time_coverage",
+              "minimum_records",
+              "required_features",
+              "target",
+              "preferences",
+              "constraints"
+            ],
+            "properties": {
+              "topic": { "$ref": "#/$defs/fieldComparison" },
+              "geography": { "$ref": "#/$defs/fieldComparison" },
+              "time_coverage": { "$ref": "#/$defs/fieldComparison" },
+              "minimum_records": { "$ref": "#/$defs/fieldComparison" },
+              "required_features": { "$ref": "#/$defs/fieldComparison" },
+              "target": { "$ref": "#/$defs/fieldComparison" },
+              "preferences": { "$ref": "#/$defs/fieldComparison" },
+              "constraints": { "$ref": "#/$defs/fieldComparison" }
+            }
+          }
+        }
+      }
+    }
+  },
+  "$defs": {
+    "fieldMetric": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["exact_matches", "cases", "exact_match_rate"],
+      "properties": {
+        "exact_matches": { "type": "integer", "minimum": 0 },
+        "cases": { "type": "integer", "minimum": 1 },
+        "exact_match_rate": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "fieldValue": {
+      "oneOf": [
+        { "type": "string" },
+        { "type": "integer" },
+        { "type": "array", "items": { "type": "string" } },
+        { "type": "null" }
+      ]
+    },
+    "fieldComparison": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected", "actual", "exact_match"],
+      "properties": {
+        "expected": { "$ref": "#/$defs/fieldValue" },
+        "actual": { "$ref": "#/$defs/fieldValue" },
+        "exact_match": { "type": "boolean" }
+      }
+    }
+  }
+}

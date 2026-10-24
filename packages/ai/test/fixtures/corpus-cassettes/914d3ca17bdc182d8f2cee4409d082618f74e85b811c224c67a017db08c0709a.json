@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "road safety",
+    "geography": "United States",
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": ["crash date", "location", "injury severity"],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

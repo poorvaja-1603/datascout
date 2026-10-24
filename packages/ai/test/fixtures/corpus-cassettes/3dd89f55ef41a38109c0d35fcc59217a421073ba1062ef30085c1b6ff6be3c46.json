@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "GDP per capita",
+    "geography": "Nepal",
+    "time_coverage": "2000-2022",
+    "minimum_records": null,
+    "required_features": [],
+    "target": null,
+    "preferences": [],
+    "constraints": ["World Bank Indicators"]
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}
