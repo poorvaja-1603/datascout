@@ -1,0 +1,11 @@
+{
+  "code": "internal_error",
+  "message": "An unexpected internal error occurred.",
+  "request_id": "fixture-error-internal",
+  "retryable": false,
+  "contract_version": "1.0.0",
+  "prompt_version": "not_applicable",
+  "schema_version": "1.0.0",
+  "scoring_version": "not_applicable",
+  "model_id": "not_applicable"
+}

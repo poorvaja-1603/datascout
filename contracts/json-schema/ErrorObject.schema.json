@@ -2,7 +2,21 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "type": "object",
   "properties": {
-    "code": { "type": "string", "minLength": 1 },
+    "code": {
+      "type": "string",
+      "enum": [
+        "invalid_request",
+        "unauthorized",
+        "forbidden",
+        "not_found",
+        "payload_too_large",
+        "rate_limited",
+        "internal_error",
+        "extraction_failed",
+        "upstream_unavailable",
+        "timeout"
+      ]
+    },
     "message": { "type": "string", "minLength": 1 },
     "request_id": { "type": "string", "minLength": 1 },
     "retryable": { "type": "boolean" },
@@ -16,6 +30,7 @@
     "code",
     "message",
     "request_id",
+    "retryable",
     "contract_version",
     "prompt_version",
     "schema_version",

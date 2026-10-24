@@ -1,0 +1,17 @@
+{
+  "request_id": "fixture-search-refused",
+  "outcome": "refused",
+  "requirements": null,
+  "refusal": {
+    "reason_code": "unsafe_request",
+    "message": "This request cannot be handled. Please try a different public dataset search."
+  },
+  "source_statuses": [],
+  "results": [],
+  "warnings": [],
+  "contract_version": "1.0.0",
+  "prompt_version": "extract-v1",
+  "schema_version": "1.0.0",
+  "scoring_version": "score-v1",
+  "model_id": "fake-datascout-v0.1"
+}

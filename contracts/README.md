@@ -32,6 +32,25 @@ simulation modes support timeout, throttling, malformed JSON, and
 injection-style output tests. `NoopTracer` and `InMemoryTracer` implement the
 tracing port without sending data externally.
 
+## Search outcomes and fixtures
+
+`SearchResponse.outcome` is `results`, `clarification_needed`, or `refused`.
+All outcomes include `source_statuses` and `results` arrays. A clarification
+includes extracted requirements with a null topic, a fixed question selected
+by `missing_topic` or `too_vague`, and no source results. A refusal has null
+requirements, a generic message selected by `unsafe_request` or `out_of_scope`,
+and no source results. No matches use the `results` outcome with an empty
+results array and a warning; source failures are represented in
+`source_statuses`, while total upstream failure uses an
+`upstream_unavailable` error.
+
+The canonical error catalog in `src/schemas.ts` fixes each error code's HTTP
+status and retryability. `fixtures/datasets.json` contains ten synthetic,
+hand-built fixtures with expected requirement verdicts; their `.invalid`
+URLs and labels are test oracles, not real catalog records or owner-reviewed
+claims. Search and error response examples are selectable by their named
+OpenAPI examples (for Prism, use `Prefer: example=<example-name>`).
+
 The canonical OpenAPI 3.1 document is not imported into API Gateway. The B1
 SAM template defines deployed routes and Cognito authorization directly. CI
 compares each SAM API event's path, method, and `AuthorizationScopes` with
@@ -40,6 +59,10 @@ compares each SAM API event's path, method, and `AuthorizationScopes` with
 the shared Zod schemas; API Gateway is limited to basic required-body and
 payload-size checks. Each environment supplies its own API origin and stage
 to clients.
+
+For B1, configure API Gateway GatewayResponses for `401`, `403`, `413`, `429`,
+and `504` to return the shared `ErrorObject`; without these custom responses,
+API Gateway returns its default `{"message": ...}` body instead.
 
 ## Contract v1 decisions
 

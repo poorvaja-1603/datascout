@@ -1,0 +1,11 @@
+{
+  "code": "extraction_failed",
+  "message": "Requirements could not be extracted from this request.",
+  "request_id": "fixture-error-extraction-failed",
+  "retryable": true,
+  "contract_version": "1.0.0",
+  "prompt_version": "not_applicable",
+  "schema_version": "1.0.0",
+  "scoring_version": "not_applicable",
+  "model_id": "not_applicable"
+}

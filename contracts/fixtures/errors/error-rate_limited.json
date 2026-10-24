@@ -1,0 +1,11 @@
+{
+  "code": "rate_limited",
+  "message": "The request rate limit was exceeded. Retry after a short delay.",
+  "request_id": "fixture-error-rate-limited",
+  "retryable": true,
+  "contract_version": "1.0.0",
+  "prompt_version": "not_applicable",
+  "schema_version": "1.0.0",
+  "scoring_version": "not_applicable",
+  "model_id": "not_applicable"
+}

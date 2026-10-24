@@ -1,0 +1,603 @@
+[
+  {
+    "description": "PASS: rainfall feature verified in a bounded sample.",
+    "dataset": {
+      "dataset_id": "datagovin:fixture-rainfall-monthly",
+      "source": "datagovin",
+      "source_url": "https://example.invalid/fixtures/rainfall-monthly",
+      "title": "Synthetic monthly rainfall by district",
+      "description": "Synthetic fixture metadata; not a real upstream dataset.",
+      "license": "CC-BY-4.0",
+      "access_type": "download",
+      "api_endpoint": null,
+      "file_formats": ["csv"],
+      "record_count": 480,
+      "columns": ["district", "year", "month", "rainfall_mm"],
+      "geography": "Maharashtra, India",
+      "time_coverage": "2010-2024",
+      "tags": ["synthetic", "rainfall"],
+      "last_updated": "2025-12-31T00:00:00Z",
+      "retrieved_at": "2026-01-15T00:00:00Z",
+      "raw_snapshot_key": null,
+      "verification_level": "sample_checked",
+      "provenance": {
+        "title": {
+          "source_field_path": "fixture.title",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        },
+        "columns": {
+          "source_field_path": "sample.header",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    "requirements": [
+      {
+        "requirement_id": "fixture-01-rainfall",
+        "type": "feature",
+        "value": "rainfall",
+        "unit": null,
+        "priority": "required",
+        "aliases": ["precipitation"],
+        "source_span": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "fixture-01-columns",
+        "dataset_id": "datagovin:fixture-rainfall-monthly",
+        "field": "columns",
+        "value": ["district", "year", "month", "rainfall_mm"],
+        "provenance": {
+          "source_field_path": "sample.header",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    ],
+    "expected_verdicts": [
+      {
+        "requirement_id": "fixture-01-rainfall",
+        "status": "PASS",
+        "reason": "The sample contains a rainfall measurement column.",
+        "evidence_ids": ["fixture-01-columns"],
+        "verification_level": "sample_checked"
+      }
+    ]
+  },
+  {
+    "description": "PARTIAL: metadata lists only one of two requested features.",
+    "dataset": {
+      "dataset_id": "datagovin:fixture-crop-yield-metadata",
+      "source": "datagovin",
+      "source_url": "https://example.invalid/fixtures/crop-yield-metadata",
+      "title": "Synthetic crop yield summary",
+      "description": "Synthetic fixture metadata; no data sample was inspected.",
+      "license": null,
+      "access_type": "download",
+      "api_endpoint": null,
+      "file_formats": ["csv"],
+      "record_count": null,
+      "columns": ["district", "year", "rainfall_mm"],
+      "geography": "India",
+      "time_coverage": null,
+      "tags": ["synthetic", "agriculture"],
+      "last_updated": null,
+      "retrieved_at": "2026-01-15T00:00:00Z",
+      "raw_snapshot_key": null,
+      "verification_level": "metadata_only",
+      "provenance": {
+        "title": {
+          "source_field_path": "catalog.title",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        },
+        "columns": {
+          "source_field_path": "catalog.columns",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    "requirements": [
+      {
+        "requirement_id": "fixture-02-climate-features",
+        "type": "feature",
+        "value": "rainfall and temperature",
+        "unit": null,
+        "priority": "required",
+        "aliases": [],
+        "source_span": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "fixture-02-columns",
+        "dataset_id": "datagovin:fixture-crop-yield-metadata",
+        "field": "columns",
+        "value": ["district", "year", "rainfall_mm"],
+        "provenance": {
+          "source_field_path": "catalog.columns",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    ],
+    "expected_verdicts": [
+      {
+        "requirement_id": "fixture-02-climate-features",
+        "status": "PARTIAL",
+        "reason": "Metadata lists rainfall but does not establish that temperature is available.",
+        "evidence_ids": ["fixture-02-columns"],
+        "verification_level": "metadata_only"
+      }
+    ]
+  },
+  {
+    "description": "FAIL: sample-checked columns do not include PM2.5.",
+    "dataset": {
+      "dataset_id": "huggingface:datascout-fixtures/air-quality-pm10",
+      "source": "huggingface",
+      "source_url": "https://example.invalid/fixtures/air-quality-pm10",
+      "title": "Synthetic air quality observations",
+      "description": "Synthetic sample contains particulate matter PM10 only.",
+      "license": "CC-BY-4.0",
+      "access_type": "download",
+      "api_endpoint": null,
+      "file_formats": ["parquet"],
+      "record_count": 1200,
+      "columns": ["date", "city", "PM10"],
+      "geography": "Delhi, India",
+      "time_coverage": "2020-2024",
+      "tags": ["synthetic", "air-quality"],
+      "last_updated": "2025-11-01T00:00:00Z",
+      "retrieved_at": "2026-01-15T00:00:00Z",
+      "raw_snapshot_key": null,
+      "verification_level": "sample_checked",
+      "provenance": {
+        "columns": {
+          "source_field_path": "sample.schema",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    "requirements": [
+      {
+        "requirement_id": "fixture-03-pm25",
+        "type": "feature",
+        "value": "PM2.5",
+        "unit": null,
+        "priority": "required",
+        "aliases": [],
+        "source_span": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "fixture-03-columns",
+        "dataset_id": "huggingface:datascout-fixtures/air-quality-pm10",
+        "field": "columns",
+        "value": ["date", "city", "PM10"],
+        "provenance": {
+          "source_field_path": "sample.schema",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    ],
+    "expected_verdicts": [
+      {
+        "requirement_id": "fixture-03-pm25",
+        "status": "FAIL",
+        "reason": "The inspected sample has PM10 and no PM2.5 field.",
+        "evidence_ids": ["fixture-03-columns"],
+        "verification_level": "sample_checked"
+      }
+    ]
+  },
+  {
+    "description": "UNKNOWN: geography is absent from metadata and no sample was inspected.",
+    "dataset": {
+      "dataset_id": "openml:datascout-fixtures/health-survey-unknown",
+      "source": "openml",
+      "source_url": "https://example.invalid/fixtures/health-survey-unknown",
+      "title": "Synthetic health survey",
+      "description": null,
+      "license": null,
+      "access_type": null,
+      "api_endpoint": null,
+      "file_formats": [],
+      "record_count": null,
+      "columns": [],
+      "geography": null,
+      "time_coverage": null,
+      "tags": ["synthetic"],
+      "last_updated": null,
+      "retrieved_at": "2026-01-15T00:00:00Z",
+      "raw_snapshot_key": null,
+      "verification_level": "metadata_only",
+      "provenance": {
+        "title": {
+          "source_field_path": "catalog.name",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    "requirements": [
+      {
+        "requirement_id": "fixture-04-geography",
+        "type": "geography",
+        "value": "Nepal",
+        "unit": null,
+        "priority": "required",
+        "aliases": [],
+        "source_span": null
+      }
+    ],
+    "evidence": [],
+    "expected_verdicts": [
+      {
+        "requirement_id": "fixture-04-geography",
+        "status": "UNKNOWN",
+        "reason": "No source metadata or inspected sample establishes the dataset geography.",
+        "evidence_ids": [],
+        "verification_level": "metadata_only"
+      }
+    ]
+  },
+  {
+    "description": "PASS: sample-checked dataset contains the requested diagnosis target.",
+    "dataset": {
+      "dataset_id": "openml:datascout-fixtures/diagnosis-table",
+      "source": "openml",
+      "source_url": "https://example.invalid/fixtures/diagnosis-table",
+      "title": "Synthetic diagnosis classification table",
+      "description": "Synthetic fixture with a bounded sample checked.",
+      "license": "CC-BY-4.0",
+      "access_type": "download",
+      "api_endpoint": null,
+      "file_formats": ["arff"],
+      "record_count": 500,
+      "columns": ["age", "feature_a", "diagnosis"],
+      "geography": null,
+      "time_coverage": null,
+      "tags": ["synthetic", "classification"],
+      "last_updated": "2025-10-01T00:00:00Z",
+      "retrieved_at": "2026-01-15T00:00:00Z",
+      "raw_snapshot_key": null,
+      "verification_level": "sample_checked",
+      "provenance": {
+        "columns": {
+          "source_field_path": "sample.data_dictionary",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    "requirements": [
+      {
+        "requirement_id": "fixture-05-diagnosis",
+        "type": "target",
+        "value": "diagnosis",
+        "unit": null,
+        "priority": "required",
+        "aliases": [],
+        "source_span": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "fixture-05-columns",
+        "dataset_id": "openml:datascout-fixtures/diagnosis-table",
+        "field": "columns",
+        "value": ["age", "feature_a", "diagnosis"],
+        "provenance": {
+          "source_field_path": "sample.data_dictionary",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    ],
+    "expected_verdicts": [
+      {
+        "requirement_id": "fixture-05-diagnosis",
+        "status": "PASS",
+        "reason": "The inspected sample contains the requested diagnosis target.",
+        "evidence_ids": ["fixture-05-columns"],
+        "verification_level": "sample_checked"
+      }
+    ]
+  },
+  {
+    "description": "PARTIAL: sample confirms population values, not the requested urban-rate indicator.",
+    "dataset": {
+      "dataset_id": "worldbank:datascout-fixtures/population-urban",
+      "source": "worldbank",
+      "source_url": "https://example.invalid/fixtures/population-urban",
+      "title": "Synthetic population indicators",
+      "description": "Synthetic sample contains a population indicator.",
+      "license": "CC-BY-4.0",
+      "access_type": "api",
+      "api_endpoint": "https://example.invalid/api/indicators",
+      "file_formats": ["json"],
+      "record_count": 32,
+      "columns": ["country", "year", "population_total"],
+      "geography": "Nepal",
+      "time_coverage": "1990-2022",
+      "tags": ["synthetic", "population"],
+      "last_updated": "2025-08-01T00:00:00Z",
+      "retrieved_at": "2026-01-15T00:00:00Z",
+      "raw_snapshot_key": null,
+      "verification_level": "sample_checked",
+      "provenance": {
+        "columns": {
+          "source_field_path": "sample.indicators",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    "requirements": [
+      {
+        "requirement_id": "fixture-06-indicators",
+        "type": "feature",
+        "value": "population total and urban population rate",
+        "unit": null,
+        "priority": "required",
+        "aliases": [],
+        "source_span": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "fixture-06-indicators",
+        "dataset_id": "worldbank:datascout-fixtures/population-urban",
+        "field": "columns",
+        "value": ["country", "year", "population_total"],
+        "provenance": {
+          "source_field_path": "sample.indicators",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    ],
+    "expected_verdicts": [
+      {
+        "requirement_id": "fixture-06-indicators",
+        "status": "PARTIAL",
+        "reason": "The sample confirms total population but not the requested urban population rate.",
+        "evidence_ids": ["fixture-06-indicators"],
+        "verification_level": "sample_checked"
+      }
+    ]
+  },
+  {
+    "description": "FAIL: inspected records are monthly, not daily.",
+    "dataset": {
+      "dataset_id": "uci:datascout-fixtures/monthly-energy",
+      "source": "uci",
+      "source_url": "https://example.invalid/fixtures/monthly-energy",
+      "title": "Synthetic monthly energy usage",
+      "description": "Synthetic records are aggregated by month.",
+      "license": "CC-BY-4.0",
+      "access_type": "download",
+      "api_endpoint": null,
+      "file_formats": ["csv"],
+      "record_count": 144,
+      "columns": ["month", "region", "usage_kwh"],
+      "geography": "India",
+      "time_coverage": "2013-2024",
+      "tags": ["synthetic", "energy"],
+      "last_updated": "2025-11-15T00:00:00Z",
+      "retrieved_at": "2026-01-15T00:00:00Z",
+      "raw_snapshot_key": null,
+      "verification_level": "sample_checked",
+      "provenance": {
+        "time_coverage": {
+          "source_field_path": "sample.month",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    "requirements": [
+      {
+        "requirement_id": "fixture-07-daily",
+        "type": "time_coverage",
+        "value": "daily observations",
+        "unit": null,
+        "priority": "required",
+        "aliases": [],
+        "source_span": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "fixture-07-frequency",
+        "dataset_id": "uci:datascout-fixtures/monthly-energy",
+        "field": "time_coverage",
+        "value": "monthly",
+        "provenance": {
+          "source_field_path": "sample.month",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    ],
+    "expected_verdicts": [
+      {
+        "requirement_id": "fixture-07-daily",
+        "status": "FAIL",
+        "reason": "The inspected sample is monthly and does not meet the required daily frequency.",
+        "evidence_ids": ["fixture-07-frequency"],
+        "verification_level": "sample_checked",
+        "measured_value": "monthly"
+      }
+    ]
+  },
+  {
+    "description": "UNKNOWN: metadata-only record has no columns or target details.",
+    "dataset": {
+      "dataset_id": "zenodo:datascout-fixtures/unknown-target",
+      "source": "zenodo",
+      "source_url": "https://example.invalid/fixtures/unknown-target",
+      "title": "Synthetic experiment deposit",
+      "description": null,
+      "license": null,
+      "access_type": "download",
+      "api_endpoint": null,
+      "file_formats": ["zip"],
+      "record_count": null,
+      "columns": [],
+      "geography": null,
+      "time_coverage": null,
+      "tags": ["synthetic"],
+      "last_updated": null,
+      "retrieved_at": "2026-01-15T00:00:00Z",
+      "raw_snapshot_key": null,
+      "verification_level": "metadata_only",
+      "provenance": {
+        "title": {
+          "source_field_path": "record.title",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        },
+        "file_formats": {
+          "source_field_path": "record.files[].type",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    "requirements": [
+      {
+        "requirement_id": "fixture-08-label",
+        "type": "target",
+        "value": "class label",
+        "unit": null,
+        "priority": "required",
+        "aliases": [],
+        "source_span": null
+      }
+    ],
+    "evidence": [],
+    "expected_verdicts": [
+      {
+        "requirement_id": "fixture-08-label",
+        "status": "UNKNOWN",
+        "reason": "Metadata does not identify any fields or target, and no sample was checked.",
+        "evidence_ids": [],
+        "verification_level": "metadata_only"
+      }
+    ]
+  },
+  {
+    "description": "PASS: sample-checked temperature field is present.",
+    "dataset": {
+      "dataset_id": "dataverse:datascout-fixtures/climate-stations",
+      "source": "dataverse",
+      "source_url": "https://example.invalid/fixtures/climate-stations",
+      "title": "Synthetic climate station observations",
+      "description": "Synthetic station sample with temperature measurements.",
+      "license": "CC-BY-4.0",
+      "access_type": "download",
+      "api_endpoint": null,
+      "file_formats": ["csv"],
+      "record_count": 8760,
+      "columns": ["station_id", "date", "temperature_c", "humidity_pct"],
+      "geography": "Kenya",
+      "time_coverage": "2020-2024",
+      "tags": ["synthetic", "climate"],
+      "last_updated": "2025-12-01T00:00:00Z",
+      "retrieved_at": "2026-01-15T00:00:00Z",
+      "raw_snapshot_key": null,
+      "verification_level": "sample_checked",
+      "provenance": {
+        "columns": {
+          "source_field_path": "sample.header",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    "requirements": [
+      {
+        "requirement_id": "fixture-09-temperature",
+        "type": "feature",
+        "value": "temperature",
+        "unit": null,
+        "priority": "required",
+        "aliases": ["temperature_c"],
+        "source_span": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "fixture-09-columns",
+        "dataset_id": "dataverse:datascout-fixtures/climate-stations",
+        "field": "columns",
+        "value": ["station_id", "date", "temperature_c", "humidity_pct"],
+        "provenance": {
+          "source_field_path": "sample.header",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    ],
+    "expected_verdicts": [
+      {
+        "requirement_id": "fixture-09-temperature",
+        "status": "PASS",
+        "reason": "The inspected sample contains the requested temperature field.",
+        "evidence_ids": ["fixture-09-columns"],
+        "verification_level": "sample_checked"
+      }
+    ]
+  },
+  {
+    "description": "PARTIAL: catalog metadata suggests district-level data but has not been sampled.",
+    "dataset": {
+      "dataset_id": "ckan:datascout-fixtures/district-transport",
+      "source": "ckan",
+      "source_url": "https://example.invalid/fixtures/district-transport",
+      "title": "Synthetic district transport statistics",
+      "description": "Catalog metadata describes district transport records.",
+      "license": "CC-BY-4.0",
+      "access_type": "download",
+      "api_endpoint": null,
+      "file_formats": ["csv"],
+      "record_count": 1000,
+      "columns": ["district_code", "year", "trip_count"],
+      "geography": "India",
+      "time_coverage": "2015-2024",
+      "tags": ["synthetic", "transport"],
+      "last_updated": "2025-09-30T00:00:00Z",
+      "retrieved_at": "2026-01-15T00:00:00Z",
+      "raw_snapshot_key": null,
+      "verification_level": "metadata_only",
+      "provenance": {
+        "columns": {
+          "source_field_path": "catalog.column_names",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    },
+    "requirements": [
+      {
+        "requirement_id": "fixture-10-district",
+        "type": "feature",
+        "value": "district-level trip counts",
+        "unit": null,
+        "priority": "required",
+        "aliases": [],
+        "source_span": null
+      }
+    ],
+    "evidence": [
+      {
+        "evidence_id": "fixture-10-columns",
+        "dataset_id": "ckan:datascout-fixtures/district-transport",
+        "field": "columns",
+        "value": ["district_code", "year", "trip_count"],
+        "provenance": {
+          "source_field_path": "catalog.column_names",
+          "retrieved_at": "2026-01-15T00:00:00Z"
+        }
+      }
+    ],
+    "expected_verdicts": [
+      {
+        "requirement_id": "fixture-10-district",
+        "status": "PARTIAL",
+        "reason": "Metadata lists district and trip count fields but the data has not been inspected.",
+        "evidence_ids": ["fixture-10-columns"],
+        "verification_level": "metadata_only"
+      }
+    ]
+  }
+]

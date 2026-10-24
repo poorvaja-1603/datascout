@@ -153,7 +153,7 @@ describe('P0-4 shared ports and fakes', () => {
         createContext(),
       ),
     ).rejects.toMatchObject({
-      code: 'FAKE_NO_CANNED_RESPONSE',
+      code: 'invalid_request',
       safeMessage: expect.stringContaining('no canned response for this input'),
     });
   });
@@ -172,7 +172,7 @@ describe('P0-4 shared ports and fakes', () => {
     await expect(
       new FakeLlmClient({ mode: 'timeout' }).generateJson(req, createContext()),
     ).rejects.toMatchObject({
-      code: 'LLM_TIMEOUT',
+      code: 'timeout',
       retryable: true,
     });
     await expect(
@@ -181,7 +181,7 @@ describe('P0-4 shared ports and fakes', () => {
         createContext(),
       ),
     ).rejects.toMatchObject({
-      code: 'LLM_THROTTLED',
+      code: 'rate_limited',
       retryable: true,
     });
   });
@@ -342,7 +342,7 @@ describe('P0-4 shared ports and fakes', () => {
       DataScoutError,
     );
     await expect(client.generateJson(req, context)).rejects.toMatchObject({
-      code: 'REQUEST_ABORTED',
+      code: 'invalid_request',
       safeMessage: 'The request was cancelled.',
       retryable: false,
     });
@@ -358,39 +358,39 @@ describe('P0-4 shared ports and fakes', () => {
         },
         context,
       ),
-    ).rejects.toMatchObject({ code: 'REQUEST_ABORTED' });
+    ).rejects.toMatchObject({ code: 'invalid_request' });
     await expect(
       connector.getDetails(dataset.dataset_id, context),
     ).rejects.toMatchObject({
-      code: 'REQUEST_ABORTED',
+      code: 'invalid_request',
     });
     await expect(
       new FakeExtractor().extract(DEMO_EXTRACTION_CASES[0]!.input, context),
-    ).rejects.toMatchObject({ code: 'REQUEST_ABORTED' });
+    ).rejects.toMatchObject({ code: 'invalid_request' });
     await expect(
       new FakeInspector([]).inspect(
         dataset,
         { maxBytes: 1024, maxRows: 2, maxColumns: 2, timeoutMs: 1000 },
         createContext(),
       ),
-    ).rejects.toMatchObject({ code: 'FIXTURE_NOT_FOUND' });
+    ).rejects.toMatchObject({ code: 'internal_error' });
     await expect(
       new FakeInspector([makeInspection(dataset.dataset_id)]).inspect(
         dataset,
         { maxBytes: 1024, maxRows: 2, maxColumns: 2, timeoutMs: 1000 },
         context,
       ),
-    ).rejects.toMatchObject({ code: 'REQUEST_ABORTED' });
+    ).rejects.toMatchObject({ code: 'invalid_request' });
     await expect(
       new FakeExplainer([]).explain([makeScoredDataset(dataset)], context),
-    ).rejects.toMatchObject({ code: 'REQUEST_ABORTED' });
+    ).rejects.toMatchObject({ code: 'invalid_request' });
 
     await expect(
       new FakeLlmClient({ mode: 'timeout' }).generateJson(
         { ...req, user: 'uncanned query' },
         createContext(),
       ),
-    ).rejects.toMatchObject({ code: 'FAKE_NO_CANNED_RESPONSE' });
+    ).rejects.toMatchObject({ code: 'invalid_request' });
   });
 
   it('records safe span shape in memory and keeps the no-op tracer transparent', async () => {

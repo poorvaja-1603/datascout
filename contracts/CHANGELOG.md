@@ -22,3 +22,17 @@
   and scopes directly in SAM, and CI checks SAM route/method/scope parity.
   Lambdas validate request bodies using the shared Zod schemas; API Gateway
   performs only basic required-body and payload-size checks.
+- `SearchResponse` requires an `outcome`: `results`, `clarification_needed`,
+  or `refused`. Clarification and refusal use fixed templates and cannot
+  contain results or source statuses. No matches are a `results` outcome with
+  a warning; partial source failures remain in source statuses, and total
+  upstream failure is `upstream_unavailable`.
+- Freeze the error-code catalog, HTTP status mapping, and retryability values
+  in `src/schemas.ts`. Every `ErrorObject` fixture includes a request ID and
+  retryability flag. Ten synthetic dataset fixtures include expected verdicts;
+  they are test oracles only and do not assert real upstream dataset facts.
+- OpenAPI examples have stable names matching their fixture files and can be
+  selected in Prism with `Prefer: example=<example-name>`.
+- B1 must configure API Gateway GatewayResponses for `401`, `403`, `413`,
+  `429`, and `504` to return the shared `ErrorObject`; otherwise API Gateway
+  returns its default `{"message": ...}` body.

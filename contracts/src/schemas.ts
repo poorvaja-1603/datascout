@@ -222,6 +222,36 @@ export const ContractVersionsSchema = z
   })
   .strict();
 
+export const SearchOutcomeSchema = z.enum([
+  'results',
+  'clarification_needed',
+  'refused',
+]);
+
+export const ClarificationReasonCodeSchema = z.enum([
+  'missing_topic',
+  'too_vague',
+]);
+
+export const ClarificationSchema = z
+  .object({
+    reason_code: ClarificationReasonCodeSchema,
+    question: nonEmptyString,
+  })
+  .strict();
+
+export const RefusalReasonCodeSchema = z.enum([
+  'unsafe_request',
+  'out_of_scope',
+]);
+
+export const RefusalSchema = z
+  .object({
+    reason_code: RefusalReasonCodeSchema,
+    message: nonEmptyString,
+  })
+  .strict();
+
 export const SourceStatusSchema = z
   .object({
     source: nonEmptyString,
@@ -269,13 +299,152 @@ export const SearchRequestSchema = z
 export const SearchResponseSchema = z
   .object({
     request_id: nonEmptyString,
-    requirements: ExtractedRequirementsSchema,
+    outcome: SearchOutcomeSchema,
+    requirements: ExtractedRequirementsSchema.nullable(),
+    clarification: ClarificationSchema.optional(),
+    refusal: RefusalSchema.optional(),
     source_statuses: z.array(SourceStatusSchema),
     results: z.array(SearchResultSchema),
     warnings: textList,
     ...ContractVersionsSchema.shape,
   })
-  .strict();
+  .strict()
+  .superRefine((response, context) => {
+    if (response.outcome === 'results') {
+      if (response.requirements === null) {
+        context.addIssue({
+          code: 'custom',
+          path: ['requirements'],
+          message: 'Results outcome requires extracted requirements.',
+        });
+      }
+      if (response.clarification !== undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: ['clarification'],
+          message: 'Results outcome must not include clarification.',
+        });
+      }
+      if (response.refusal !== undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: ['refusal'],
+          message: 'Results outcome must not include refusal.',
+        });
+      }
+      if (response.results.length === 0 && response.warnings.length === 0) {
+        context.addIssue({
+          code: 'custom',
+          path: ['warnings'],
+          message: 'An empty results outcome must include a warning.',
+        });
+      }
+      return;
+    }
+
+    if (
+      response.source_statuses.length !== 0 ||
+      response.results.length !== 0
+    ) {
+      context.addIssue({
+        code: 'custom',
+        path: ['source_statuses'],
+        message:
+          'Clarification and refusal outcomes must not include source results.',
+      });
+    }
+    if (response.outcome === 'clarification_needed') {
+      if (
+        response.requirements === null ||
+        response.requirements.topic !== null
+      ) {
+        context.addIssue({
+          code: 'custom',
+          path: ['requirements'],
+          message:
+            'Clarification outcome requires extracted requirements with a null topic.',
+        });
+      }
+      if (response.clarification === undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: ['clarification'],
+          message: 'Clarification outcome requires a clarification question.',
+        });
+      }
+      if (response.refusal !== undefined) {
+        context.addIssue({
+          code: 'custom',
+          path: ['refusal'],
+          message: 'Clarification outcome must not include refusal.',
+        });
+      }
+      return;
+    }
+
+    if (response.requirements !== null) {
+      context.addIssue({
+        code: 'custom',
+        path: ['requirements'],
+        message: 'Refusal outcome requires null requirements.',
+      });
+    }
+    if (response.refusal === undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['refusal'],
+        message: 'Refusal outcome requires a refusal object.',
+      });
+    }
+    if (response.clarification !== undefined) {
+      context.addIssue({
+        code: 'custom',
+        path: ['clarification'],
+        message: 'Refusal outcome must not include clarification.',
+      });
+    }
+  });
+
+export const ErrorCodeSchema = z.enum([
+  'invalid_request',
+  'unauthorized',
+  'forbidden',
+  'not_found',
+  'payload_too_large',
+  'rate_limited',
+  'internal_error',
+  'extraction_failed',
+  'upstream_unavailable',
+  'timeout',
+]);
+
+export type ErrorCode = z.infer<typeof ErrorCodeSchema>;
+
+export const ERROR_HTTP_STATUS = {
+  invalid_request: 400,
+  unauthorized: 401,
+  forbidden: 403,
+  not_found: 404,
+  payload_too_large: 413,
+  rate_limited: 429,
+  internal_error: 500,
+  extraction_failed: 502,
+  upstream_unavailable: 503,
+  timeout: 504,
+} as const satisfies Record<ErrorCode, number>;
+
+export const ERROR_RETRYABLE = {
+  invalid_request: false,
+  unauthorized: false,
+  forbidden: false,
+  not_found: false,
+  payload_too_large: false,
+  rate_limited: true,
+  internal_error: false,
+  extraction_failed: true,
+  upstream_unavailable: true,
+  timeout: true,
+} as const satisfies Record<ErrorCode, boolean>;
 
 export const CompareRequestSchema = z
   .object({
@@ -335,13 +504,17 @@ export const DatasetDetailSchema = z
 
 export const ErrorObjectSchema = z
   .object({
-    code: nonEmptyString,
+    code: ErrorCodeSchema,
     message: nonEmptyString,
     request_id: nonEmptyString,
-    retryable: z.boolean().optional(),
+    retryable: z.boolean(),
     ...ContractVersionsSchema.shape,
   })
-  .strict();
+  .strict()
+  .refine((error) => error.retryable === ERROR_RETRYABLE[error.code], {
+    message: 'retryable does not match the error code.',
+    path: ['retryable'],
+  });
 
 export type ExtractedRequirements = z.infer<typeof ExtractedRequirementsSchema>;
 export type Requirement = z.infer<typeof RequirementSchema>;
@@ -351,6 +524,13 @@ export type Evidence = z.infer<typeof EvidenceSchema>;
 export type RequirementMatch = z.infer<typeof RequirementMatchSchema>;
 export type ScoreBreakdown = z.infer<typeof ScoreBreakdownSchema>;
 export type ContractVersions = z.infer<typeof ContractVersionsSchema>;
+export type SearchOutcome = z.infer<typeof SearchOutcomeSchema>;
+export type ClarificationReasonCode = z.infer<
+  typeof ClarificationReasonCodeSchema
+>;
+export type Clarification = z.infer<typeof ClarificationSchema>;
+export type RefusalReasonCode = z.infer<typeof RefusalReasonCodeSchema>;
+export type Refusal = z.infer<typeof RefusalSchema>;
 export type SourceStatus = z.infer<typeof SourceStatusSchema>;
 export type QualityCheck = z.infer<typeof QualityCheckSchema>;
 export type SearchResult = z.infer<typeof SearchResultSchema>;

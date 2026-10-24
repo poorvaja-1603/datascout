@@ -3,103 +3,136 @@
   "type": "object",
   "properties": {
     "request_id": { "type": "string", "minLength": 1 },
+    "outcome": {
+      "type": "string",
+      "enum": ["results", "clarification_needed", "refused"]
+    },
     "requirements": {
+      "anyOf": [
+        {
+          "type": "object",
+          "properties": {
+            "topic": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Trim surrounding whitespace before measuring length; maximum 200 characters."
+                },
+                { "type": "null" }
+              ]
+            },
+            "geography": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Trim surrounding whitespace before measuring length; maximum 200 characters."
+                },
+                { "type": "null" }
+              ]
+            },
+            "time_coverage": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Trim surrounding whitespace before measuring length; maximum 200 characters."
+                },
+                { "type": "null" }
+              ]
+            },
+            "minimum_records": {
+              "anyOf": [
+                { "type": "integer", "minimum": 1, "maximum": 1000000000 },
+                { "type": "null" }
+              ]
+            },
+            "required_features": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "description": "Trim surrounding whitespace before measuring length; maximum 100 characters."
+              },
+              "description": "Maximum 20 non-empty entries; reject rather than truncate."
+            },
+            "target": {
+              "anyOf": [
+                {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 200,
+                  "description": "Trim surrounding whitespace before measuring length; maximum 200 characters."
+                },
+                { "type": "null" }
+              ]
+            },
+            "preferences": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "description": "Trim surrounding whitespace before measuring length; maximum 100 characters."
+              },
+              "description": "Maximum 20 non-empty entries; reject rather than truncate."
+            },
+            "constraints": {
+              "maxItems": 20,
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100,
+                "description": "Trim surrounding whitespace before measuring length; maximum 100 characters."
+              },
+              "description": "Maximum 20 non-empty entries; reject rather than truncate."
+            }
+          },
+          "required": [
+            "topic",
+            "geography",
+            "time_coverage",
+            "minimum_records",
+            "required_features",
+            "target",
+            "preferences",
+            "constraints"
+          ],
+          "additionalProperties": false
+        },
+        { "type": "null" }
+      ]
+    },
+    "clarification": {
       "type": "object",
       "properties": {
-        "topic": {
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200,
-              "description": "Trim surrounding whitespace before measuring length; maximum 200 characters."
-            },
-            { "type": "null" }
-          ]
+        "reason_code": {
+          "type": "string",
+          "enum": ["missing_topic", "too_vague"]
         },
-        "geography": {
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200,
-              "description": "Trim surrounding whitespace before measuring length; maximum 200 characters."
-            },
-            { "type": "null" }
-          ]
-        },
-        "time_coverage": {
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200,
-              "description": "Trim surrounding whitespace before measuring length; maximum 200 characters."
-            },
-            { "type": "null" }
-          ]
-        },
-        "minimum_records": {
-          "anyOf": [
-            { "type": "integer", "minimum": 1, "maximum": 1000000000 },
-            { "type": "null" }
-          ]
-        },
-        "required_features": {
-          "maxItems": 20,
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100,
-            "description": "Trim surrounding whitespace before measuring length; maximum 100 characters."
-          },
-          "description": "Maximum 20 non-empty entries; reject rather than truncate."
-        },
-        "target": {
-          "anyOf": [
-            {
-              "type": "string",
-              "minLength": 1,
-              "maxLength": 200,
-              "description": "Trim surrounding whitespace before measuring length; maximum 200 characters."
-            },
-            { "type": "null" }
-          ]
-        },
-        "preferences": {
-          "maxItems": 20,
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100,
-            "description": "Trim surrounding whitespace before measuring length; maximum 100 characters."
-          },
-          "description": "Maximum 20 non-empty entries; reject rather than truncate."
-        },
-        "constraints": {
-          "maxItems": 20,
-          "type": "array",
-          "items": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 100,
-            "description": "Trim surrounding whitespace before measuring length; maximum 100 characters."
-          },
-          "description": "Maximum 20 non-empty entries; reject rather than truncate."
-        }
+        "question": { "type": "string", "minLength": 1 }
       },
-      "required": [
-        "topic",
-        "geography",
-        "time_coverage",
-        "minimum_records",
-        "required_features",
-        "target",
-        "preferences",
-        "constraints"
-      ],
+      "required": ["reason_code", "question"],
+      "additionalProperties": false
+    },
+    "refusal": {
+      "type": "object",
+      "properties": {
+        "reason_code": {
+          "type": "string",
+          "enum": ["unsafe_request", "out_of_scope"]
+        },
+        "message": { "type": "string", "minLength": 1 }
+      },
+      "required": ["reason_code", "message"],
       "additionalProperties": false
     },
     "source_statuses": {
@@ -301,6 +334,7 @@
   },
   "required": [
     "request_id",
+    "outcome",
     "requirements",
     "source_statuses",
     "results",

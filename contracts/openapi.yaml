@@ -33,7 +33,9 @@ paths:
         Extracts requirements from the query, searches enabled sources, and
         returns ranked results with evidence and deterministic score details.
         A source failure is reported as partial coverage where other sources
-        return results. The query is limited to 1,000 characters after trimming.
+        return results. If all required upstream sources fail, the request
+        returns 503 with `upstream_unavailable`. The query is limited to
+        1,000 characters after trimming.
       security:
         - cognito:
             - datascout-api/search
@@ -50,6 +52,22 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/SearchResponse'
+              examples:
+                search-results:
+                  summary: Search returned matching datasets.
+                  externalValue: ./fixtures/search-results.json
+                search-partial:
+                  summary: Search returned results while one source failed.
+                  externalValue: ./fixtures/search-partial.json
+                search-no-match:
+                  summary: Search completed without matching datasets.
+                  externalValue: ./fixtures/search-no-match.json
+                search-clarification:
+                  summary: Search needs a more specific topic.
+                  externalValue: ./fixtures/search-clarification.json
+                search-refused:
+                  summary: Search request was refused.
+                  externalValue: ./fixtures/search-refused.json
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -62,8 +80,12 @@ paths:
           $ref: '#/components/responses/TooManyRequests'
         '500':
           $ref: '#/components/responses/InternalError'
+        '502':
+          $ref: '#/components/responses/ExtractionFailed'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+        '504':
+          $ref: '#/components/responses/Timeout'
 
   /results/{request_id}:
     get:
@@ -205,6 +227,16 @@ components:
   schemas:
     ExtractedRequirements:
       $ref: ./json-schema/ExtractedRequirements.schema.json
+    SearchOutcome:
+      $ref: ./json-schema/SearchOutcome.schema.json
+    ClarificationReasonCode:
+      $ref: ./json-schema/ClarificationReasonCode.schema.json
+    Clarification:
+      $ref: ./json-schema/Clarification.schema.json
+    RefusalReasonCode:
+      $ref: ./json-schema/RefusalReasonCode.schema.json
+    Refusal:
+      $ref: ./json-schema/Refusal.schema.json
     RequirementType:
       $ref: ./json-schema/RequirementType.schema.json
     RequirementPriority:
@@ -255,6 +287,8 @@ components:
       $ref: ./json-schema/DatasetDetail.schema.json
     ErrorObject:
       $ref: ./json-schema/ErrorObject.schema.json
+    ErrorCode:
+      $ref: ./json-schema/ErrorCode.schema.json
 
   responses:
     BadRequest:
@@ -263,30 +297,50 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorObject'
+          examples:
+            error-invalid_request:
+              summary: Request is invalid.
+              externalValue: ./fixtures/errors/error-invalid_request.json
     Unauthorized:
       description: Missing, expired, malformed, or invalid Cognito access token.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorObject'
+          examples:
+            error-unauthorized:
+              summary: Authentication is required.
+              externalValue: ./fixtures/errors/error-unauthorized.json
     Forbidden:
       description: Cognito access token does not include the required route scope.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorObject'
+          examples:
+            error-forbidden:
+              summary: Caller lacks the route scope.
+              externalValue: ./fixtures/errors/error-forbidden.json
     NotFound:
       description: Resource does not exist, is expired, or is not owned by caller.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorObject'
+          examples:
+            error-not_found:
+              summary: Resource was not found.
+              externalValue: ./fixtures/errors/error-not_found.json
     ContentTooLarge:
       description: Request body exceeds a configured API Gateway limit.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorObject'
+          examples:
+            error-payload_too_large:
+              summary: Request body exceeds the size limit.
+              externalValue: ./fixtures/errors/error-payload_too_large.json
     TooManyRequests:
       description: Request was throttled.
       headers:
@@ -299,15 +353,47 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorObject'
+          examples:
+            error-rate_limited:
+              summary: Request was rate limited.
+              externalValue: ./fixtures/errors/error-rate_limited.json
     InternalError:
       description: Unexpected internal failure; details are not exposed.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorObject'
+          examples:
+            error-internal_error:
+              summary: Unexpected internal failure.
+              externalValue: ./fixtures/errors/error-internal_error.json
+    ExtractionFailed:
+      description: Requirement extraction failed after retries.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+          examples:
+            error-extraction_failed:
+              summary: Extraction failed.
+              externalValue: ./fixtures/errors/error-extraction_failed.json
     ServiceUnavailable:
       description: Required service is temporarily unavailable.
       content:
         application/json:
           schema:
             $ref: '#/components/schemas/ErrorObject'
+          examples:
+            error-upstream_unavailable:
+              summary: All required upstream services are unavailable.
+              externalValue: ./fixtures/errors/error-upstream_unavailable.json
+    Timeout:
+      description: Request processing exceeded its time limit.
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorObject'
+          examples:
+            error-timeout:
+              summary: Request timed out.
+              externalValue: ./fixtures/errors/error-timeout.json

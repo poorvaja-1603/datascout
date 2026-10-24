@@ -1,0 +1,35 @@
+{
+  "request_id": "fixture-search-no-match",
+  "outcome": "results",
+  "requirements": {
+    "topic": "crop yield",
+    "geography": "Maharashtra",
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": ["rainfall", "temperature"],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "source_statuses": [
+    {
+      "source": "datagovin",
+      "status": "success",
+      "result_count": 0,
+      "warning": null
+    },
+    {
+      "source": "huggingface",
+      "status": "success",
+      "result_count": 0,
+      "warning": null
+    }
+  ],
+  "results": [],
+  "warnings": ["No matching datasets were found in the available sources."],
+  "contract_version": "1.0.0",
+  "prompt_version": "extract-v1",
+  "schema_version": "1.0.0",
+  "scoring_version": "score-v1",
+  "model_id": "fake-datascout-v0.1"
+}

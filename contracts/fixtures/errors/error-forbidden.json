@@ -1,0 +1,11 @@
+{
+  "code": "forbidden",
+  "message": "The access token does not grant permission for this operation.",
+  "request_id": "fixture-error-forbidden",
+  "retryable": false,
+  "contract_version": "1.0.0",
+  "prompt_version": "not_applicable",
+  "schema_version": "1.0.0",
+  "scoring_version": "not_applicable",
+  "model_id": "not_applicable"
+}

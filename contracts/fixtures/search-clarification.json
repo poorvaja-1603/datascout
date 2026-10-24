@@ -1,0 +1,26 @@
+{
+  "request_id": "fixture-search-clarification",
+  "outcome": "clarification_needed",
+  "requirements": {
+    "topic": null,
+    "geography": null,
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": [],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "clarification": {
+    "reason_code": "too_vague",
+    "question": "What kind of dataset does your project need?"
+  },
+  "source_statuses": [],
+  "results": [],
+  "warnings": [],
+  "contract_version": "1.0.0",
+  "prompt_version": "extract-v1",
+  "schema_version": "1.0.0",
+  "scoring_version": "score-v1",
+  "model_id": "fake-datascout-v0.1"
+}

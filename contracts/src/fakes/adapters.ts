@@ -24,6 +24,7 @@ import type {
   Requirement,
 } from '../schemas.js';
 import type { SourceStatus } from '../schemas.js';
+import { createClarification } from '../response-templates.js';
 import { DEMO_EXTRACTION_CASES } from './fake-llm-client.js';
 
 function normalizeWhitespace(input: string): string {
@@ -174,7 +175,7 @@ function createDemoExtractionFixtures(): {
       requirements.topic === null
         ? {
             kind: 'clarification',
-            question: 'What kind of dataset does your project need?',
+            question: createClarification('too_vague').question,
           }
         : {
             kind: 'ok',

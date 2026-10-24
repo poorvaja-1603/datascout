@@ -1,0 +1,58 @@
+{
+  "request_id": "fixture-search-partial",
+  "outcome": "results",
+  "requirements": {
+    "topic": "air quality",
+    "geography": "Delhi",
+    "time_coverage": "2018-2023",
+    "minimum_records": 10000,
+    "required_features": ["PM2.5", "NO2"],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "source_statuses": [
+    {
+      "source": "huggingface",
+      "status": "success",
+      "result_count": 1,
+      "warning": null
+    },
+    {
+      "source": "datagovin",
+      "status": "failed",
+      "result_count": 0,
+      "warning": "The source could not be reached."
+    }
+  ],
+  "results": [
+    {
+      "dataset_id": "huggingface:datascout-fixtures/delhi-air-quality",
+      "score": 58,
+      "score_breakdown": {
+        "scoring_version": "score-v1",
+        "total": 58,
+        "components": [
+          { "name": "requirement_satisfaction", "weight": 50, "points": 30 },
+          { "name": "validation_access", "weight": 20, "points": 8 },
+          { "name": "metadata_completeness", "weight": 15, "points": 10 },
+          { "name": "license_source_clarity", "weight": 10, "points": 7 },
+          { "name": "freshness", "weight": 5, "points": 3 }
+        ],
+        "evidence_coverage": 0.6
+      },
+      "matches": [],
+      "evidence": [],
+      "quality_checks": [],
+      "verification_level": "metadata_only",
+      "warnings": ["One configured source failed; results may be incomplete."],
+      "explanation": null
+    }
+  ],
+  "warnings": ["One configured source failed; results may be incomplete."],
+  "contract_version": "1.0.0",
+  "prompt_version": "extract-v1",
+  "schema_version": "1.0.0",
+  "scoring_version": "score-v1",
+  "model_id": "fake-datascout-v0.1"
+}

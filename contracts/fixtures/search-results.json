@@ -1,0 +1,72 @@
+{
+  "request_id": "fixture-search-results",
+  "outcome": "results",
+  "requirements": {
+    "topic": "crop yield",
+    "geography": "Maharashtra",
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": ["rainfall", "temperature"],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "source_statuses": [
+    {
+      "source": "datagovin",
+      "status": "success",
+      "result_count": 1,
+      "warning": null
+    }
+  ],
+  "results": [
+    {
+      "dataset_id": "datagovin:fixture-crop-yield",
+      "score": 75,
+      "score_breakdown": {
+        "scoring_version": "score-v1",
+        "total": 75,
+        "components": [
+          { "name": "requirement_satisfaction", "weight": 50, "points": 40 },
+          { "name": "validation_access", "weight": 20, "points": 12 },
+          { "name": "metadata_completeness", "weight": 15, "points": 12 },
+          { "name": "license_source_clarity", "weight": 10, "points": 8 },
+          { "name": "freshness", "weight": 5, "points": 3 }
+        ],
+        "evidence_coverage": 1
+      },
+      "matches": [
+        {
+          "requirement_id": "fixture-rainfall",
+          "status": "PASS",
+          "reason": "The sample contains the rainfall_mm column.",
+          "evidence_ids": ["fixture-evidence-rainfall"],
+          "verification_level": "sample_checked",
+          "measured_value": "rainfall_mm"
+        }
+      ],
+      "evidence": [
+        {
+          "evidence_id": "fixture-evidence-rainfall",
+          "dataset_id": "datagovin:fixture-crop-yield",
+          "field": "columns",
+          "value": ["district", "year", "rainfall_mm", "temperature_c"],
+          "provenance": {
+            "source_field_path": "sample.header",
+            "retrieved_at": "2026-01-15T00:00:00Z"
+          }
+        }
+      ],
+      "quality_checks": [],
+      "verification_level": "sample_checked",
+      "warnings": [],
+      "explanation": "Sample-checked crop data includes rainfall measurements."
+    }
+  ],
+  "warnings": [],
+  "contract_version": "1.0.0",
+  "prompt_version": "extract-v1",
+  "schema_version": "1.0.0",
+  "scoring_version": "score-v1",
+  "model_id": "fake-datascout-v0.1"
+}
