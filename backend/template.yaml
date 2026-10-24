@@ -1,0 +1,346 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: DataScout MVP Backend - REST API, Cognito, DynamoDB, S3, and Lambdas
+
+Parameters:
+  Environment:
+    Type: String
+    Default: dev
+    AllowedValues: [dev, staging, prod]
+    Description: Deployment target environment.
+  CorsAllowedOrigin:
+    Type: String
+    Default: '*'
+    Description: Allowed CORS origin for the frontend application.
+  LogLevel:
+    Type: String
+    Default: INFO
+    AllowedValues: [DEBUG, INFO, WARN, ERROR]
+    Description: Logging severity level.
+
+Globals:
+  Function:
+    Runtime: nodejs22.x
+    Timeout: 30
+    MemorySize: 512
+    Tracing: Active
+    Environment:
+      Variables:
+        NODE_OPTIONS: --enable-source-maps
+        ENVIRONMENT: !Ref Environment
+        LOG_LEVEL: !Ref LogLevel
+        RESULTS_TABLE_NAME: !Ref ResultsTable
+        DATASETS_TABLE_NAME: !Ref DatasetsTable
+        SNAPSHOTS_BUCKET_NAME: !Ref SnapshotsBucket
+        CONTRACT_VERSION: 1.0.0
+        PROMPT_VERSION: extract-v1
+        SCHEMA_VERSION: 1.0.0
+        SCORING_VERSION: score-v1
+        MODEL_ID: bedrock-claude-haiku-v1
+
+Resources:
+  # ---------------------------------------------------------------------------
+  # Cognito User Pool, Resource Server, and App Client
+  # ---------------------------------------------------------------------------
+  CognitoUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: !Sub datascout-users-${Environment}
+      UsernameAttributes: [email]
+      AutoVerifiedAttributes: [email]
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: false
+          RequireUppercase: true
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+
+  CognitoResourceServer:
+    Type: AWS::Cognito::UserPoolResourceServer
+    Properties:
+      UserPoolId: !Ref CognitoUserPool
+      Identifier: datascout-api
+      Name: DataScout API
+      Scopes:
+        - ScopeName: search
+          ScopeDescription: Run project requirement extraction and dataset search
+        - ScopeName: read
+          ScopeDescription: Read cached search results and dataset details
+        - ScopeName: compare
+          ScopeDescription: Run side-by-side dataset comparisons
+
+  CognitoUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    DependsOn: CognitoResourceServer
+    Properties:
+      ClientName: !Sub datascout-web-client-${Environment}
+      UserPoolId: !Ref CognitoUserPool
+      GenerateSecret: false
+      AllowedOAuthFlows: [code]
+      AllowedOAuthFlowsUserPoolClient: true
+      AllowedOAuthScopes:
+        - openid
+        - email
+        - profile
+        - datascout-api/search
+        - datascout-api/read
+        - datascout-api/compare
+      SupportedIdentityProviders: [COGNITO]
+      CallbackURLs:
+        - http://localhost:3000
+        - http://localhost:5173
+      LogoutURLs:
+        - http://localhost:3000
+        - http://localhost:5173
+      ExplicitAuthFlows:
+        - ALLOW_USER_SRP_AUTH
+        - ALLOW_REFRESH_TOKEN_AUTH
+      PreventUserExistenceErrors: ENABLED
+
+  # ---------------------------------------------------------------------------
+  # API Gateway REST API with Cognito Authorizer & Gateway Responses
+  # ---------------------------------------------------------------------------
+  ApiGatewayApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: !Ref Environment
+      Name: !Sub datascout-api-${Environment}
+      Cors:
+        AllowOrigin: !Sub "'${CorsAllowedOrigin}'"
+        AllowHeaders: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+        AllowMethods: "'GET,POST,OPTIONS'"
+      Auth:
+        DefaultAuthorizer: CognitoAuthorizer
+        Authorizers:
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt CognitoUserPool.Arn
+            Identity:
+              Header: Authorization
+        AddDefaultAuthorizerToCorsPreflight: false
+      GatewayResponses:
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${CorsAllowedOrigin}'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+          ResponseTemplates:
+            application/json: '{"code":"unauthorized","message":"Authorization failed or missing credentials.","request_id":"$context.requestId","retryable":false}'
+        DEFAULT_5XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${CorsAllowedOrigin}'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+          ResponseTemplates:
+            application/json: '{"code":"internal_error","message":"An unexpected server error occurred.","request_id":"$context.requestId","retryable":true}'
+
+  # ---------------------------------------------------------------------------
+  # DynamoDB Storage
+  # ---------------------------------------------------------------------------
+  ResultsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub datascout-results-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+      TimeToLiveSpecification:
+        AttributeName: ttl
+        Enabled: true
+      SSESpecification:
+        SSEEnabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  DatasetsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub datascout-datasets-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: dataset_id
+          AttributeType: S
+      KeySchema:
+        - AttributeName: dataset_id
+          KeyType: HASH
+      SSESpecification:
+        SSEEnabled: true
+      PointInTimeRecoverySpecification:
+        PointInTimeRecoveryEnabled: true
+
+  # ---------------------------------------------------------------------------
+  # S3 Snapshot Storage
+  # ---------------------------------------------------------------------------
+  SnapshotsBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: !Sub datascout-snapshots-${AWS::AccountId}-${AWS::Region}-${Environment}
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      LifecycleConfiguration:
+        Rules:
+          - Id: ExpireOldSnapshots
+            Status: Enabled
+            ExpirationInDays: 30
+
+  # ---------------------------------------------------------------------------
+  # Lambda Functions
+  # ---------------------------------------------------------------------------
+  SearchFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/search.handler
+      Description: POST /search - Natural language requirement extraction and candidate search
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref ResultsTable
+        - DynamoDBReadPolicy:
+            TableName: !Ref DatasetsTable
+      Events:
+        Search:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /search
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+              AuthorizationScopes:
+                - datascout-api/search
+
+  ResultsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/results.handler
+      Description: GET /results/{request_id} - Owner-only cached search response retrieval
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref ResultsTable
+      Events:
+        Results:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /results/{request_id}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+              AuthorizationScopes:
+                - datascout-api/read
+
+  DatasetFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/dataset.handler
+      Description: GET /dataset/{dataset_id} - Normalized public dataset detail
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref DatasetsTable
+      Events:
+        Dataset:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /dataset/{dataset_id}
+            Method: get
+            Auth:
+              Authorizer: CognitoAuthorizer
+              AuthorizationScopes:
+                - datascout-api/read
+
+  CompareFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/compare.handler
+      Description: POST /compare - Side-by-side comparison of 2 to 4 datasets
+      Policies:
+        - DynamoDBReadPolicy:
+            TableName: !Ref DatasetsTable
+      Events:
+        Compare:
+          Type: Api
+          Properties:
+            RestApiId: !Ref ApiGatewayApi
+            Path: /compare
+            Method: post
+            Auth:
+              Authorizer: CognitoAuthorizer
+              AuthorizationScopes:
+                - datascout-api/compare
+
+  RefreshFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      CodeUri: ./
+      Handler: dist/handlers/refresh.handler
+      Description: Scheduled catalog harvest and indicator indexing
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref DatasetsTable
+        - S3CrudPolicy:
+            BucketName: !Ref SnapshotsBucket
+      Events:
+        DailySchedule:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+            Name: !Sub datascout-refresh-schedule-${Environment}
+            Description: Daily dataset catalog refresh trigger
+            Enabled: false
+
+Outputs:
+  ApiEndpoint:
+    Description: HTTP base URL for the deployed REST API
+    Value: !Sub https://${ApiGatewayApi}.execute-api.${AWS::Region}.amazonaws.com/${Environment}
+    Export:
+      Name: !Sub datascout-api-endpoint-${Environment}
+
+  CognitoUserPoolId:
+    Description: Cognito User Pool identifier
+    Value: !Ref CognitoUserPool
+    Export:
+      Name: !Sub datascout-user-pool-id-${Environment}
+
+  CognitoUserPoolClientId:
+    Description: Cognito User Pool Public App Client identifier
+    Value: !Ref CognitoUserPoolClient
+    Export:
+      Name: !Sub datascout-user-pool-client-id-${Environment}
+
+  CognitoUserPoolArn:
+    Description: Cognito User Pool ARN
+    Value: !GetAtt CognitoUserPool.Arn
+
+  ResultsTableName:
+    Description: DynamoDB Results and search cache table name
+    Value: !Ref ResultsTable
+
+  DatasetsTableName:
+    Description: DynamoDB Normalized dataset detail table name
+    Value: !Ref DatasetsTable
+
+  SnapshotsBucketName:
+    Description: S3 Snapshots and samples private bucket name
+    Value: !Ref SnapshotsBucket

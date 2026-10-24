@@ -1,0 +1,20 @@
+{
+  "output": {
+    "topic": "school attendance",
+    "geography": "Ghana",
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": [
+      "student age",
+      "attendance dates"
+    ],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

@@ -1,0 +1,20 @@
+{
+  "output": {
+    "topic": "earthquake events",
+    "geography": "Japan",
+    "time_coverage": "2005-2015",
+    "minimum_records": 1200,
+    "required_features": [
+      "magnitude",
+      "depth"
+    ],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

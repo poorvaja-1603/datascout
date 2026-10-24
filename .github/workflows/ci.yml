@@ -25,6 +25,8 @@ jobs:
           - "@datascout/ai"
           - "@datascout/verify"
           - "@datascout/observability"
+          - "@datascout/connectors"
+          - "@datascout/backend"
 
     steps:
       - uses: actions/checkout@v4

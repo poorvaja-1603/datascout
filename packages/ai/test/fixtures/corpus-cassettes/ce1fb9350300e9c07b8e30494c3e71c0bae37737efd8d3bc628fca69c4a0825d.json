@@ -1,0 +1,21 @@
+{
+  "output": {
+    "topic": "product reviews",
+    "geography": null,
+    "time_coverage": null,
+    "minimum_records": 300000,
+    "required_features": [
+      "review text",
+      "rating",
+      "product category"
+    ],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

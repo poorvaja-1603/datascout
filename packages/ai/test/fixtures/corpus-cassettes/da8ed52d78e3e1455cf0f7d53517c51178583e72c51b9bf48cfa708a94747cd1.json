@@ -1,0 +1,22 @@
+{
+  "output": {
+    "topic": "rainfall",
+    "geography": "India",
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": [
+      "district"
+    ],
+    "target": null,
+    "preferences": [
+      "dates",
+      "station identifiers"
+    ],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}
