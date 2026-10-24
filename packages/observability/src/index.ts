@@ -6,18 +6,15 @@ import {
   type LangfuseSpan,
 } from '@langfuse/tracing';
 import { NodeSDK } from '@opentelemetry/sdk-node';
-import { NoopTracer, type SpanHandle, type Tracer } from '@datascout/contracts';
+import {
+  NoopTracer,
+  redactSensitiveText,
+  type SpanHandle,
+  type Tracer,
+} from '@datascout/contracts';
 
 const SENSITIVE_KEY_PATTERN =
   /(?:access.?key|api.?key|authorization|cookie|credential|e-?mail|host|owner|password|process|prompt|query|secret|token|user.?id|user.?input)/i;
-const SENSITIVE_VALUE_PATTERNS = [
-  /\b[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}\b/gi,
-  /\bBearer\s+[A-Za-z0-9._~+/-]+=*/gi,
-  /\b(?:pk|sk)-lf-[A-Za-z0-9_-]+\b/gi,
-  /\bAKIA[0-9A-Z]{16}\b/g,
-  /\b(?:aws_secret_access_key|secret_access_key)\s*[:=]\s*[A-Za-z0-9/+=]+\b/gi,
-];
-
 export type LangfuseEnvironment = Readonly<Record<string, string | undefined>>;
 
 export interface LangfuseTracerOptions {
@@ -42,12 +39,7 @@ interface LangfuseRuntime {
 
 let runtime: LangfuseRuntime | undefined;
 
-export function redactSensitiveText(value: string): string {
-  return SENSITIVE_VALUE_PATTERNS.reduce(
-    (redacted, pattern) => redacted.replace(pattern, '[REDACTED]'),
-    value,
-  );
-}
+export { redactSensitiveText } from '@datascout/contracts';
 
 export function redactTelemetryValue(value: unknown): unknown {
   if (typeof value === 'string') return redactSensitiveText(value);

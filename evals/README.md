@@ -74,7 +74,7 @@ unmeasured quality rows. Do not use it to claim accuracy.
 
 ## Baseline status
 
-The shared extraction schema, extraction implementation, and Bedrock provider are present, but no live Bedrock run or model-quality baseline has been measured. See `BASELINE.md`; do not replace `NOT RUN` with invented or structure-only metrics.
+The shared extraction schema and implementation are present. The updated plan uses an external provider, but no provider has yet been selected/configured and no live model-quality baseline has been measured. See `BASELINE.md`; do not replace `NOT RUN` with invented or structure-only metrics.
 
 ## Langfuse status and redaction
 
@@ -88,4 +88,4 @@ Before transmitting data to Langfuse:
 - Treat all redaction as a pre-export application responsibility; verify it with tests before enabling trace delivery.
 - Configure separate development and production projects/environments and least-privilege keys. Keep runtime trace delivery optional so Langfuse outages cannot fail searches.
 
-These are required setup controls, not evidence that trace delivery or application-side redaction has been tested. Application-side pre-export redaction must be implemented and verified before any trace can be considered production-ready.
+These are required setup controls. Unit tests cover the application redaction patterns, but do not prove every possible secret or personally identifying value will be caught. The smoke trace verifies telemetry delivery only; no production application traffic has been traced.

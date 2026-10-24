@@ -4,7 +4,7 @@
 
 DataScout helps students, researchers, and developers find public datasets that fit a data science or machine-learning project. A user describes the need in natural language; the product searches multiple sources and returns ranked candidates with requirement-level evidence, validation notes, access guidance, starter code, and next steps.
 
-The product differentiator is transparent verification. Bedrock interprets the request and can phrase evidence-based guidance. Deterministic application logic validates dataset evidence, assigns requirement verdicts, and calculates suitability scores.
+The product differentiator is transparent verification. Gemini interprets the request and can phrase evidence-based guidance; Ollama supports local development. Deterministic application logic validates dataset evidence, assigns requirement verdicts, and calculates suitability scores. The Learner Lab role does not permit Bedrock, so deployed hosted model calls use Gemini with redaction and data-egress controls.
 
 ## MVP Users and Workflow
 
@@ -43,11 +43,11 @@ Use the **Brutalist x Tactile** visual direction: strong typography, crisp borde
 - Amazon API Gateway: REST API entry point and API protection controls.
 - Amazon Cognito: verified user sign-up/sign-in and access token issuer for API authorization.
 - AWS Lambda: API orchestration, source adapters, validation/scoring, and scheduled refresh.
-- Amazon Bedrock: requirement extraction and evidence-grounded explanations/guidance.
+- External hosted LLM API, selected through the provider-agnostic client in `docs/plan.md` decision D1; never used to assign verdicts or scores.
 - Amazon DynamoDB: normalized dataset details and search-result cache.
 - Amazon S3: private metadata snapshots and permitted bounded samples/artifacts.
 - Amazon EventBridge: bounded, idempotent catalog refresh trigger.
-- Langfuse: external LLM tracing and evaluation; redact/minimize data before export. Langfuse failure must not fail search.
+- Langfuse: one hosted project for redacted LLM tracing and evaluation; redact/minimize data before export. Langfuse failure must not fail search.
 
 ## Safety, Privacy, and Quality
 

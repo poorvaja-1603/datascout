@@ -169,29 +169,26 @@ export function matchRequirement(
         supportingEvidence,
       );
     }
-    if (measured !== expected) {
-      const definitive = positiveVerificationLevels.has(
-        dataset.verification_level,
-      );
+    const verified = positiveVerificationLevels.has(dataset.verification_level);
+    if (measured < expected) {
       return makeVerdict(
         requirement,
         dataset,
-        definitive ? 'FAIL' : 'UNKNOWN',
-        definitive
-          ? 'The inspected record count does not exactly match the requested value.'
-          : 'Metadata record counts do not establish an exact match.',
+        verified ? 'FAIL' : 'UNKNOWN',
+        verified
+          ? 'The inspected record count is below the requested minimum.'
+          : 'The metadata count is below the requested minimum, but has not been verified by inspection.',
         supportingEvidence,
         measured,
       );
     }
-    const verified = positiveVerificationLevels.has(dataset.verification_level);
     return makeVerdict(
       requirement,
       dataset,
       verified ? 'PASS' : 'PARTIAL',
       verified
-        ? 'The inspected record count exactly matches the requested value.'
-        : 'Metadata reports the requested record count, but the dataset was not inspected.',
+        ? 'The inspected record count meets the requested minimum.'
+        : 'Metadata reports at least the requested record count, but the dataset was not inspected.',
       supportingEvidence,
       measured,
     );
