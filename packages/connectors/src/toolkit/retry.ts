@@ -52,7 +52,7 @@ export function isTransientStatus(status: number): boolean {
  * completed delay for the caller — the caller is responsible for checking
  * signal.aborted after the sleep.
  */
-function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
+export function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
   return new Promise<void>((resolve) => {
     if (signal?.aborted) {
       resolve();

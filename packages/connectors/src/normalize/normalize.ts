@@ -156,7 +156,7 @@ export function normalizeDataset(
       retrieved_at: timestamp,
     };
   }
-  if (license !== null) {
+  if (rawLicense !== null) {
     provenance['license'] = {
       source_field_path: fieldPaths['license'] ?? 'license',
       retrieved_at: timestamp,
