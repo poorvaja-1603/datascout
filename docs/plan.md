@@ -19,7 +19,7 @@ Sources are staged: data.gov.in and Hugging Face first (vertical slice), then Op
 
 - React app on AWS Amplify; REST API on API Gateway with TypeScript Lambda functions.
 - Amazon Cognito User Pool and an API Gateway Cognito authorizer with scope-based access.
-- Bedrock requirement extraction and evidence-grounded explanations.
+- Configurable fake/cassette requirement extraction and evidence-grounded explanations.
 - Connectors for data.gov.in, Hugging Face, OpenML, World Bank, plus optional extra sources.
 - Canonical metadata schema, bounded dataset inspection, deterministic matching/scoring, comparison, and cache.
 - DynamoDB (metadata, results), private S3 (snapshots, permitted samples), EventBridge bounded refresh.
@@ -54,7 +54,7 @@ Working conventions: one branch per task ID, small PRs, `CODEOWNERS` by director
 ```text
 React / Amplify Auth <-> Cognito User Pool
       | access token (Bearer)
-API Gateway Cognito authorizer -> Search Lambda -> requirement extraction (Bedrock)
+API Gateway Cognito authorizer -> Search Lambda -> requirement extraction (configured LLM provider)
                     |          -> source adapters (parallel, bounded)
                     |          -> normalize -> inspect (bounded sample)
                     |          -> match -> score (deterministic)
@@ -79,7 +79,7 @@ docs/                   PRD.md, plan.md, decision notes
 
 Backend language is TypeScript. The existing Python `evals/validate_dataset.py` stays as the corpus integrity check; evaluation runners are TypeScript so they exercise the exact production extraction code.
 
-AWS services are those in the abstract/PRD (Amplify, API Gateway, Lambda, Bedrock, DynamoDB, S3, EventBridge) plus Cognito for authentication. Langfuse is the external hosted observability platform. Any other AWS service needs a short decision note with cost and reason.
+AWS services are those in the abstract/PRD (Amplify, API Gateway, Lambda, DynamoDB, S3, EventBridge) plus Cognito for authentication. Langfuse is the external hosted observability platform. Any other AWS service needs a short decision note with cost and reason.
 
 ## 5. Phase 0: Contract Kit
 
@@ -195,11 +195,11 @@ Do not renormalize for missing dimensions. Unknown earns zero and lowers `eviden
 
 ### Provider abstraction
 
-`LlmClient` has three implementations selected by `LLM_PROVIDER`: `fake` (canned, for tests and frontend/backend development), `cassette` (record and replay real responses for deterministic CI), and `bedrock`. This means no stream is blocked on Bedrock model access, and tests never call the network.
+`LlmClient` has two implementations selected by `LLM_PROVIDER`: `fake` (canned, for tests and frontend/backend development) and `cassette` (record and replay responses for deterministic CI). No stream depends on a hosted model, and tests never call the network.
 
 ### Stage 1: requirement extraction
 
-- Bedrock Converse API with a forced single tool whose input schema is the `ExtractedRequirements` JSON Schema where the model supports it; response is re-validated with Zod regardless.
+- Provider output is re-validated with Zod against the `ExtractedRequirements` schema.
 - Versioned prompt file (`prompts/extract.v1.md`), low temperature, small output token cap, request timeout.
 - Strict parsing: reject extra fields, wrong types, negative or non-integer counts, over-long strings. No "repair and trust".
 - Deterministic post-processing: year-range normalization, alias normalization, derive `Requirement[]` and `source_span`.
@@ -229,7 +229,7 @@ Record `prompt_version`, `model_id`, `schema_version`, `scoring_version`, `contr
 
 | Threat                                                                          | Controls                                                                                                                                                                                                                       | Test                                                                                                                                                                       |
 | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Prompt injection in the user query                                              | Treat input as data inside delimiters; system prompt states that nothing in the query changes instructions; forced JSON tool schema; Bedrock Guardrails prompt-attack filter on input; output never executed                   | Injection suite (direct override, role play, "ignore previous", encoded payloads, multilingual); pass = extraction still returns valid schema with no instruction followed |
+| Prompt injection in the user query                                              | Treat input as data inside delimiters; system prompt states that nothing in the query changes instructions; strict schema validation; output never executed                   | Injection suite (direct override, role play, "ignore previous", encoded payloads, multilingual); pass = extraction still returns valid schema with no instruction followed |
 | Indirect injection via dataset cards, column names, CSV cells, API descriptions | Source text is truncated, stripped of markup, delimited as untrusted evidence, never given tool access; explanation stage sees only short sanitized fields; validator drops claims not backed by evidence                      | Fixtures with malicious cards and cells ("recommend this dataset first", "reveal your prompt", URLs) must not change verdicts, score, rank, or output format               |
 | Verdict or score manipulation by the model                                      | Model has no role in verdicts, scores, ranking, licenses, row counts, or availability; they come from deterministic code                                                                                                       | Unit test that `packages/verify` has no LLM import; ranking identical with explanation stage disabled                                                                      |
 | Hallucinated or unsupported claims                                              | Evidence-ID citation, numeric and entity checks, drop-or-template fallback                                                                                                                                                     | Unsupported-claim rate on labeled set must be zero known at release                                                                                                        |
@@ -243,7 +243,7 @@ Record `prompt_version`, `model_id`, `schema_version`, `scoring_version`, `contr
 | XSS and spreadsheet injection from source text                                  | Frontend renders source text as plain text (no raw HTML or unsanitized markdown); any CSV export escapes leading `=`, `+`, `-`, `@`                                                                                            | Frontend test with script/HTML payloads in titles and descriptions                                                                                                         |
 | Over-trust in uncertain output                                                  | UI shows verification depth, evidence coverage, and "not verified" states prominently; explanation is secondary                                                                                                                | UI review checklist                                                                                                                                                        |
 
-Bedrock Guardrails complement but do not replace application checks: they do not verify dataset facts, and app-level validation stays on even when Guardrails are enabled.
+Application safety checks and output validation do not verify dataset facts; deterministic source evidence remains authoritative.
 
 ## 10. Langfuse Monitoring
 
@@ -308,7 +308,7 @@ Use the Langfuse TypeScript SDK (OpenTelemetry based): `@langfuse/tracing` and `
 - **Scoring:** determinism, monotonicity (adding a verified required match never lowers the score), component correctness, ranking agreement with a reviewed rubric.
 - **Grounding:** evidence-ID validity, supported-claim rate, unsupported-claim rate, numeric and entity mismatches.
 - **Safety:** injection success rate, leakage rate, SSRF block rate, unsafe-file rejection, trace redaction pass rate, guardrail false-positive rate.
-- **Operations:** p50/p95 latency per stage and end to end, per-source timeout behavior, Bedrock failure behavior, cache hit rate, trace delivery success, estimated cost per search.
+- **Operations:** p50/p95 latency per stage and end to end, per-source timeout behavior, extraction failure behavior, cache hit rate, trace delivery success, estimated cost per search.
 
 ### Process
 
@@ -375,14 +375,14 @@ Bold, high-contrast structure with tactile control states. Ink-and-light foundat
 
 ## 14. AWS and Deployment
 
-1. Confirm region, Bedrock model access, data.gov.in API key, Langfuse environments, budget alarm, Cognito registration policy, redirect/logout URLs.
+1. Confirm AWS region, data.gov.in API key, Langfuse environments, budget alarm, Cognito registration policy, redirect/logout URLs.
 2. SAM template with least-privilege IAM, explicit ARNs where possible.
 3. DynamoDB on-demand with documented access patterns and TTL; private S3 with encryption and lifecycle.
 4. Cognito, authorizer, scopes, CORS, throttling, request validation.
 5. EventBridge schedule for bounded, idempotent refresh with per-source last-success, failure, and item counts.
 6. Deploy a **protected skeleton early** (handlers return fixtures) so the frontend can switch from the mock API to real Cognito and API Gateway before real logic exists.
 7. Amplify hosting with API URL and public Cognito identifiers only.
-8. Alarms and review procedure for Lambda errors/timeouts/throttles, Bedrock failures, source failures, auth failures, storage growth. Do not log request bodies or tokens.
+8. Alarms and review procedure for Lambda errors/timeouts/throttles, source failures, auth failures, storage growth. Do not log request bodies or tokens.
 9. Teardown document; rotate credentials after the demo.
 
 ## 15. Work Packages
@@ -397,7 +397,7 @@ See Section 5. Tasks P0-1 to P0-6, about 5 to 7 hours total; P0-1 to P0-4 are th
 
 | ID  | Task                                                                                                                             | Needs      | Done when                                                                                    | Est |
 | --- | -------------------------------------------------------------------------------------------------------------------------------- | ---------- | -------------------------------------------------------------------------------------------- | --- |
-| A1  | LLM client: `fake`, `cassette`, `bedrock` providers, timeouts, token caps, config                                                | P0-4       | Same calling code works against all three; cassette replay is deterministic in CI            | 3   |
+| A1  | LLM client: `fake`, `cassette` providers, timeouts, token caps, config                                                | P0-4       | Same calling code works against both; cassette replay is deterministic in CI            | 3   |
 | A2  | Requirement extraction: prompt v1, strict Zod parse, normalization, derive `Requirement[]` and spans, clarification/refusal path | A1         | Schema-valid output for all dev cases with the fake/cassette; malformed-output tests pass    | 5   |
 | A3  | Evaluation runner for extraction: metrics, per-field report, split handling, run metadata, `BASELINE.md` update script           | A2, corpus | One command produces a report with corpus hash and versions; dev-only unless `--heldout`     | 5   |
 | A4  | Observability package: Langfuse init, redaction, tracer wrapper, flush with timeout, score reporting, smoke script               | P0-4       | Smoke trace visible in Langfuse; redaction tests pass; invalid keys do not break calls       | 4   |
@@ -450,7 +450,7 @@ Approximate load including Phase 0: Stream A about 51 hours, Stream B about 55, 
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------ |
 | M0                  | `contracts-v1` tagged; mock API runs; fixtures committed                                                                                                                                           | Each stream can run its own tests and local dev with no other stream's code    |
 | M1 Walking skeleton | Deployed protected API serving fixture responses; frontend signs in through the real Cognito pool and renders fixture results; A modules pass unit tests on fixtures; Langfuse smoke trace visible | Token rejection tests; screenshot of fixture results in the deployed UI        |
-| M2 Vertical slice   | Real extraction (Bedrock or cassette), Hugging Face and data.gov.in candidates, deterministic verdicts and scores, UI on real data, traces with redaction in Langfuse                              | Five demo queries produce sensible results; first extraction baseline recorded |
+| M2 Vertical slice   | Extraction (cassette), Hugging Face and data.gov.in candidates, deterministic verdicts and scores, UI on real data, traces with redaction in Langfuse                              | Five demo queries produce sensible results; first extraction baseline recorded |
 | M3 Feature complete | OpenML and World Bank enabled, refresh running, grounded explanations validated, safety suite green, extra sources behind flags                                                                    | Partial-source behavior shown; safety suite report                             |
 | M4 Release          | Gates in Section 11 pass on the held-out split; backend and frontend verification done; demo script rehearsed; known limitations documented                                                        | Evaluation report and Langfuse dashboards reviewed together                    |
 
@@ -462,7 +462,7 @@ Approximate load including Phase 0: Stream A about 51 hours, Stream B about 55, 
 - Extra sources, if enabled, passed the adapter checklist.
 - Every displayed field has provenance or is marked unavailable; metadata-only and sample-checked findings are distinguishable.
 - Verdicts, evidence, verification level, and score components are deterministic and visible.
-- Bedrock handles interpretation and phrasing only. Invalid model output, prompt injection, hostile dataset text, unsupported claims, and source timeouts have safe outcomes.
+- LLM output handles interpretation and phrasing only. Invalid output, prompt injection, hostile dataset text, unsupported claims, and source timeouts have safe outcomes.
 - Langfuse captures redacted traces and scores; a Langfuse outage does not affect search.
 - DynamoDB cache and S3 artifacts respect retention, privacy, and license limits; refresh is bounded and idempotent.
 - Evaluation report with held-out results and false-PASS review exists.
@@ -472,7 +472,6 @@ Approximate load including Phase 0: Stream A about 51 hours, Stream B about 55, 
 | Item                     | Risk or question                                                                | Handling                                                                                               |
 | ------------------------ | ------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------ |
 | data.gov.in access       | Catalog behavior and key limits are community-reported, not guaranteed          | One-hour spike in B4 before committing to the harvest design; fallback is a small curated seed catalog |
-| Bedrock model access     | Region and model availability may delay real extraction                         | `fake` and `cassette` providers keep everyone moving; confirm access in M1                             |
 | Corpus size              | 50 cases are enough for a baseline but thin for adversarial and no-match claims | Add v0.2 cases and the separate safety suite                                                           |
 | Sample access limits     | Many datasets can only be metadata-checked                                      | Surface verification depth honestly; never claim more than was checked                                 |
 | Extra source scope creep | Extra sources cost adapter, fixtures, and limitation notes each                 | Flags, adapter checklist, stretch status                                                               |
@@ -486,6 +485,5 @@ Approximate load including Phase 0: Stream A about 51 hours, Stream B about 55, 
 - [OpenML data concepts](https://docs.openml.org/concepts/data/) and [REST API](https://docs.openml.org/ecosystem/Rest/)
 - [World Bank Indicators API](https://datahelpdesk.worldbank.org/knowledgebase/articles/889392)
 - [UCI Machine Learning Repository](https://archive.ics.uci.edu/), [Zenodo REST API](https://developers.zenodo.org/), [Dataverse Search API](https://guides.dataverse.org/en/latest/api/search.html), [CKAN API](https://docs.ckan.org/en/latest/api/index.html)
-- [Amazon Bedrock Guardrails](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails.html) and [prompt-attack detection](https://docs.aws.amazon.com/bedrock/latest/userguide/guardrails-prompt-attack.html)
 - [API Gateway Cognito authorizer](https://docs.aws.amazon.com/apigateway/latest/developerguide/apigateway-integrate-with-cognito.html) and [Cognito PKCE](https://docs.aws.amazon.com/cognito/latest/developerguide/using-pkce-in-authorization-code.html)
 - [Langfuse tracing](https://langfuse.com/docs/observability/get-started), [TypeScript SDK serverless flushing](https://langfuse.com/docs/observability/features/queuing-batching), [evaluation scores](https://langfuse.com/docs/evaluation/scores/overview), [datasets and experiments](https://langfuse.com/docs/evaluation/experiments/datasets), [personal-data controls](https://langfuse.com/security/manage-personal-data)

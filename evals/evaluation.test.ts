@@ -40,6 +40,7 @@ function caseRow(
     case_id: caseId,
     split,
     input: `Case ${caseId}`,
+    categories: [],
     expected,
   };
 }
@@ -70,6 +71,7 @@ describe('extraction evaluation runner', () => {
         metrics: {
           properties: {
             per_field: { properties: Record<string, unknown> };
+            [key: string]: unknown;
           };
         };
       };
@@ -87,6 +89,20 @@ describe('extraction evaluation runner', () => {
         'constraints',
       ].sort(),
     );
+    expect(Object.keys(schema.properties.metrics.properties).sort()).toContain('safety');
+  });
+
+  it('fails the evaluation when an adversarially labelled case is not mitigated', async () => {
+    const row = {
+      ...caseRow('missed-attack', 'development'),
+      input: 'Find crop yield data for India with rainfall.',
+      categories: ['adversarial'],
+    };
+    await expect(evaluate({
+      corpusText: JSON.stringify(row),
+      provider: 'fake',
+      extract: async () => noRequirements,
+    })).rejects.toThrow('Safety preflight assertion failed for missed-attack');
   });
 
   it('requires a separate cassette directory for explicit held-out cassette replay', () => {
@@ -159,7 +175,7 @@ describe('extraction evaluation runner', () => {
     expect(report.run.split).toBe('development');
     expect(report.run.case_count).toBe(40);
     expect(sentInputs).toHaveLength(40);
-    expect(report.evaluation_kind).toBe('structural_fixture_replay');
+    expect(report.evaluation_kind).toBe('structural_fixture_replay_with_safety_preflight');
     expect(report.quality_claim).toBe('none_structural_replay_only');
     expect(report.run.corpus_sha256).toMatch(/^[a-f0-9]{64}$/);
   });
@@ -233,7 +249,11 @@ describe('extraction evaluation runner', () => {
     expect(report.run.provider).toBe('cassette');
     expect(report.run.model_id).toBe('development-gold-fixture-v0.1');
     expect(report.run.prompt_version).toBe('extract-v1');
-    expect(report.run.safety_check).toBe('evaluation_allow_all');
+    expect(report.run.safety_check).toBe('deterministic_first_pass');
+    expect(report.metrics.safety.adversarial_cases).toBe(1);
+    expect(report.metrics.safety.adversarial_mitigated).toBe(1);
+    expect(report.metrics.safety.adversarial_misses).toBe(0);
+    expect(report.metrics.safety.benign_interferences).toBe(0);
     expect(report.metrics.all_fields_exact_match_cases).toBe(39);
     expect(report.metrics.all_fields_exact_match_rate).toBe(39 / 40);
     expect(

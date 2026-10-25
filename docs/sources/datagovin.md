@@ -22,7 +22,7 @@
 1. **Credential Requirement**:
    * The catalog list endpoint is accessible without an API key, but resource row sampling requires a registered OGD API key.
    * Provided via `DATAGOVIN_API_KEY` environment variable or injected through connector options.
-   * If no API key is provided, `search` marks the source status as `disabled`.
+   * A missing API key does not disable local search over the harvested public catalog. It only blocks resource detail and row-sample requests; sample verification is then reported as unavailable.
 2. **Query String Redaction**:
    * The API key must be transmitted in the query string (`?api-key=...`).
    * Every URL, log line, error message, and exception thrown by the connector passes through the redaction helper (`redactUrl`, `redactErrorMessage`).

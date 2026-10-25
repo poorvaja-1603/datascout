@@ -26,23 +26,49 @@ export const DEFAULT_ERROR_VERSIONS: ContractVersions = {
   model_id: 'not_applicable',
 };
 
+function isLocalOrTestEnvironment(): boolean {
+  return (
+    process.env.ENVIRONMENT === 'local' ||
+    process.env.NODE_ENV === 'test' ||
+    process.env.VITEST === 'true' ||
+    Boolean(process.env.VITEST)
+  );
+}
+
 export function extractContextInfo(event: APIGatewayProxyEvent): RequestContextInfo {
   const requestId =
     event.requestContext?.requestId ||
     (event.headers?.['x-request-id'] as string) ||
     randomUUID();
 
-  const claims = (event.requestContext?.authorizer as Record<string, any>)?.claims;
-  const sub =
-    claims?.sub ||
-    (event.headers?.['x-user-sub'] as string) ||
-    null;
+  const authorizer = event.requestContext?.authorizer as
+    | Record<string, unknown>
+    | undefined;
+  const claims = authorizer?.claims as Record<string, unknown> | undefined;
 
-  const scopeHeader =
-    claims?.scope ||
-    (event.headers?.['x-token-scopes'] as string) ||
-    '';
-  const scopes = scopeHeader.split(' ').map((s: string) => s.trim()).filter(Boolean);
+  let sub: string | null = null;
+  if (typeof claims?.sub === 'string' && claims.sub.trim().length > 0) {
+    sub = claims.sub.trim();
+  } else if (
+    isLocalOrTestEnvironment() &&
+    typeof event.headers?.['x-user-sub'] === 'string'
+  ) {
+    sub = event.headers['x-user-sub'].trim() || null;
+  }
+
+  let scopeHeader = '';
+  if (typeof claims?.scope === 'string') {
+    scopeHeader = claims.scope;
+  } else if (
+    isLocalOrTestEnvironment() &&
+    typeof event.headers?.['x-token-scopes'] === 'string'
+  ) {
+    scopeHeader = event.headers['x-token-scopes'];
+  }
+  const scopes = scopeHeader
+    .split(' ')
+    .map((s: string) => s.trim())
+    .filter(Boolean);
 
   return { requestId, sub, scopes };
 }

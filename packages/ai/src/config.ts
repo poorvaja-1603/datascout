@@ -1,12 +1,11 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-export type LlmProvider = 'fake' | 'cassette' | 'bedrock';
+export type LlmProvider = 'fake' | 'cassette';
 
 export interface LlmConfig {
   provider: LlmProvider;
   modelId: string;
-  region?: string;
   cassetteDirectory: string;
   timeoutMs: number;
   maxOutputTokens: number;
@@ -50,10 +49,9 @@ export function loadLlmConfig(env: LlmEnvironment = process.env): LlmConfig {
   const provider = (env.LLM_PROVIDER ?? 'fake').trim();
   if (
     provider !== 'fake' &&
-    provider !== 'cassette' &&
-    provider !== 'bedrock'
+    provider !== 'cassette'
   ) {
-    throw new TypeError('LLM_PROVIDER must be fake, cassette, or bedrock.');
+    throw new TypeError('LLM_PROVIDER must be fake or cassette.');
   }
 
   const timeoutMs = parseInteger(
@@ -73,28 +71,9 @@ export function loadLlmConfig(env: LlmEnvironment = process.env): LlmConfig {
   const cassetteDirectory =
     env.LLM_CASSETTE_DIR?.trim() || DEFAULT_CASSETTE_DIRECTORY;
 
-  if (provider === 'bedrock') {
-    const region = env.AWS_REGION?.trim();
-    const modelId = env.BEDROCK_MODEL_ID?.trim();
-    if (!region) throw new TypeError('AWS_REGION is required for bedrock.');
-    if (!modelId) {
-      throw new TypeError('BEDROCK_MODEL_ID is required for bedrock.');
-    }
-    return {
-      provider,
-      region,
-      modelId,
-      cassetteDirectory,
-      timeoutMs,
-      maxOutputTokens,
-    };
-  }
-
   return {
     provider,
-    modelId:
-      env.BEDROCK_MODEL_ID?.trim() ||
-      (provider === 'fake' ? 'fake-datascout-v0.1' : 'cassette-datascout-v1'),
+    modelId: provider === 'fake' ? 'fake-datascout-v0.1' : 'cassette-datascout-v1',
     cassetteDirectory,
     timeoutMs,
     maxOutputTokens,

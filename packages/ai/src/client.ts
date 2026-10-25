@@ -2,12 +2,6 @@ import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import {
-  BedrockRuntimeClient,
-  ConverseCommand,
-  type ConverseCommandOutput,
-  type ConverseCommandInput,
-} from '@aws-sdk/client-bedrock-runtime';
-import {
   DATASCOUT_ERROR_CODES,
   DataScoutError,
   FakeLlmClient,
@@ -27,14 +21,6 @@ interface Cassette {
   usage: { inputTokens: number; outputTokens: number };
 }
 
-type JsonDocument =
-  | null
-  | boolean
-  | number
-  | string
-  | JsonDocument[]
-  | { [key: string]: JsonDocument };
-
 interface JsonLlmClientOptions {
   provider: LlmClient['provider'];
   modelId: string;
@@ -45,16 +31,9 @@ interface JsonLlmClientOptions {
   ) => Promise<Omit<LlmJsonResponse, 'latencyMs'>>;
 }
 
-export interface LlmClientDependencies {
-  sendBedrock?: (
-    command: ConverseCommand,
-    signal: AbortSignal,
-  ) => Promise<ConverseCommandOutput>;
-}
-
 function assertConfig(config: LlmConfig): void {
   if (
-    !['fake', 'cassette', 'bedrock'].includes(config.provider) ||
+    !['fake', 'cassette'].includes(config.provider) ||
     !Number.isSafeInteger(config.timeoutMs) ||
     config.timeoutMs < 1 ||
     config.timeoutMs > 300_000 ||
@@ -65,14 +44,6 @@ function assertConfig(config: LlmConfig): void {
   ) {
     throw new TypeError(
       'LLM configuration contains invalid limits or model ID.',
-    );
-  }
-  if (
-    config.provider === 'bedrock' &&
-    (!config.region?.trim() || !config.modelId.trim())
-  ) {
-    throw new TypeError(
-      'Bedrock configuration requires AWS region and model ID.',
     );
   }
   if (!config.cassetteDirectory.trim()) {
@@ -317,107 +288,8 @@ function createCassetteClient(config: LlmConfig): LlmClient {
   });
 }
 
-function bedrockError(error: unknown): DataScoutError {
-  const name =
-    typeof error === 'object' && error !== null && 'name' in error
-      ? String(error.name)
-      : '';
-  if (
-    name === 'ThrottlingException' ||
-    name === 'TooManyRequestsException' ||
-    name === 'ServiceQuotaExceededException'
-  ) {
-    return new DataScoutError(
-      DATASCOUT_ERROR_CODES.llmThrottled,
-      'The LLM provider is rate limiting requests.',
-    );
-  }
-  if (
-    name === 'ServiceUnavailableException' ||
-    name === 'InternalServerException' ||
-    name === 'ModelNotReadyException'
-  ) {
-    return new DataScoutError(
-      'upstream_unavailable',
-      'The LLM provider is temporarily unavailable.',
-    );
-  }
-  return new DataScoutError(
-    'extraction_failed',
-    'The LLM provider could not complete the request.',
-  );
-}
-
-function createBedrockClient(
-  config: LlmConfig,
-  dependencies: LlmClientDependencies,
-): LlmClient {
-  const runtime = new BedrockRuntimeClient({ region: config.region! });
-  const send =
-    dependencies.sendBedrock ??
-    ((command: ConverseCommand, signal: AbortSignal) =>
-      runtime.send(command, { abortSignal: signal }));
-  return new ConfiguredLlmClient({
-    provider: 'bedrock',
-    modelId: config.modelId,
-    config,
-    invoke: async (req, signal) => {
-      const input: ConverseCommandInput = {
-        modelId: config.modelId,
-        system: [{ text: req.system }],
-        messages: [{ role: 'user', content: [{ text: req.user }] }],
-        inferenceConfig: {
-          maxTokens: req.maxOutputTokens,
-          temperature: 0.1,
-        },
-        toolConfig: {
-          tools: [
-            {
-              toolSpec: {
-                name: 'emit_json',
-                description:
-                  'Return the requested data in the supplied JSON schema.',
-                inputSchema: {
-                  json: JSON.parse(
-                    JSON.stringify(req.jsonSchema),
-                  ) as JsonDocument,
-                },
-              },
-            },
-          ],
-          toolChoice: { tool: { name: 'emit_json' } },
-        },
-      };
-      try {
-        const response = await send(new ConverseCommand(input), signal);
-        const toolUse = response.output?.message?.content?.find(
-          (block) => 'toolUse' in block,
-        );
-        if (!toolUse || !('toolUse' in toolUse)) {
-          throw new DataScoutError(
-            'extraction_failed',
-            'The LLM provider returned no structured output.',
-          );
-        }
-        return {
-          output: toolUse.toolUse.input,
-          modelId: config.modelId,
-          usage: {
-            inputTokens: response.usage?.inputTokens ?? 0,
-            outputTokens: response.usage?.outputTokens ?? 0,
-          },
-        };
-      } catch (error) {
-        if (error instanceof DataScoutError) throw error;
-        throw bedrockError(error);
-      }
-    },
-  });
-}
-
 export function createLlmClient(
   config: LlmConfig,
-  dependencies: LlmClientDependencies = {},
 ): LlmClient {
   assertConfig(config);
   switch (config.provider) {
@@ -451,8 +323,6 @@ export function createLlmClient(
     }
     case 'cassette':
       return createCassetteClient(config);
-    case 'bedrock':
-      return createBedrockClient(config, dependencies);
   }
 }
 

@@ -2,7 +2,7 @@
 
 **Status: NOT RUN.**
 
-The v1 requirement contract, extraction implementation, and Bedrock provider exist, but no live Bedrock run or model-quality baseline has been measured. Reporting model-quality or operational baseline numbers now would be misleading. The project owner confirmed reviewing the corpus and reports creating a Langfuse project and configuring API keys locally.
+The v1 requirement contract and extraction implementation exist, but no live model-quality baseline has been measured. Reporting model-quality or operational baseline numbers now would be misleading. The project owner confirmed reviewing the corpus and reports creating a Langfuse project and configuring API keys locally.
 
 The corpus structural check passed on 2026-10-24 with 50 cases (40 development, 10 held out). The project owner confirmed reviewing the annotations on 2026-10-24. Corpus SHA-256: `842F282E8000D59720AA22B28E83E85809650882C4F2F19B91C26FC2FAB35BD3`. Structural validation and review confirmation do not establish model quality.
 
@@ -24,7 +24,10 @@ Do not use development cases for final quality claims. Record corpus hash, model
 
 The extraction runner in `evals/runner.ts` defaults to development-only
 deterministic fake/cassette execution and labels its output as
-`structural_fixture_replay`. The checked-in cassettes derive from gold
+`structural_fixture_replay_with_safety_preflight` (report schema v2). The
+first-pass safety screen is checked against corpus labels before each local
+replay; the replay itself keeps original inputs only for cassette-key lookup.
+The checked-in cassettes derive from gold
 annotations, so their scores are not model predictions or annotation-accuracy
 evidence. `evals/update-baseline.ts` requires
 `--accept-structural-replay`, accepts development-only reports, and appends a

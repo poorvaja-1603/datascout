@@ -1,9 +1,5 @@
 import { fileURLToPath } from 'node:url';
-import { describe, expect, it, vi } from 'vitest';
-import {
-  ConverseCommand,
-  type ConverseCommandOutput,
-} from '@aws-sdk/client-bedrock-runtime';
+import { describe, expect, it } from 'vitest';
 import { DataScoutError } from '@datascout/contracts';
 import type { CallContext, LlmJsonRequest } from '@datascout/contracts';
 import { createLlmClient, getCassetteKey } from '../src/client.js';
@@ -75,104 +71,6 @@ describe('LLM client providers', () => {
     expect(JSON.stringify(first)).not.toContain(request.user);
   });
 
-  it('uses Bedrock Converse structured output through the same client call', async () => {
-    const sendBedrock = vi.fn(
-      async (_command: ConverseCommand, _signal: AbortSignal) => {
-        void _command;
-        void _signal;
-        return {
-          output: {
-            message: {
-              content: [
-                {
-                  toolUse: {
-                    toolUseId: 'tool-call',
-                    name: 'emit_json',
-                    input: { value: 'from-bedrock' },
-                  },
-                },
-              ],
-            },
-          },
-          usage: { inputTokens: 9, outputTokens: 2 },
-        } as unknown as ConverseCommandOutput;
-      },
-    );
-    const client = createLlmClient(
-      loadLlmConfig({
-        LLM_PROVIDER: 'bedrock',
-        AWS_REGION: 'us-east-1',
-        BEDROCK_MODEL_ID: 'test-model',
-        LLM_MAX_OUTPUT_TOKENS: '20',
-      }),
-      { sendBedrock },
-    );
-    const response = await client.generateJson(request, context());
-    const command = sendBedrock.mock.calls[0]?.[0];
-
-    expect(client.provider).toBe('bedrock');
-    expect(response.output).toEqual({ value: 'from-bedrock' });
-    expect(response.usage).toEqual({ inputTokens: 9, outputTokens: 2 });
-    expect(command?.input.inferenceConfig?.maxTokens).toBe(20);
-    expect(command?.input.toolConfig?.toolChoice).toEqual({
-      tool: { name: 'emit_json' },
-    });
-  });
-
-  it('maps Bedrock throttling to the canonical retryable error without leaking details', async () => {
-    const upstreamError = Object.assign(new Error(request.user), {
-      name: 'ThrottlingException',
-    });
-    const sendBedrock = vi.fn(
-      async (_command: ConverseCommand, _signal: AbortSignal) => {
-        void _command;
-        void _signal;
-        throw upstreamError;
-      },
-    );
-    const client = createLlmClient(
-      loadLlmConfig({
-        LLM_PROVIDER: 'bedrock',
-        AWS_REGION: 'us-east-1',
-        BEDROCK_MODEL_ID: 'test-model',
-      }),
-      { sendBedrock },
-    );
-
-    await expect(client.generateJson(request, context())).rejects.toMatchObject(
-      {
-        code: 'rate_limited',
-        retryable: true,
-        safeMessage: 'The LLM provider is rate limiting requests.',
-      },
-    );
-  });
-
-  it('applies the earlier of request timeout and context deadline', async () => {
-    const sendBedrock = vi.fn(
-      (_command: ConverseCommand, signal: AbortSignal) =>
-        new Promise<ConverseCommandOutput>((_resolve, reject) => {
-          signal.addEventListener('abort', () => reject(new Error('aborted')), {
-            once: true,
-          });
-        }),
-    );
-    const client = createLlmClient(
-      loadLlmConfig({
-        LLM_PROVIDER: 'bedrock',
-        AWS_REGION: 'us-east-1',
-        BEDROCK_MODEL_ID: 'test-model',
-        LLM_TIMEOUT_MS: '10',
-      }),
-      { sendBedrock },
-    );
-
-    await expect(client.generateJson(request, context())).rejects.toMatchObject(
-      { code: 'timeout', retryable: true },
-    );
-    expect(sendBedrock.mock.calls[0]?.[1].aborted).toBe(true);
-  });
-
   it('maps caller cancellation to the canonical non-retryable error', async () => {
     const controller = new AbortController();
     controller.abort();
@@ -192,14 +90,6 @@ describe('LLM configuration', () => {
     ['unknown provider', { LLM_PROVIDER: 'local' }],
     ['invalid timeout', { LLM_TIMEOUT_MS: '0' }],
     ['invalid token cap', { LLM_MAX_OUTPUT_TOKENS: '8193' }],
-    [
-      'missing Bedrock region',
-      { LLM_PROVIDER: 'bedrock', BEDROCK_MODEL_ID: 'm' },
-    ],
-    [
-      'missing Bedrock model',
-      { LLM_PROVIDER: 'bedrock', AWS_REGION: 'us-east-1' },
-    ],
   ])('rejects %s explicitly', (_description, env) => {
     expect(() => loadLlmConfig(env)).toThrow(TypeError);
   });

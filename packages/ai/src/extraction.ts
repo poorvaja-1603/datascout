@@ -25,7 +25,12 @@ export const EXTRACTION_TIMEOUT_MS = 15_000;
 export type SafetyCheck = (
   query: string,
   ctx: CallContext,
-) => Promise<RefusalReasonCode | null> | RefusalReasonCode | null;
+) => Promise<SafetyDecision> | SafetyDecision;
+
+export type SafetyDecision =
+  | RefusalReasonCode
+  | { sanitizedQuery: string }
+  | null;
 
 const extractionSchema = toJsonSchemas().ExtractedRequirements as object;
 const promptPromise = readFile(
@@ -208,8 +213,9 @@ export function createRequirementExtractor(
       ensureCallActive(ctx);
       validateQuery(query);
 
-      const refusalCode = await safetyCheck(query, ctx);
+      const safetyDecision = await safetyCheck(query, ctx);
       ensureCallActive(ctx);
+      const refusalCode = typeof safetyDecision === 'string' ? safetyDecision : null;
       if (refusalCode !== null) {
         const parsedReason = RefusalReasonCodeSchema.safeParse(refusalCode);
         if (!parsedReason.success) {
@@ -224,7 +230,15 @@ export function createRequirementExtractor(
         };
       }
 
-      const request = createRequest(await promptPromise, query);
+      const extractionQuery = safetyDecision !== null && typeof safetyDecision === 'object'
+        && 'sanitizedQuery' in safetyDecision
+        ? safetyDecision.sanitizedQuery
+        : query;
+      if (typeof extractionQuery !== 'string' || extractionQuery.trim().length === 0) {
+        return { kind: 'refused', reasonCode: 'unsafe_request' };
+      }
+
+      const request = createRequest(await promptPromise, extractionQuery);
       for (let attempt = 0; attempt < 2; attempt += 1) {
         ensureCallActive(ctx);
         try {

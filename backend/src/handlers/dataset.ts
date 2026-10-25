@@ -12,6 +12,7 @@ import {
   errorResponse,
 } from '../utils/http.js';
 import datasetDetailFixture from '../../../contracts/fixtures/dataset-detail.json' with { type: 'json' };
+import { getDatasetsStore } from '../storage/index.js';
 
 const datasetIdRegex = new RegExp(DATASET_ID_PATTERN);
 
@@ -33,6 +34,13 @@ export async function handler(
       `Dataset ID '${datasetId}' does not match canonical pattern {source}:{native_id}.`,
       requestId,
     );
+  }
+
+  try {
+    const stored = await getDatasetsStore().getDataset(datasetId);
+    if (stored) return jsonResponse(200, DatasetDetailSchema.parse(stored));
+  } catch {
+    return errorResponse('internal_error', 'Dataset detail could not be loaded.', requestId);
   }
 
   const response = {

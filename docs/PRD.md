@@ -4,7 +4,7 @@
 
 DataScout helps students, researchers, and developers find public datasets that fit a data science or machine-learning project. A user describes the need in natural language; the product searches multiple sources and returns ranked candidates with requirement-level evidence, validation notes, access guidance, starter code, and next steps.
 
-The product differentiator is transparent verification. Bedrock interprets the request and can phrase evidence-based guidance. Deterministic application logic validates dataset evidence, assigns requirement verdicts, and calculates suitability scores.
+The product differentiator is transparent verification. The configured LLM provider interprets the request and can phrase evidence-based guidance. Deterministic application logic validates dataset evidence, assigns requirement verdicts, and calculates suitability scores.
 
 ## MVP Users and Workflow
 
@@ -43,7 +43,7 @@ Use the **Brutalist x Tactile** visual direction: strong typography, crisp borde
 - Amazon API Gateway: REST API entry point and API protection controls.
 - Amazon Cognito: verified user sign-up/sign-in and access token issuer for API authorization.
 - AWS Lambda: API orchestration, source adapters, validation/scoring, and scheduled refresh.
-- Amazon Bedrock: requirement extraction and evidence-grounded explanations/guidance.
+- Fake/cassette LLM provider: requirement extraction and evidence-grounded explanations/guidance.
 - Amazon DynamoDB: normalized dataset details and search-result cache.
 - Amazon S3: private metadata snapshots and permitted bounded samples/artifacts.
 - Amazon EventBridge: bounded, idempotent catalog refresh trigger.

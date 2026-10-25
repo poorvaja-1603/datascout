@@ -44,7 +44,7 @@ export interface LlmJsonResponse {
 }
 
 export interface LlmClient {
-  readonly provider: 'fake' | 'cassette' | 'bedrock';
+  readonly provider: 'fake' | 'cassette';
   readonly modelId: string;
   generateJson(req: LlmJsonRequest, ctx: CallContext): Promise<LlmJsonResponse>;
 }

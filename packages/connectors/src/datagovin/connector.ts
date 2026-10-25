@@ -119,21 +119,9 @@ export class DataGovInConnector implements Connector {
       throw new Error('data.gov.in search cancelled.');
     }
 
-    // 1. If no API key is configured, mark source status as disabled
-    if (!this.apiKey) {
-      return {
-        source: this.source,
-        status: {
-          source: this.source,
-          status: 'disabled',
-          result_count: 0,
-          warning: 'data.gov.in API key is not configured',
-        },
-        datasets: [],
-      };
-    }
-
-    // 2. If cached catalog is empty, mark source status as partial with warning
+    // Candidate search uses the public harvested catalog and does not require the
+    // API key; credentials are needed only for protected resource details/samples.
+    // If cached catalog is empty, return a partial source status.
     if (this.cachedCatalog.length === 0) {
       return {
         source: this.source,
@@ -357,6 +345,7 @@ export class DataGovInConnector implements Connector {
 
     const datasets: Dataset[] = [];
     const rawEntries: CachedCatalogEntry[] = [];
+    const seenIds = new Set<string>();
     const counts = { fetched: 0, skipped: 0, failed: 0 };
     const warnings: string[] = [];
 
@@ -461,10 +450,11 @@ export class DataGovInConnector implements Connector {
                 : '';
 
           // Validate native ID: strict pattern
-          if (!isValidNativeId(id) || !title) {
+          if (!isValidNativeId(id) || !title || seenIds.has(id)) {
             counts.skipped++;
             continue;
           }
+          seenIds.add(id);
 
           const sector =
             typeof raw['sector'] === 'string' && raw['sector'].trim()

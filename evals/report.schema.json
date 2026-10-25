@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://datascout.example/schemas/extraction-report-v1.json",
-  "title": "DataScout extraction evaluation report v1",
+  "$id": "https://datascout.example/schemas/extraction-report-v2.json",
+  "title": "DataScout extraction evaluation report v2",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -14,9 +14,9 @@
     "cases"
   ],
   "properties": {
-    "report_schema": { "const": "extraction-report-v1" },
-    "evaluator_version": { "const": "extraction-evaluator-v1" },
-    "evaluation_kind": { "const": "structural_fixture_replay" },
+    "report_schema": { "const": "extraction-report-v2" },
+    "evaluator_version": { "const": "extraction-evaluator-v2" },
+    "evaluation_kind": { "const": "structural_fixture_replay_with_safety_preflight" },
     "quality_claim": { "const": "none_structural_replay_only" },
     "run": {
       "type": "object",
@@ -44,7 +44,7 @@
         "model_id": { "type": "string", "minLength": 1 },
         "configured_model_id": { "type": "string", "minLength": 1 },
         "prompt_version": { "type": "string", "minLength": 1 },
-        "safety_check": { "const": "evaluation_allow_all" },
+        "safety_check": { "const": "deterministic_first_pass" },
         "extraction_schema": { "const": "ExtractedRequirements" },
         "extraction_schema_version": { "const": "1" },
         "corpus_sha256": { "type": "string", "pattern": "^[a-f0-9]{64}$" },
@@ -59,7 +59,8 @@
         "cases",
         "all_fields_exact_match_cases",
         "all_fields_exact_match_rate",
-        "per_field"
+        "per_field",
+        "safety"
       ],
       "properties": {
         "cases": { "type": "integer", "minimum": 1 },
@@ -88,6 +89,19 @@
             "preferences": { "$ref": "#/$defs/fieldMetric" },
             "constraints": { "$ref": "#/$defs/fieldMetric" }
           }
+        },
+        "safety": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["cases", "adversarial_cases", "adversarial_mitigated", "adversarial_misses", "benign_cases", "benign_interferences"],
+          "properties": {
+            "cases": { "type": "integer", "minimum": 1 },
+            "adversarial_cases": { "type": "integer", "minimum": 0 },
+            "adversarial_mitigated": { "type": "integer", "minimum": 0 },
+            "adversarial_misses": { "type": "integer", "minimum": 0 },
+            "benign_cases": { "type": "integer", "minimum": 0 },
+            "benign_interferences": { "type": "integer", "minimum": 0 }
+          }
         }
       }
     },
@@ -96,11 +110,13 @@
       "items": {
         "type": "object",
         "additionalProperties": false,
-        "required": ["case_id", "split", "result_kind", "fields"],
+        "required": ["case_id", "split", "result_kind", "safety_action", "adversarial", "fields"],
         "properties": {
           "case_id": { "type": "string", "minLength": 1 },
           "split": { "enum": ["development", "held_out"] },
           "result_kind": { "enum": ["ok", "clarification", "refused"] },
+          "safety_action": { "enum": ["allowed", "sanitized", "refused"] },
+          "adversarial": { "type": "boolean" },
           "fields": {
             "type": "object",
             "additionalProperties": false,

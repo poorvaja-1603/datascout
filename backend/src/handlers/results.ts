@@ -2,13 +2,12 @@ import type {
   APIGatewayProxyEvent,
   APIGatewayProxyResult,
 } from 'aws-lambda';
-import { SearchResponseSchema } from '@datascout/contracts';
 import {
   extractContextInfo,
   jsonResponse,
   errorResponse,
 } from '../utils/http.js';
-import searchResultsFixture from '../../../contracts/fixtures/search-results.json' with { type: 'json' };
+import { getResultsStore } from '../storage/index.js';
 
 export async function handler(
   event: APIGatewayProxyEvent,
@@ -17,21 +16,33 @@ export async function handler(
   const targetRequestId = event.pathParameters?.request_id;
 
   if (!targetRequestId) {
-    return errorResponse('invalid_request', 'Missing request_id path parameter.', requestId);
+    return errorResponse(
+      'invalid_request',
+      'Missing request_id path parameter.',
+      requestId,
+    );
   }
 
-  // Check authentication / ownership
+  // Check authentication
   if (!sub) {
-    return errorResponse('unauthorized', 'User identity required to retrieve cached results.', requestId);
+    return errorResponse(
+      'unauthorized',
+      'User identity required to retrieve cached results.',
+      requestId,
+    );
   }
 
-  // Simulate ownership: only permit retrieval if authorized user owns this request ID
-  // In development/skeleton mode, test requests owned by the user return the fixture
-  const response = {
-    ...searchResultsFixture,
-    request_id: targetRequestId,
-  };
+  const resultsStore = getResultsStore();
+  const stored = await resultsStore.getResult(targetRequestId);
 
-  const validatedResponse = SearchResponseSchema.parse(response);
-  return jsonResponse(200, validatedResponse);
+  // Return 404 with identical error if not found or belongs to someone else (never reveal which)
+  if (!stored || stored.ownerSub !== sub) {
+    return errorResponse(
+      'not_found',
+      'Search result not found or expired.',
+      requestId,
+    );
+  }
+
+  return jsonResponse(200, stored.searchResponse);
 }

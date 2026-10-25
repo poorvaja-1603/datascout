@@ -10,3 +10,4 @@
 2. **Access Control**: Gated datasets and private repositories are skipped.
 3. **Viewer Availability**: Dataset Viewer API availability varies per dataset. If viewer endpoints return 404 or 503, the adapter gracefully falls back to `metadata_only` verification.
 4. **Rate Limits**: Hub API rate limits (HTTP 429) trigger exponential backoff.
+5. **Bounded sample inspection**: The connector selects an available config/split through the Viewer `splits` endpoint, requests a bounded `/rows` page, and parses only the returned row objects. Missing or unsupported splits remain `metadata_only`; Hub loading scripts are never executed.

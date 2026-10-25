@@ -1,5 +1,14 @@
 {
-  "output": null,
+  "output": {
+    "topic": null,
+    "geography": null,
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": [],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
   "modelId": "development-gold-fixture-v0.1",
   "usage": {
     "inputTokens": 0,

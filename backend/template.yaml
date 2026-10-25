@@ -10,13 +10,35 @@ Parameters:
     Description: Deployment target environment.
   CorsAllowedOrigin:
     Type: String
-    Default: '*'
-    Description: Allowed CORS origin for the frontend application.
+    Default: 'http://localhost:5173'
+    Description: Allowed CORS origin for frontend applications (defaults to local dev http://localhost:5173). Required for cross-origin browser requests.
+  AmplifyOrigin:
+    Type: String
+    Default: ''
+    Description: Optional deployed frontend URL (e.g. AWS Amplify or custom domain) for Cognito OAuth redirects.
   LogLevel:
     Type: String
     Default: INFO
     AllowedValues: [DEBUG, INFO, WARN, ERROR]
     Description: Logging severity level.
+  LlmProvider:
+    Type: String
+    Default: fake
+    AllowedValues: [fake, cassette]
+    Description: LLM provider for fixture-backed local and deterministic replay modes.
+  DataGovInApiSecretArn:
+    Type: String
+    Default: ''
+    Description: Optional ARN of a Secrets Manager secret whose SecretString is the data.gov.in API key.
+  HuggingFaceApiSecretArn:
+    Type: String
+    Default: ''
+    Description: Optional ARN of a Secrets Manager secret whose SecretString is the Hugging Face token.
+
+Conditions:
+  HasAmplifyOrigin: !Not [!Equals [!Ref AmplifyOrigin, '']]
+  HasDataGovInApiSecret: !Not [!Equals [!Ref DataGovInApiSecretArn, '']]
+  HasHuggingFaceApiSecret: !Not [!Equals [!Ref HuggingFaceApiSecretArn, '']]
 
 Globals:
   Function:
@@ -29,14 +51,16 @@ Globals:
         NODE_OPTIONS: --enable-source-maps
         ENVIRONMENT: !Ref Environment
         LOG_LEVEL: !Ref LogLevel
+        LLM_PROVIDER: !Ref LlmProvider
         RESULTS_TABLE_NAME: !Ref ResultsTable
         DATASETS_TABLE_NAME: !Ref DatasetsTable
+        CATALOG_TABLE_NAME: !Ref CatalogTable
         SNAPSHOTS_BUCKET_NAME: !Ref SnapshotsBucket
         CONTRACT_VERSION: 1.0.0
         PROMPT_VERSION: extract-v1
         SCHEMA_VERSION: 1.0.0
         SCORING_VERSION: score-v1
-        MODEL_ID: bedrock-claude-haiku-v1
+        MODEL_ID: fake-datascout-v0.1
 
 Resources:
   # ---------------------------------------------------------------------------
@@ -92,12 +116,20 @@ Resources:
         - datascout-api/read
         - datascout-api/compare
       SupportedIdentityProviders: [COGNITO]
-      CallbackURLs:
-        - http://localhost:3000
-        - http://localhost:5173
-      LogoutURLs:
-        - http://localhost:3000
-        - http://localhost:5173
+      CallbackURLs: !If
+        - HasAmplifyOrigin
+        - - http://localhost:3000
+          - http://localhost:5173
+          - !Ref AmplifyOrigin
+        - - http://localhost:3000
+          - http://localhost:5173
+      LogoutURLs: !If
+        - HasAmplifyOrigin
+        - - http://localhost:3000
+          - http://localhost:5173
+          - !Ref AmplifyOrigin
+        - - http://localhost:3000
+          - http://localhost:5173
       ExplicitAuthFlows:
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
@@ -124,7 +156,23 @@ Resources:
               Header: Authorization
         AddDefaultAuthorizerToCorsPreflight: false
       GatewayResponses:
-        DEFAULT_4XX:
+        REQUEST_TOO_LARGE:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${CorsAllowedOrigin}'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+          ResponseTemplates:
+            application/json: '{"code":"payload_too_large","message":"Request body exceeds the allowed size.","request_id":"$context.requestId","retryable":false}'
+        INTEGRATION_TIMEOUT:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${CorsAllowedOrigin}'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+          ResponseTemplates:
+            application/json: '{"code":"timeout","message":"The request timed out.","request_id":"$context.requestId","retryable":true}'
+        UNAUTHORIZED:
           ResponseParameters:
             Headers:
               Access-Control-Allow-Origin: !Sub "'${CorsAllowedOrigin}'"
@@ -132,6 +180,30 @@ Resources:
               Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
           ResponseTemplates:
             application/json: '{"code":"unauthorized","message":"Authorization failed or missing credentials.","request_id":"$context.requestId","retryable":false}'
+        ACCESS_DENIED:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${CorsAllowedOrigin}'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+          ResponseTemplates:
+            application/json: '{"code":"forbidden","message":"Access denied: insufficient permissions or scopes.","request_id":"$context.requestId","retryable":false}'
+        THROTTLED:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${CorsAllowedOrigin}'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+          ResponseTemplates:
+            application/json: '{"code":"rate_limited","message":"Request throttled: rate limit exceeded.","request_id":"$context.requestId","retryable":true}'
+        DEFAULT_4XX:
+          ResponseParameters:
+            Headers:
+              Access-Control-Allow-Origin: !Sub "'${CorsAllowedOrigin}'"
+              Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
+              Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
+          ResponseTemplates:
+            application/json: '{"code":"invalid_request","message":"Invalid request.","request_id":"$context.requestId","retryable":false}'
         DEFAULT_5XX:
           ResponseParameters:
             Headers:
@@ -139,7 +211,7 @@ Resources:
               Access-Control-Allow-Headers: "'Content-Type,Authorization,X-Amz-Date,X-Api-Key,X-Amz-Security-Token'"
               Access-Control-Allow-Methods: "'GET,POST,OPTIONS'"
           ResponseTemplates:
-            application/json: '{"code":"internal_error","message":"An unexpected server error occurred.","request_id":"$context.requestId","retryable":true}'
+            application/json: '{"code":"internal_error","message":"An unexpected server error occurred.","request_id":"$context.requestId","retryable":false}'
 
   # ---------------------------------------------------------------------------
   # DynamoDB Storage
@@ -179,6 +251,24 @@ Resources:
       PointInTimeRecoverySpecification:
         PointInTimeRecoveryEnabled: true
 
+  CatalogTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub datascout-catalog-${Environment}
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: pk
+          AttributeType: S
+        - AttributeName: sk
+          AttributeType: S
+      KeySchema:
+        - AttributeName: pk
+          KeyType: HASH
+        - AttributeName: sk
+          KeyType: RANGE
+      SSESpecification:
+        SSEEnabled: true
+
   # ---------------------------------------------------------------------------
   # S3 Snapshot Storage
   # ---------------------------------------------------------------------------
@@ -207,14 +297,42 @@ Resources:
   SearchFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./
+      CodeUri: .aws-sam/minimal/SearchFunction
       Handler: dist/handlers/search.handler
       Description: POST /search - Natural language requirement extraction and candidate search
+      Environment:
+        Variables:
+          DATAGOVIN_API_KEY_SECRET_ARN: !Ref DataGovInApiSecretArn
+          HUGGINGFACE_API_TOKEN_SECRET_ARN: !Ref HuggingFaceApiSecretArn
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref ResultsTable
-        - DynamoDBReadPolicy:
-            TableName: !Ref DatasetsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+              Resource: !GetAtt ResultsTable.Arn
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:BatchGetItem
+                - dynamodb:PutItem
+              Resource: !GetAtt DatasetsTable.Arn
+            - Effect: Allow
+              Action:
+                - dynamodb:Query
+                - dynamodb:GetItem
+              Resource: !GetAtt CatalogTable.Arn
+            - !If
+              - HasDataGovInApiSecret
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref DataGovInApiSecretArn
+              - !Ref AWS::NoValue
+            - !If
+              - HasHuggingFaceApiSecret
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref HuggingFaceApiSecretArn
+              - !Ref AWS::NoValue
       Events:
         Search:
           Type: Api
@@ -230,12 +348,15 @@ Resources:
   ResultsFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./
+      CodeUri: .aws-sam/minimal/ResultsFunction
       Handler: dist/handlers/results.handler
       Description: GET /results/{request_id} - Owner-only cached search response retrieval
       Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref ResultsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+              Resource: !GetAtt ResultsTable.Arn
       Events:
         Results:
           Type: Api
@@ -251,12 +372,16 @@ Resources:
   DatasetFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./
+      CodeUri: .aws-sam/minimal/DatasetFunction
       Handler: dist/handlers/dataset.handler
       Description: GET /dataset/{dataset_id} - Normalized public dataset detail
       Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref DatasetsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:PutItem
+              Resource: !GetAtt DatasetsTable.Arn
       Events:
         Dataset:
           Type: Api
@@ -272,12 +397,16 @@ Resources:
   CompareFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./
+      CodeUri: .aws-sam/minimal/CompareFunction
       Handler: dist/handlers/compare.handler
       Description: POST /compare - Side-by-side comparison of 2 to 4 datasets
       Policies:
-        - DynamoDBReadPolicy:
-            TableName: !Ref DatasetsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:GetItem
+                - dynamodb:BatchGetItem
+              Resource: !GetAtt DatasetsTable.Arn
       Events:
         Compare:
           Type: Api
@@ -293,12 +422,26 @@ Resources:
   RefreshFunction:
     Type: AWS::Serverless::Function
     Properties:
-      CodeUri: ./
+      CodeUri: .aws-sam/minimal/RefreshFunction
       Handler: dist/handlers/refresh.handler
       Description: Scheduled catalog harvest and indicator indexing
+      Environment:
+        Variables:
+          DATAGOVIN_API_KEY_SECRET_ARN: !Ref DataGovInApiSecretArn
       Policies:
-        - DynamoDBCrudPolicy:
-            TableName: !Ref DatasetsTable
+        - Statement:
+            - Effect: Allow
+              Action:
+                - dynamodb:PutItem
+                - dynamodb:Query
+                - dynamodb:BatchWriteItem
+              Resource: !GetAtt CatalogTable.Arn
+            - !If
+              - HasDataGovInApiSecret
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                Resource: !Ref DataGovInApiSecretArn
+              - !Ref AWS::NoValue
         - S3CrudPolicy:
             BucketName: !Ref SnapshotsBucket
       Events:
@@ -308,7 +451,41 @@ Resources:
             Schedule: rate(1 day)
             Name: !Sub datascout-refresh-schedule-${Environment}
             Description: Daily dataset catalog refresh trigger
-            Enabled: false
+            Enabled: true
+
+  SearchErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub datascout-search-errors-${Environment}
+      AlarmDescription: Search Lambda reported one or more errors in five minutes.
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref SearchFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
+
+  RefreshErrorsAlarm:
+    Type: AWS::CloudWatch::Alarm
+    Properties:
+      AlarmName: !Sub datascout-refresh-errors-${Environment}
+      AlarmDescription: Catalog refresh Lambda reported one or more errors in five minutes.
+      Namespace: AWS/Lambda
+      MetricName: Errors
+      Dimensions:
+        - Name: FunctionName
+          Value: !Ref RefreshFunction
+      Statistic: Sum
+      Period: 300
+      EvaluationPeriods: 1
+      Threshold: 1
+      ComparisonOperator: GreaterThanOrEqualToThreshold
+      TreatMissingData: notBreaching
 
 Outputs:
   ApiEndpoint:

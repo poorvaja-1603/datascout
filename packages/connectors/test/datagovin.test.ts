@@ -41,8 +41,11 @@ describe('DataGovInConnector', () => {
   });
 
   describe('Search', () => {
-    it('returns disabled source status when no API key is configured', async () => {
-      const connector = new DataGovInConnector({ apiKey: undefined, cachedCatalog: [] });
+    it('searches the harvested local catalog without a resource API key', async () => {
+      const connector = new DataGovInConnector({
+        apiKey: undefined,
+        cachedCatalog: [{ id: 'agriculture-01', title: 'Agriculture data', desc: 'Agriculture statistics' }],
+      });
       const req: ConnectorSearchRequest = {
         requirements: {
           topic: 'agriculture',
@@ -60,10 +63,9 @@ describe('DataGovInConnector', () => {
 
       const result = await connector.search(req, createMockContext());
       expect(result.source).toBe('datagovin');
-      expect(result.status.status).toBe('disabled');
-      expect(result.status.result_count).toBe(0);
-      expect(result.status.warning).toContain('API key is not configured');
-      expect(result.datasets).toHaveLength(0);
+      expect(result.status.status).toBe('success');
+      expect(result.status.result_count).toBe(1);
+      expect(result.datasets[0]?.dataset_id).toBe('datagovin:agriculture-01');
     });
 
     it('returns partial status with warning when cached catalog is empty', async () => {

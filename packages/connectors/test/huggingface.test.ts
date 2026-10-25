@@ -119,7 +119,7 @@ describe('HuggingFaceConnector', () => {
     vi.restoreAllMocks();
   });
 
-  it('handles search API failures gracefully and returns degraded status', async () => {
+  it('handles search API failures gracefully and returns failed status', async () => {
     vi.spyOn(safeFetchModule, 'safeFetch').mockResolvedValueOnce({
       status: 503,
       statusText: 'Service Unavailable',
@@ -148,7 +148,7 @@ describe('HuggingFaceConnector', () => {
     };
 
     const result = await connector.search(req, createMockContext());
-    expect(result.status.status).toBe('degraded');
+    expect(result.status.status).toBe('failed');
     expect(result.datasets).toHaveLength(0);
 
     vi.restoreAllMocks();

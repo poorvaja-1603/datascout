@@ -1,20 +1,16 @@
 # `@datascout/ai`
 
 This package implements the shared `LlmClient` port from `@datascout/contracts`.
-Choose a provider with `LLM_PROVIDER=fake|cassette|bedrock`; callers continue to
+Choose a provider with `LLM_PROVIDER=fake|cassette`; callers continue to
 use `generateJson(req, ctx)` for every provider.
 
 | Setting                 | Default              | Validation and behavior                                                                        |
 | ----------------------- | -------------------- | ---------------------------------------------------------------------------------------------- |
-| `LLM_PROVIDER`          | `fake`               | Must be `fake`, `cassette`, or `bedrock`.                                                      |
+| `LLM_PROVIDER`          | `fake`               | Must be `fake` or `cassette`.                                                                  |
 | `LLM_TIMEOUT_MS`        | `30000`              | Integer from 1 to 300000; the smaller request or config timeout and the context deadline wins. |
 | `LLM_MAX_OUTPUT_TOKENS` | `1024`               | Integer from 1 to 8192; request output is capped to this value.                                |
 | `LLM_CASSETTE_DIR`      | package `cassettes/` | Directory containing deterministic `<request-sha256>.json` replay files.                       |
-| `AWS_REGION`            | —                    | Required by the Bedrock provider.                                                              |
-| `BEDROCK_MODEL_ID`      | —                    | Required by the Bedrock provider.                                                              |
-
-Bedrock uses the AWS SDK default credential chain and Converse API structured
-tool output. Cloud calls are never required for package tests. Cassette files
+Cloud model calls are not part of this configuration. Cassette files
 contain only the structured output, model identifier, and token usage; request
 prompts are used only to compute a SHA-256 lookup key and are not logged or
 written to the cassette. Provider errors are surfaced as safe `DataScoutError`
@@ -32,9 +28,10 @@ Preferences are marked preferred; other derived requirements are required.
 No aliases are synthesized.
 
 The required `safetyCheck` runs before any model call and returns a contract
-refusal reason or `null`. A2 intentionally does not embed an unapproved safety
-classification policy: callers must supply the project's vetted checks. A
-null topic produces the contract's fixed clarification question. Invalid
+refusal reason, a `{ sanitizedQuery }` for a detected hostile suffix, or
+`null`. The backend supplies `createRequestSafetyCheck()` as a deterministic
+first-pass screen; it is a heuristic and needs broader adversarial evaluation
+before release. A null topic produces the contract's fixed clarification question. Invalid
 model output is retried once and then fails with a safe `extraction_failed`
 error; timeouts receive one retry and caller cancellation/deadlines are passed
 through the existing `CallContext`.

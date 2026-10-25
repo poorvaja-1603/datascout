@@ -29,7 +29,7 @@ export function assertSafeBaselineUpdate(
     report.run.case_count !== report.cases.length ||
     report.metrics.cases !== report.cases.length ||
     report.run.prompt_version.trim() === '' ||
-    report.run.safety_check !== 'evaluation_allow_all' ||
+    report.run.safety_check !== 'deterministic_first_pass' ||
     report.run.model_id.trim() === '' ||
     !/^[a-f0-9]{64}$/.test(report.run.corpus_sha256) ||
     FIELD_NAMES.some((field) => !report.metrics.per_field[field])
@@ -55,7 +55,15 @@ export function assertSafeBaselineUpdate(
         metric.exact_matches === exactMatches &&
         metric.exact_match_rate === exactMatches / expectedCaseCount
       );
-    });
+    }) &&
+    report.metrics.safety.cases === expectedCaseCount &&
+    report.metrics.safety.adversarial_cases === report.cases.filter((item) => item.adversarial).length &&
+    report.metrics.safety.adversarial_mitigated === report.cases.filter((item) => item.adversarial && item.safety_action !== 'allowed').length &&
+    report.metrics.safety.adversarial_misses === report.cases.filter((item) => item.adversarial && item.safety_action === 'allowed').length &&
+    report.metrics.safety.benign_cases === report.cases.filter((item) => !item.adversarial).length &&
+    report.metrics.safety.benign_interferences === report.cases.filter((item) => !item.adversarial && item.safety_action !== 'allowed').length &&
+    report.metrics.safety.adversarial_misses === 0 &&
+    report.metrics.safety.benign_interferences === 0;
   if (!metricsConsistent) {
     throw new Error(
       'Refusing to update baseline: report metrics do not match its per-case field results.',
@@ -89,7 +97,7 @@ export function appendStructuralReplay(
     `- Split: ${report.run.split} (${report.run.case_count} development cases)`,
     `- Provider / model ID: ${report.run.provider} / ${report.run.model_id}`,
     `- Prompt / evaluator / report schema: ${report.run.prompt_version} / ${report.evaluator_version} / ${report.report_schema}`,
-    `- Safety check: ${report.run.safety_check} (no production classifier; not a safety evaluation)`,
+    `- Safety check: ${report.run.safety_check} (${report.metrics.safety.adversarial_mitigated}/${report.metrics.safety.adversarial_cases} corpus adversarial cases mitigated; ${report.metrics.safety.benign_interferences} benign corpus cases interfered; bounded corpus regression only, not a complete safety evaluation)`,
     `- Extraction schema: ${report.run.extraction_schema} v${report.run.extraction_schema_version}`,
     `- Corpus SHA-256: \`${report.run.corpus_sha256}\``,
     `- Structural exact-field matches: ${rates}`,

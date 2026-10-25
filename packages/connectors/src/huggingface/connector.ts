@@ -4,12 +4,15 @@ import type {
   ConnectorSearchRequest,
   ConnectorSearchResult,
   Dataset,
+  InspectionLimits,
+  SampleInspection,
   SourceId,
-  SourceStatus,
 } from '@datascout/contracts';
 import { safeFetch } from '../toolkit/safe-fetch.js';
 import { normalizeDataset } from '../normalize/index.js';
 import type { RawCandidate } from '../normalize/index.js';
+import { inspectBytes } from '../inspect/inspector.js';
+
 
 export interface HuggingFaceConnectorOptions {
   hubApiBaseUrl?: string;
@@ -47,7 +50,7 @@ export class HuggingFaceConnector implements Connector {
     this.hubApiBaseUrl = options.hubApiBaseUrl ?? 'https://huggingface.co/api';
     this.viewerApiBaseUrl =
       options.viewerApiBaseUrl ?? 'https://datasets-server.huggingface.co';
-    this.apiToken = options.apiToken;
+    this.apiToken = options.apiToken ?? process.env['HUGGINGFACE_API_TOKEN'];
   }
 
   async search(
@@ -81,7 +84,7 @@ export class HuggingFaceConnector implements Connector {
           source: this.source,
           status: {
             source: this.source,
-            status: 'degraded' as unknown as SourceStatus['status'],
+            status: 'failed',
             result_count: 0,
             warning: `Hugging Face Hub API returned HTTP ${response.status}`,
           },
@@ -95,7 +98,7 @@ export class HuggingFaceConnector implements Connector {
           source: this.source,
           status: {
             source: this.source,
-            status: 'degraded' as unknown as SourceStatus['status'],
+            status: 'failed',
             result_count: 0,
             warning: 'Hugging Face API returned non-array payload',
           },
@@ -289,6 +292,75 @@ export class HuggingFaceConnector implements Connector {
       return dataset;
     } catch {
       return null;
+    }
+  }
+
+  async inspectSample(
+    dataset: Dataset,
+    limits: InspectionLimits,
+    ctx: CallContext,
+  ): Promise<SampleInspection> {
+    const empty = (status: SampleInspection['status']): SampleInspection => ({
+      datasetId: dataset.dataset_id,
+      status,
+      verificationLevel: 'metadata_only',
+      rowsExamined: 0,
+      columns: [],
+      dateRange: null,
+      duplicateRate: null,
+      evidence: [],
+    });
+    const nativeId = dataset.dataset_id.startsWith('huggingface:')
+      ? dataset.dataset_id.slice('huggingface:'.length)
+      : '';
+    if (!nativeId || ctx.signal.aborted) return empty('failed');
+
+    const headers: Record<string, string> = { Accept: 'application/json' };
+    if (this.apiToken) headers.Authorization = `Bearer ${this.apiToken}`;
+    try {
+      const splitsUrl = new URL(`${this.viewerApiBaseUrl}/splits`);
+      splitsUrl.searchParams.set('dataset', nativeId);
+      const splitsResponse = await safeFetch(splitsUrl.toString(), {
+        headers,
+        signal: ctx.signal,
+        timeoutMs: Math.min(limits.timeoutMs, 3000),
+        maxBytes: 256 * 1024,
+        allowedContentTypes: ['application/json'],
+      });
+      if (splitsResponse.status !== 200) return empty('failed');
+      const splitPayload = await splitsResponse.json<{ splits?: Array<{ config?: string; split?: string }> }>();
+      const firstSplit = splitPayload.splits?.find((item) => item.config && item.split);
+      if (!firstSplit?.config || !firstSplit.split) return empty('failed');
+
+      const rowsUrl = new URL(`${this.viewerApiBaseUrl}/rows`);
+      rowsUrl.searchParams.set('dataset', nativeId);
+      rowsUrl.searchParams.set('config', firstSplit.config);
+      rowsUrl.searchParams.set('split', firstSplit.split);
+      rowsUrl.searchParams.set('offset', '0');
+      rowsUrl.searchParams.set('length', String(Math.min(limits.maxRows, 500)));
+      const response = await safeFetch(rowsUrl.toString(), {
+        headers,
+        signal: ctx.signal,
+        timeoutMs: limits.timeoutMs,
+        maxBytes: limits.maxBytes,
+        allowedContentTypes: ['application/json'],
+      });
+      if (response.status !== 200) return empty('failed');
+      const payload = await response.json<{ rows?: Array<{ row?: Record<string, unknown> }> }>();
+      const rows = Array.isArray(payload.rows)
+        ? payload.rows.flatMap((item) => item && typeof item.row === 'object' && item.row !== null ? [item.row] : [])
+        : [];
+      if (rows.length === 0) return empty('failed');
+      const bytes = new TextEncoder().encode(JSON.stringify(rows));
+      return await inspectBytes(dataset, bytes, {
+        contentType: 'application/json',
+        filename: `${nativeId.replaceAll('/', '_')}.json`,
+        limits,
+        signal: ctx.signal,
+        deadlineMs: ctx.deadlineMs,
+      });
+    } catch {
+      return empty('failed');
     }
   }
 }
