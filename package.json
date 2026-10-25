@@ -10,7 +10,9 @@
     "contracts",
     "packages/ai",
     "packages/verify",
-    "packages/observability"
+    "packages/observability",
+    "packages/connectors",
+    "backend"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
@@ -39,8 +41,10 @@
   "devDependencies": {
     "@eslint/js": "10.0.1",
     "@redocly/cli": "2.71.0",
+    "@types/aws-lambda": "^8.10.164",
     "@types/node": "^22.20.5",
     "eslint": "10.13.0",
+    "esbuild": "0.28.2",
     "globals": "17.13.0",
     "prettier": "3.9.10",
     "tsx": "4.23.15",

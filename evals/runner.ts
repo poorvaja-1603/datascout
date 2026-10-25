@@ -3,12 +3,14 @@ import { mkdir, readFile, realpath, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 import { dirname, resolve } from 'node:path';
 import type { ExtractionResult } from '@datascout/contracts';
+import type { CallContext } from '@datascout/contracts';
 import {
   createLlmClient,
   createRequirementExtractor,
   EXTRACTION_PROMPT_VERSION,
   loadLlmConfig,
 } from '../packages/ai/src/index.js';
+import { createRequestSafetyCheck } from '../packages/ai/src/safety.js';
 
 export const REPORT_SCHEMA_VERSION = 'extraction-report-v1';
 export const EVALUATOR_VERSION = 'extraction-evaluator-v2';
@@ -33,6 +35,7 @@ export interface CorpusCase {
   case_id: string;
   split: Split;
   input: string;
+  categories: string[];
   expected: Record<FieldName, FieldValue>;
 }
 
@@ -55,6 +58,8 @@ interface EvaluationCase {
   case_id: string;
   split: Split;
   result_kind: ExtractionResult['kind'];
+  safety_action: 'allowed' | 'sanitized' | 'refused';
+  adversarial: boolean;
   fields: Record<FieldName, FieldComparison>;
 }
 
@@ -71,7 +76,7 @@ export interface EvaluationReport {
     model_id: string;
     configured_model_id: string;
     prompt_version: string;
-    safety_check: 'evaluation_allow_all';
+    safety_check: 'deterministic_first_pass';
     extraction_schema: 'ExtractedRequirements';
     extraction_schema_version: '1';
     corpus_sha256: string;
@@ -86,6 +91,14 @@ export interface EvaluationReport {
       FieldName,
       { exact_matches: number; cases: number; exact_match_rate: number }
     >;
+    safety: {
+      cases: number;
+      adversarial_cases: number;
+      adversarial_mitigated: number;
+      adversarial_misses: number;
+      benign_cases: number;
+      benign_interferences: number;
+    };
   };
   cases: EvaluationCase[];
 }
@@ -117,6 +130,7 @@ export function parseCorpus(corpusText: string): CorpusCase[] {
         throw new Error(`Invalid corpus case on line ${index + 1}.`);
       }
       const expected = value.expected;
+      const categories = value.categories;
       if (!isRecord(expected)) {
         throw new Error(`Invalid corpus case on line ${index + 1}.`);
       }
@@ -124,6 +138,7 @@ export function parseCorpus(corpusText: string): CorpusCase[] {
         typeof value.case_id !== 'string' ||
         (value.split !== 'development' && value.split !== 'held_out') ||
         typeof value.input !== 'string' ||
+        !Array.isArray(categories) || categories.some((category) => typeof category !== 'string') ||
         FIELD_NAMES.some((field) => !(field in expected))
       ) {
         throw new Error(`Invalid corpus case on line ${index + 1}.`);
@@ -132,6 +147,7 @@ export function parseCorpus(corpusText: string): CorpusCase[] {
         case_id: value.case_id,
         split: value.split,
         input: value.input,
+        categories,
         expected: Object.fromEntries(
           FIELD_NAMES.map((field) => [
             field,
@@ -220,6 +236,7 @@ export async function evaluate(options: EvaluationOptions): Promise<EvaluationRe
   let configuredModelId = provider === 'fake' ? 'fake-datascout-v0.1' : 'cassette-datascout-v1';
   const modelIds = new Set<string>();
   let extract = options.extract;
+  const safetyCheck = createRequestSafetyCheck();
 
   if (!extract) {
     const config = loadLlmConfig({
@@ -228,7 +245,7 @@ export async function evaluate(options: EvaluationOptions): Promise<EvaluationRe
     });
     const client = createLlmClient(config);
     configuredModelId = client.modelId;
-    const extractor = createRequirementExtractor(client, () => null);
+    const extractor = createRequirementExtractor(client, safetyCheck);
     extract = async (input) => {
       const controller = new AbortController();
       const context = {
@@ -256,7 +273,21 @@ export async function evaluate(options: EvaluationOptions): Promise<EvaluationRe
   }
 
   const cases: EvaluationCase[] = [];
+  const safetyContext: CallContext = {
+    requestId: 'eval-safety-preflight',
+    signal: new AbortController().signal,
+    deadlineMs: Date.now() + 60_000,
+    tracer: { withSpan: async (_name, _options, callback) => callback({ setAttributes() {}, score() {} }), flush: async () => undefined },
+  };
   for (const testCase of selected) {
+    const safetyDecision = safetyCheck(testCase.input, safetyContext);
+    const safetyAction = safetyDecision === null
+      ? 'allowed'
+      : typeof safetyDecision === 'string' ? 'refused' : 'sanitized';
+    const adversarial = testCase.categories.includes('adversarial');
+    if ((adversarial && safetyAction === 'allowed') || (!adversarial && safetyAction !== 'allowed')) {
+      throw new Error(`Safety preflight assertion failed for ${testCase.case_id} (${adversarial ? 'adversarial' : 'benign'} case: ${safetyAction}).`);
+    }
     let result: ExtractionResult;
     try {
       result = await extract(testCase.input);
@@ -288,6 +319,8 @@ export async function evaluate(options: EvaluationOptions): Promise<EvaluationRe
       case_id: testCase.case_id,
       split,
       result_kind: responseKind(result),
+      safety_action: safetyAction,
+      adversarial,
       fields,
     });
   }
@@ -333,7 +366,7 @@ export async function evaluate(options: EvaluationOptions): Promise<EvaluationRe
       model_id: modelId,
       configured_model_id: configuredModelId,
       prompt_version: EXTRACTION_PROMPT_VERSION,
-      safety_check: 'evaluation_allow_all',
+      safety_check: 'deterministic_first_pass',
       extraction_schema: 'ExtractedRequirements',
       extraction_schema_version: '1',
       corpus_sha256: corpusSha256,
@@ -345,6 +378,14 @@ export async function evaluate(options: EvaluationOptions): Promise<EvaluationRe
       all_fields_exact_match_cases: allFieldsExact,
       all_fields_exact_match_rate: allFieldsExact / cases.length,
       per_field: perField,
+      safety: {
+        cases: cases.length,
+        adversarial_cases: cases.filter((item) => item.adversarial).length,
+        adversarial_mitigated: cases.filter((item) => item.adversarial && item.safety_action !== 'allowed').length,
+        adversarial_misses: cases.filter((item) => item.adversarial && item.safety_action === 'allowed').length,
+        benign_cases: cases.filter((item) => !item.adversarial).length,
+        benign_interferences: cases.filter((item) => !item.adversarial && item.safety_action !== 'allowed').length,
+      },
     },
     cases,
   };
@@ -436,7 +477,7 @@ export async function runCli(args: string[]): Promise<void> {
   });
   await writeReport(report, options.outputPath);
   console.log(
-    `Wrote ${report.run.case_count} ${report.run.split} cases (${report.evaluation_kind}; no model-quality claim) to ${options.outputPath}`,
+    `Wrote ${report.run.case_count} ${report.run.split} cases (${report.evaluation_kind}; no model-quality claim). Safety preflight: ${report.metrics.safety.adversarial_mitigated}/${report.metrics.safety.adversarial_cases} adversarial cases mitigated; ${report.metrics.safety.benign_interferences}/${report.metrics.safety.benign_cases} benign cases interfered. Report: ${options.outputPath}`,
   );
 }
 

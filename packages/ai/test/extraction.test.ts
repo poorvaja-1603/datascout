@@ -112,7 +112,14 @@ describe('requirement extraction', () => {
     expect(developmentIds.every((caseId) => caseId.startsWith('REQE-'))).toBe(
       true,
     );
-    expect(fixtureFiles.sort()).toEqual(expectedCassetteNames.sort());
+    // The adversarial safety replay has one extra sanitized-query cassette in
+    // addition to the 40 development-corpus fixtures.
+    const safetyFixtureNames = [
+      'a7f9680ed72aff3ad77265698c85fb50bcc6a02908aee53ed68dede849c891b6.json',
+    ];
+    expect(fixtureFiles.sort()).toEqual(
+      [...expectedCassetteNames, ...safetyFixtureNames].sort(),
+    );
 
     const client = createLlmClient(
       loadLlmConfig({

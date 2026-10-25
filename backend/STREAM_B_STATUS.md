@@ -1,0 +1,19 @@
+# Stream B completion check
+
+Reviewed against the Stream B table in `docs/plan.md` on 2026-10-25.
+
+| Task | Status in this checkout | Remaining acceptance work |
+| --- | --- | --- |
+| B1 SAM foundation | Template contains Cognito scopes/authorizer, API handlers, DynamoDB, private S3, EventBridge, and scoped IAM. Search/results storage now uses DynamoDB. | Deploy a dev stack and verify missing, expired, and wrong-scope tokens against the live API. |
+| B2 connector toolkit | `safeFetch`, SSRF checks, redirect checks, retry/backoff, redaction, recorder, and tests exist. | Run the connector security tests as part of release verification. |
+| B3 Hugging Face | Hub connector, fixture tests, and limitation note exist. Search now wires it into the backend. | Verify a live candidate round trip with bounded viewer/sample checks. |
+| B4 data.gov.in | Bounded catalog harvest, local catalog search, protected detail/sample fetch, redaction, fixtures, and spike note exist. Refresh now persists harvested catalog metadata. | Supply the key and verify resource sampling; the remote endpoint behavior has not been rechecked in this session. |
+| B5 normalize and inspect | Normalization, deduplication, provenance, bounded CSV/JSON/Parquet inspection, fixtures, and tests exist. Search now invokes bounded sample inspection for both required sources and includes sample evidence in scores and quality checks. | Confirm sample behavior against live source APIs and review the sample-check coverage/results. |
+| B6 pipeline and ownership | Search extracts with fake/cassette provider, runs the two source connectors in parallel, inspects bounded samples, deduplicates, scores, explains, validates the contract response, persists owner-scoped results and scored dataset details; results and compare routes read stored data. The deterministic first-pass screen is checked against all 50 corpus requests (both adversarial cases mitigated; no benign cases interfered) plus 22 hand-written attack and benign security-query cases. | Expand beyond this heuristic regression set and complete live auth/isolation checks. |
+| B7 refresh Lambda | Refresh performs a capped, rate-limited data.gov.in catalog harvest, upserts stable source/native-ID keys, persists refresh status, exposes non-success status in search source status, and is scheduled daily in the SAM template. | Verify repeated runs and the source status in AWS after deployment. |
+| B8 security and operations | API routes have Cognito scopes; results enforce owner checks; S3 blocks public access and expires objects; Lambda error alarms are defined. | Complete auth/isolation/SSRF/IAM/cache/partial-source checks in a deployed environment. Alarm notifications are not wired to an SNS destination. |
+| B9 deployment and secrets | Deployment and teardown guide exists; SAM template accepts optional ARNs for separate Secrets Manager secrets; Search and Refresh fetch only needed values at runtime, cache five minutes, and do not log SDK errors. SAM validate/build now pass with the actual minimal package CodeUris. | No AWS deployment or credential checks were performed. Create source secrets if desired, deploy after approval, then complete the live smoke checklist. |
+
+## Deployment packaging note
+
+The handlers import workspace packages (`@datascout/ai`, `@datascout/connectors`, `@datascout/verify`, and `@datascout/observability`). The `package:lambda` script bundles those workspace dependencies into five per-function artifacts under `backend/.aws-sam/minimal`, includes the AI prompt resource, and records file sizes and SHA-256 hashes in a manifest. It excludes repository dependencies, tests, docs, credentials, `.env`, and `.git`. `backend/template.yaml` points only at those per-function artifacts. The automatic reviewer rejected packaging the entire repository root because it could include unrelated files and secrets; no whole-root packaging workaround was used.

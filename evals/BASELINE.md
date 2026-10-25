@@ -49,7 +49,10 @@ Do not use development cases for final quality claims. Record corpus hash, model
 
 The extraction runner in `evals/runner.ts` defaults to development-only
 deterministic fake/cassette execution and labels its output as
-`structural_fixture_replay`. The checked-in cassettes derive from gold
+`structural_fixture_replay_with_safety_preflight` (report schema v2). The
+first-pass safety screen is checked against corpus labels before each local
+replay; the replay itself keeps original inputs only for cassette-key lookup.
+The checked-in cassettes derive from gold
 annotations, so their scores are not model predictions or annotation-accuracy
 evidence. `evals/update-baseline.ts` requires
 `--accept-structural-replay`, accepts development-only reports, and appends a

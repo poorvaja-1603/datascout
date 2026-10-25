@@ -41,6 +41,7 @@ function caseRow(
     case_id: caseId,
     split,
     input: `Case ${caseId}`,
+    categories: [],
     expected,
   };
 }
@@ -71,6 +72,7 @@ describe('extraction evaluation runner', () => {
         metrics: {
           properties: {
             per_field: { properties: Record<string, unknown> };
+            [key: string]: unknown;
           };
         };
       };
@@ -88,6 +90,20 @@ describe('extraction evaluation runner', () => {
         'constraints',
       ].sort(),
     );
+    expect(Object.keys(schema.properties.metrics.properties).sort()).toContain('safety');
+  });
+
+  it('fails the evaluation when an adversarially labelled case is not mitigated', async () => {
+    const row = {
+      ...caseRow('missed-attack', 'development'),
+      input: 'Find crop yield data for India with rainfall.',
+      categories: ['adversarial'],
+    };
+    await expect(evaluate({
+      corpusText: JSON.stringify(row),
+      provider: 'fake',
+      extract: async () => noRequirements,
+    })).rejects.toThrow('Safety preflight assertion failed for missed-attack');
   });
 
   it('requires a separate cassette directory for explicit held-out cassette replay', () => {
@@ -160,7 +176,7 @@ describe('extraction evaluation runner', () => {
     expect(report.run.split).toBe('development');
     expect(report.run.case_count).toBe(40);
     expect(sentInputs).toHaveLength(40);
-    expect(report.evaluation_kind).toBe('structural_fixture_replay');
+    expect(report.evaluation_kind).toBe('structural_fixture_replay_with_safety_preflight');
     expect(report.quality_claim).toBe('none_structural_replay_only');
     expect(report.run.corpus_sha256).toMatch(/^[a-f0-9]{64}$/);
   });

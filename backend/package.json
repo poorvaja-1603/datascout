@@ -1,0 +1,28 @@
+{
+  "name": "@datascout/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run --passWithNoTests",
+    "lint": "eslint . --ext .ts,.js",
+    "package:lambda": "node scripts/package-lambda.mjs",
+    "format": "prettier --write .",
+    "format:check": "prettier --check ."
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "3.1147.0",
+    "@aws-sdk/client-secrets-manager": "^3.1147.0",
+    "@aws-sdk/lib-dynamodb": "3.1147.0",
+    "@datascout/ai": "0.1.0",
+    "@datascout/connectors": "0.1.0",
+    "@datascout/contracts": "0.1.0",
+    "@datascout/observability": "0.1.0",
+    "@datascout/verify": "0.1.0",
+    "zod": "4.6.7"
+  },
+  "devDependencies": {
+    "@types/aws-lambda": "^8.10.147"
+  }
+}

@@ -35,7 +35,12 @@ export const EXTRACTION_TIMEOUT_MS = 15_000;
 export type SafetyCheck = (
   query: string,
   ctx: CallContext,
-) => Promise<RefusalReasonCode | null> | RefusalReasonCode | null;
+) => Promise<SafetyDecision> | SafetyDecision;
+
+export type SafetyDecision =
+  | RefusalReasonCode
+  | { sanitizedQuery: string }
+  | null;
 
 const extractionSchema = toJsonSchemas().ExtractedRequirements as object;
 const promptPromise = readFile(

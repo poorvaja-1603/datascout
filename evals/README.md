@@ -44,6 +44,16 @@ annotations: replay scores exercise the extraction path and report structure,
 but are not model predictions, annotation validation, or genuine accuracy. The
 deterministic `fake` provider is also available with `--provider fake`.
 
+The application request path uses a deterministic first-pass safety screen.
+The runner injects the same screen into the extractor, evaluates it for every
+selected corpus case, and records the per-case action plus adversarial-miss and
+benign-interference counts. Sanitized requests use matching local cassette keys;
+replay never calls an external model. Regression tests in
+`packages/ai/test/safety.test.ts` cover corpus attacks, stand-alone override and
+exfiltration requests, obfuscation, encoded instructions, and benign security
+queries. This is bounded heuristic coverage, not a complete safety evaluation;
+broader attacks and false-positive testing remain needed before release.
+
 Only conservative exact matching is reported. Each field's exact-match rate is
 the number of selected cases whose complete value matches the expected value
 divided by the selected case count. Scalar values must match exactly; arrays

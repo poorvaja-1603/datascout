@@ -1,0 +1,19 @@
+{
+  "output": {
+    "topic": "sentiment analysis",
+    "geography": null,
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": [
+      "text"
+    ],
+    "target": "sentiment label",
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}
