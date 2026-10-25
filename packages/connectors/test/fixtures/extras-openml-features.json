@@ -1,0 +1,5 @@
+{
+  "data_features": {
+    "feature": [{ "name": "temperature" }, { "name": "rainfall" }]
+  }
+}

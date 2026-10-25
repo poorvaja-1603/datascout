@@ -7,3 +7,6 @@ export * from './normalize/index.js';
 export * from './inspect/index.js';
 export * from './datagovin/index.js';
 export * from './huggingface/connector.js';
+export * from './openml/connector.js';
+export * from './worldbank/connector.js';
+export * from './extras/index.js';

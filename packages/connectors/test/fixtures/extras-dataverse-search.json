@@ -1,0 +1,11 @@
+{
+  "data": {
+    "items": [
+      {
+        "type": "dataset",
+        "entityId": 100,
+        "global_id": "doi:10.7017/EXAMPLE"
+      }
+    ]
+  }
+}

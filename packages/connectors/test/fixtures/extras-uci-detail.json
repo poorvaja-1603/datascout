@@ -1,0 +1,10 @@
+{
+  "status": 200,
+  "data": {
+    "name": "Climate observations",
+    "abstract": "Weather measurements",
+    "license": "CC BY 4.0",
+    "num_instances": 120,
+    "variables": [{ "name": "temperature" }, { "name": "rainfall" }]
+  }
+}

@@ -1,0 +1,22 @@
+{
+  "hits": {
+    "hits": [
+      {
+        "id": 771,
+        "links": {
+          "html": "https://zenodo.org/records/771",
+          "self": "https://zenodo.org/api/records/771"
+        },
+        "metadata": {
+          "title": "Climate observations",
+          "description": "A climate dataset",
+          "access_right": "open",
+          "license": { "id": "cc-by-4.0" },
+          "keywords": ["climate"],
+          "publication_date": "2025-01-02"
+        },
+        "files": [{ "key": "observations.csv", "size": 200 }]
+      }
+    ]
+  }
+}

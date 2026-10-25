@@ -135,6 +135,12 @@ Resources:
         - ALLOW_REFRESH_TOKEN_AUTH
       PreventUserExistenceErrors: ENABLED
 
+  CognitoUserPoolDomain:
+    Type: AWS::Cognito::UserPoolDomain
+    Properties:
+      Domain: !Sub datascout-${AWS::AccountId}-${AWS::Region}-${Environment}
+      UserPoolId: !Ref CognitoUserPool
+
   # ---------------------------------------------------------------------------
   # API Gateway REST API with Cognito Authorizer & Gateway Responses
   # ---------------------------------------------------------------------------
@@ -505,6 +511,10 @@ Outputs:
     Value: !Ref CognitoUserPoolClient
     Export:
       Name: !Sub datascout-user-pool-client-id-${Environment}
+
+  CognitoHostedUiDomain:
+    Description: Cognito managed login domain hostname for the public SPA client
+    Value: !Sub datascout-${AWS::AccountId}-${AWS::Region}-${Environment}.auth.${AWS::Region}.amazoncognito.com
 
   CognitoUserPoolArn:
     Description: Cognito User Pool ARN

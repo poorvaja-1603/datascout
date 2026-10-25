@@ -1,0 +1,14 @@
+{
+  "success": true,
+  "result": {
+    "results": [
+      {
+        "id": "123",
+        "name": "climate-data",
+        "title": "Climate data",
+        "notes": "Observations",
+        "resources": [{ "format": "CSV" }]
+      }
+    ]
+  }
+}

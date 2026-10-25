@@ -1,0 +1,8 @@
+{
+  "qualities": {
+    "quality": [
+      { "name": "NumberOfInstances", "value": "120" },
+      { "name": "NumberOfFeatures", "value": "2" }
+    ]
+  }
+}

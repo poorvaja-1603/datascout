@@ -1,0 +1,10 @@
+{
+  "data_set_description": {
+    "did": 7,
+    "name": "Climate observations",
+    "description": "Climate measurements",
+    "licence": "CC BY 4.0",
+    "tag": "climate,weather",
+    "version_date": "2025-04-01T00:00:00Z"
+  }
+}

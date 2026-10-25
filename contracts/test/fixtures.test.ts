@@ -232,7 +232,7 @@ describe('P0-5 contract fixtures', () => {
     );
 
     expect(DatasetDetailSchema.parse(detail).dataset.dataset_id).toBe(
-      'datagovin:fixture-rainfall-monthly',
+      'datagovin:fixture-crop-yield',
     );
     expect(
       CompareResponseSchema.parse(compare).datasets.map(

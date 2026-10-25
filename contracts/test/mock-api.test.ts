@@ -81,14 +81,14 @@ describe('P0-6 fixture-backed mock API', () => {
     ).toBe('clarification_needed');
 
     const datasetResponse = await fetch(
-      `${baseUrl}/dataset/${encodeURIComponent('datagovin:fixture-rainfall-monthly')}`,
+      `${baseUrl}/dataset/${encodeURIComponent('datagovin:fixture-crop-yield')}`,
       { headers: authorized('mock-read-token') },
     );
     expect(datasetResponse.status).toBe(200);
     expect(
       DatasetDetailSchema.parse(await responseJson(datasetResponse)).dataset
         .dataset_id,
-    ).toBe('datagovin:fixture-rainfall-monthly');
+    ).toBe('datagovin:fixture-crop-yield');
 
     const compareResponse = await fetch(`${baseUrl}/compare`, {
       method: 'POST',

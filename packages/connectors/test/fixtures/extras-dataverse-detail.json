@@ -1,0 +1,18 @@
+{
+  "data": {
+    "datasetPersistentId": "doi:10.7017/EXAMPLE",
+    "publicationDate": "2025-01-01",
+    "metadataBlocks": {
+      "citation": {
+        "fields": [
+          { "typeName": "title", "value": "Climate survey" },
+          {
+            "typeName": "dsDescription",
+            "value": [{ "dsDescriptionValue": { "value": "Survey data" } }]
+          }
+        ]
+      }
+    },
+    "files": [{ "dataFile": { "filename": "survey.csv", "restricted": false } }]
+  }
+}

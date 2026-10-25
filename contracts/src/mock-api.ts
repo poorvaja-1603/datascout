@@ -1,5 +1,5 @@
 import { createServer } from '@msw/serve';
-import { http, HttpResponse } from 'msw';
+import { http, HttpResponse, type JsonBodyType } from 'msw';
 import { readFile } from 'node:fs/promises';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -54,13 +54,24 @@ function loadSearchExample(value: unknown) {
   return SearchResponseSchema.parse(value);
 }
 
+function corsJson(value: JsonBodyType, status = 200): Response {
+  return HttpResponse.json(value, {
+    status,
+    headers: {
+      'Access-Control-Allow-Origin': '*',
+      'Access-Control-Allow-Headers': 'Authorization, Content-Type, Prefer',
+      'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+    },
+  });
+}
+
 function createErrorResponse(
   code: ErrorCode,
   errors: Map<ErrorCode, ErrorObject>,
 ): Response {
   const error = errors.get(code);
   if (!error) throw new Error(`Missing ${code} mock API error fixture.`);
-  return HttpResponse.json(error, { status: ERROR_HTTP_STATUS[code] });
+  return corsJson(error, ERROR_HTTP_STATUS[code]);
 }
 
 function authorize(
@@ -134,6 +145,15 @@ async function loadFixtures(): Promise<{
 export async function createMockApiServer() {
   const fixtures = await loadFixtures();
   const handlers = [
+    http.options(/.*/, () =>
+      new HttpResponse(null, {
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Headers': 'Authorization, Content-Type, Prefer',
+          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+        },
+      }),
+    ),
     http.post('/search', async ({ request }) => {
       const authFailure = authorize(request, 'search', fixtures.errors);
       if (authFailure) return authFailure;
@@ -155,7 +175,7 @@ export async function createMockApiServer() {
         fixtures.errors,
       );
       if ('response' in selection) return selection.response;
-      return HttpResponse.json(selection.value);
+      return corsJson(selection.value);
     }),
     http.get('/results/:request_id', ({ params, request }) => {
       const authFailure = authorize(request, 'read', fixtures.errors);
@@ -171,7 +191,7 @@ export async function createMockApiServer() {
       if (selection.value.request_id !== params['request_id']) {
         return createErrorResponse('not_found', fixtures.errors);
       }
-      return HttpResponse.json(selection.value);
+      return corsJson(selection.value);
     }),
     http.get('/dataset/:dataset_id', ({ params, request }) => {
       const authFailure = authorize(request, 'read', fixtures.errors);
@@ -187,7 +207,7 @@ export async function createMockApiServer() {
       if (selection.value.dataset.dataset_id !== params['dataset_id']) {
         return createErrorResponse('not_found', fixtures.errors);
       }
-      return HttpResponse.json(selection.value);
+      return corsJson(selection.value);
     }),
     http.post('/compare', async ({ request }) => {
       const authFailure = authorize(request, 'compare', fixtures.errors);
@@ -220,7 +240,7 @@ export async function createMockApiServer() {
       ) {
         return createErrorResponse('not_found', fixtures.errors);
       }
-      return HttpResponse.json(selection.value);
+      return corsJson(selection.value);
     }),
   ];
 
