@@ -1,0 +1,2202 @@
+{
+  "report_schema": "live-extraction-report-v1",
+  "evaluator_version": "model-extraction-evaluator-v2",
+  "quality_claim": "measured_model_output_not_release_approval",
+  "run": {
+    "run_id": "2026-10-24T20-23-26-972Z-development",
+    "started_at": "2026-10-24T20:23:26.972Z",
+    "split": "development",
+    "provider": "ollama",
+    "model_id": "qwen3:8b",
+    "prompt_version": "extract-v2",
+    "extraction_schema": "ExtractedRequirements",
+    "extraction_schema_version": "1",
+    "corpus_sha256": "c51fea6749565df1889d00ff56f0233d6ddb9fd359adf01b16308c3dcecd21a5",
+    "case_count": 40,
+    "timeout_ms": 120000,
+    "safety_triage": "enabled_with_local_in_memory_budget"
+  },
+  "metrics": {
+    "cases": 40,
+    "all_fields_exact_match_cases": 13,
+    "all_fields_exact_match_rate": 0.325,
+    "result_kinds": {
+      "ok": 36,
+      "clarification": 1,
+      "refused": 3,
+      "error": 0
+    },
+    "per_field": {
+      "topic": {
+        "exact_matches": 24,
+        "cases": 40,
+        "exact_match_rate": 0.6
+      },
+      "geography": {
+        "exact_matches": 36,
+        "cases": 40,
+        "exact_match_rate": 0.9
+      },
+      "time_coverage": {
+        "exact_matches": 33,
+        "cases": 40,
+        "exact_match_rate": 0.825
+      },
+      "minimum_records": {
+        "exact_matches": 37,
+        "cases": 40,
+        "exact_match_rate": 0.925
+      },
+      "required_features": {
+        "exact_matches": 18,
+        "cases": 40,
+        "exact_match_rate": 0.45
+      },
+      "target": {
+        "exact_matches": 31,
+        "cases": 40,
+        "exact_match_rate": 0.775
+      },
+      "preferences": {
+        "exact_matches": 33,
+        "cases": 40,
+        "exact_match_rate": 0.825
+      },
+      "constraints": {
+        "exact_matches": 32,
+        "cases": 40,
+        "exact_match_rate": 0.8
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "REQE-001",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "crop yield",
+          "actual": "crop yield",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Maharashtra",
+          "actual": "Maharashtra",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "rainfall",
+            "temperature"
+          ],
+          "actual": [
+            "rainfall",
+            "temperature"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-002",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "air quality",
+          "actual": "air quality",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Delhi",
+          "actual": "Delhi",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "2018-2023",
+          "actual": "2018-2023",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": 10000,
+          "actual": 10000,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "PM2.5",
+            "NO2"
+          ],
+          "actual": [
+            "PM2.5",
+            "NO2",
+            "monthly"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-003",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "house prices",
+          "actual": "house prices",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Bengaluru",
+          "actual": "Bengaluru",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "area",
+            "bedrooms",
+            "neighborhood"
+          ],
+          "actual": [
+            "area",
+            "bedrooms",
+            "neighborhood"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": "house prices",
+          "actual": "house prices",
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-004",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "public health survey",
+          "actual": "public health survey data",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": "Kenya",
+          "actual": "Kenya",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "2015-2020",
+          "actual": "2015-2020",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": 5000,
+          "actual": 5000,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-005",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "handwritten digit recognition",
+          "actual": "handwritten digit recognition",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [
+            "digit"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": "digit",
+          "exact_match": false
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [
+            "OpenML"
+          ],
+          "actual": [
+            "openml"
+          ],
+          "exact_match": false
+        }
+      }
+    },
+    {
+      "case_id": "REQE-006",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "sentiment analysis",
+          "actual": "sentiment analysis text",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "text"
+          ],
+          "actual": [
+            "labeled sentiment analysis text"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": "sentiment label",
+          "actual": null,
+          "exact_match": false
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [
+            "Hugging Face Datasets"
+          ],
+          "exact_match": false
+        }
+      }
+    },
+    {
+      "case_id": "REQE-007",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "GDP per capita",
+          "actual": "World Bank indicator data",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": "Nepal",
+          "actual": "Nepal",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "2000-2022",
+          "actual": "2000-2022",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [
+            "annual GDP per capita"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [
+            "World Bank Indicators"
+          ],
+          "actual": [],
+          "exact_match": false
+        }
+      }
+    },
+    {
+      "case_id": "REQE-008",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "rainfall",
+          "actual": "rainfall data",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": "India",
+          "actual": "India",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": "preferably with dates",
+          "exact_match": false
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "district"
+          ],
+          "actual": [
+            "by district",
+            "station identifiers"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [
+            "dates",
+            "station identifiers"
+          ],
+          "actual": [],
+          "exact_match": false
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-009",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "traffic observations",
+          "actual": "traffic observations",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "California",
+          "actual": "California",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "2020-2024",
+          "actual": "2020-2024",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": 250000,
+          "actual": 250000,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [
+            "roads"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-010",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "school attendance",
+          "actual": "school attendance",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Ghana",
+          "actual": "Ghana",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "student age",
+            "attendance dates"
+          ],
+          "actual": [
+            "student age",
+            "attendance dates"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-011",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "customer churn",
+          "actual": "customer churn",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [
+            "cancellation outcome"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": "cancellation outcome",
+          "actual": "cancellation outcome",
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-012",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "electricity consumption",
+          "actual": "electricity consumption",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Germany",
+          "actual": "Germany",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "2010-2020",
+          "actual": "2010-2020",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "monthly measurements",
+            "households"
+          ],
+          "actual": [
+            "monthly electricity consumption for households"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-013",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "floods",
+          "actual": "floods",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Bangladesh",
+          "actual": "Bangladesh",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": 8000,
+          "actual": 8000,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "affected area",
+            "event date"
+          ],
+          "actual": [
+            "affected area",
+            "event date"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-014",
+      "split": "development",
+      "result_kind": "refused",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "winning lottery numbers",
+          "actual": null,
+          "exact_match": false
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false
+        },
+        "time_coverage": {
+          "expected": "next year",
+          "actual": null,
+          "exact_match": false
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false
+        },
+        "required_features": {
+          "expected": [],
+          "actual": null,
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false
+        },
+        "preferences": {
+          "expected": [],
+          "actual": null,
+          "exact_match": false
+        },
+        "constraints": {
+          "expected": [],
+          "actual": null,
+          "exact_match": false
+        }
+      }
+    },
+    {
+      "case_id": "REQE-015",
+      "split": "development",
+      "result_kind": "clarification",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-016",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "climate",
+          "actual": "climate data",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": null,
+          "actual": "north",
+          "exact_match": false
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": "recent",
+          "exact_match": false
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [
+            "recent",
+            "large"
+          ],
+          "actual": [
+            "large"
+          ],
+          "exact_match": false
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-017",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "wildfire risk prediction",
+          "actual": "wildfire risk prediction",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Australia",
+          "actual": "Australia",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "humidity",
+            "wind speed",
+            "fire occurrence"
+          ],
+          "actual": [
+            "humidity",
+            "wind speed",
+            "fire occurrence"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": "fire occurrence",
+          "actual": null,
+          "exact_match": false
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-018",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "exchange rates",
+          "actual": "exchange rates",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "2012-2024",
+          "actual": "2012-2024",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": 2000,
+          "actual": 2000,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "daily observations"
+          ],
+          "actual": [
+            "daily"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-019",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "public transport ridership",
+          "actual": "public transport ridership",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Mumbai",
+          "actual": "Mumbai",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [
+            "ridership data"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [
+            "data.gov.in"
+          ],
+          "actual": [],
+          "exact_match": false
+        }
+      }
+    },
+    {
+      "case_id": "REQE-020",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "crop disease images",
+          "actual": "crop disease image dataset",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "images",
+            "disease type"
+          ],
+          "actual": [
+            "disease type",
+            "downloadable as JPG files"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": "disease type",
+          "actual": null,
+          "exact_match": false
+        },
+        "preferences": {
+          "expected": [
+            "JPG files",
+            "downloadable"
+          ],
+          "actual": [],
+          "exact_match": false
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-021",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "forest cover",
+          "actual": "forest cover",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Brazil",
+          "actual": "Brazil",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "1990-2020",
+          "actual": "1990-2020",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "annual measurements"
+          ],
+          "actual": [
+            "annual measurements"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-022",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "diabetes",
+          "actual": "diabetes research",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": "Canada",
+          "actual": "Canada",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "age",
+            "BMI",
+            "diagnosis status"
+          ],
+          "actual": [
+            "age",
+            "BMI",
+            "diagnosis status"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-023",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "bike-share trips",
+          "actual": "bike-share trips",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": 50000,
+          "actual": 50000,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "start station",
+            "trip duration"
+          ],
+          "actual": [
+            "start station",
+            "trip duration"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-024",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "temperature",
+          "actual": "temperature",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-025",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "inflation",
+          "actual": "inflation indicators",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": "Peru",
+          "actual": "Peru",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [
+            "inflation rate"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [
+            "World Bank Indicators"
+          ],
+          "actual": [
+            "World Bank"
+          ],
+          "exact_match": false
+        }
+      }
+    },
+    {
+      "case_id": "REQE-026",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "earthquake events",
+          "actual": "earthquake events",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Japan",
+          "actual": "Japan",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "2005-2015",
+          "actual": "2005-2015",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": 1200,
+          "actual": 1200,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "magnitude",
+            "depth"
+          ],
+          "actual": [
+            "magnitude",
+            "depth"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-027",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "food prices",
+          "actual": "food prices",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Lagos",
+          "actual": "Lagos",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "product name",
+            "market",
+            "price"
+          ],
+          "actual": [
+            "product name",
+            "market",
+            "price"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-028",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "speech recognition",
+          "actual": "speech recognition research",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "audio clips",
+            "language labels"
+          ],
+          "actual": [
+            "language labels",
+            "audio clips"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": "language labels",
+          "actual": null,
+          "exact_match": false
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-029",
+      "split": "development",
+      "result_kind": "refused",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "medical records",
+          "actual": null,
+          "exact_match": false
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false
+        },
+        "required_features": {
+          "expected": [
+            "names",
+            "contact details"
+          ],
+          "actual": null,
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false
+        },
+        "preferences": {
+          "expected": [],
+          "actual": null,
+          "exact_match": false
+        },
+        "constraints": {
+          "expected": [
+            "private personal data"
+          ],
+          "actual": null,
+          "exact_match": false
+        }
+      }
+    },
+    {
+      "case_id": "REQE-030",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "rainfall",
+          "actual": "Monthly rainfall",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": "Queensland, Australia",
+          "actual": "Queensland, Australia",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "1980-2020",
+          "actual": "1980-2020",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "monthly measurements"
+          ],
+          "actual": [
+            "rainfall"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-031",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "product reviews",
+          "actual": "product reviews",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": 300000,
+          "actual": 300000,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "review text",
+            "rating",
+            "product category"
+          ],
+          "actual": [
+            "review text",
+            "rating",
+            "product category"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-032",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "dengue fever cases",
+          "actual": "dengue fever",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": "Sri Lanka",
+          "actual": "Sri Lanka",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": "by week",
+          "exact_match": false
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "weekly counts"
+          ],
+          "actual": [
+            "cases"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-033",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "night-time lights",
+          "actual": "satellite data",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "2016-2022",
+          "actual": "2016-2022",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "coordinates",
+            "brightness values"
+          ],
+          "actual": [
+            "coordinates",
+            "brightness values"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-034",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "urban heat islands",
+          "actual": "urban heat islands",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Phoenix",
+          "actual": "Phoenix",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "summer 2019",
+          "actual": "summer 2019",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "daily temperature"
+          ],
+          "actual": [
+            "daily temperature"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-035",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "plant photos",
+          "actual": "plant photos",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": 1000,
+          "actual": 1000,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "labeled images",
+            "species names",
+            "image files"
+          ],
+          "actual": [
+            "species names",
+            "image files"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": "species names",
+          "actual": null,
+          "exact_match": false
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-036",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "unemployment statistics",
+          "actual": "unemployment statistics",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "Spain",
+          "actual": "Spain",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "1995-2020",
+          "actual": "1995-2020",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "annual measurements"
+          ],
+          "actual": [
+            "annual unemployment rate"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-037",
+      "split": "development",
+      "result_kind": "refused",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "river pollution",
+          "actual": null,
+          "exact_match": false
+        },
+        "geography": {
+          "expected": "India",
+          "actual": null,
+          "exact_match": false
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false
+        },
+        "required_features": {
+          "expected": [
+            "pH"
+          ],
+          "actual": null,
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false
+        },
+        "preferences": {
+          "expected": [],
+          "actual": null,
+          "exact_match": false
+        },
+        "constraints": {
+          "expected": [],
+          "actual": null,
+          "exact_match": false
+        }
+      }
+    },
+    {
+      "case_id": "REQE-038",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "road safety",
+          "actual": "road safety",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": "United States",
+          "actual": "United States",
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "crash date",
+            "location",
+            "injury severity"
+          ],
+          "actual": [
+            "crash date",
+            "location",
+            "injury severity"
+          ],
+          "exact_match": true
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-039",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "wholesale prices",
+          "actual": "wholesale prices for onions",
+          "exact_match": false
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": "2021",
+          "actual": "2021",
+          "exact_match": true
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [
+            "daily measurements",
+            "onions"
+          ],
+          "actual": [
+            "daily wholesale prices"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        },
+        "constraints": {
+          "expected": [
+            "data.gov.in"
+          ],
+          "actual": [
+            "data.gov.in"
+          ],
+          "exact_match": true
+        }
+      }
+    },
+    {
+      "case_id": "REQE-040",
+      "split": "development",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "fields": {
+        "topic": {
+          "expected": "energy",
+          "actual": "energy",
+          "exact_match": true
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": "recent",
+          "exact_match": false
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [
+            "solar",
+            "wind"
+          ],
+          "exact_match": false
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true
+        },
+        "preferences": {
+          "expected": [
+            "recent",
+            "solar",
+            "wind"
+          ],
+          "actual": [],
+          "exact_match": false
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true
+        }
+      }
+    }
+  ]
+}

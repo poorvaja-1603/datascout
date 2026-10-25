@@ -1,0 +1,505 @@
+{
+  "report_schema": "verdict-evaluation-v1",
+  "evaluator_version": "match-fixture-evaluator-v1",
+  "quality_claim": "labeled_synthetic_fixture_only",
+  "started_at": "2026-10-25T11:57:20.519Z",
+  "fixture_sha256": "4ab1bedbffc33d578cf86de1a10b1b8e56c43237c81d131274f18f62207ec7d8",
+  "metrics": {
+    "verdicts": 70,
+    "exact_match_rate": 1,
+    "false_pass_count": 0,
+    "false_pass_rate": 0
+  },
+  "cases": [
+    {
+      "dataset_id": "datagovin:crop-yield-maharashtra",
+      "requirement_id": "req-dg1-topic",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:crop-yield-maharashtra",
+      "requirement_id": "req-dg1-geo",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:crop-yield-maharashtra",
+      "requirement_id": "req-dg1-time",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:crop-yield-maharashtra",
+      "requirement_id": "req-dg1-minrec",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:crop-yield-maharashtra",
+      "requirement_id": "req-dg1-feat1",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:crop-yield-maharashtra",
+      "requirement_id": "req-dg1-target",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:crop-yield-maharashtra",
+      "requirement_id": "req-dg1-fail-geo",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:delhi-air-quality",
+      "requirement_id": "req-dg2-topic",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:delhi-air-quality",
+      "requirement_id": "req-dg2-geo",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:delhi-air-quality",
+      "requirement_id": "req-dg2-feat",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:delhi-air-quality",
+      "requirement_id": "req-dg2-fail-records",
+      "expected": "UNKNOWN",
+      "actual": "UNKNOWN",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:delhi-air-quality",
+      "requirement_id": "req-dg2-pref-fmt",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:karnataka-phc-facilities",
+      "requirement_id": "req-dg3-topic",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:karnataka-phc-facilities",
+      "requirement_id": "req-dg3-geo",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:karnataka-phc-facilities",
+      "requirement_id": "req-dg3-feat1",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:karnataka-phc-facilities",
+      "requirement_id": "req-dg3-minrec",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:karnataka-phc-facilities",
+      "requirement_id": "req-dg3-fail-rec",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:karnataka-phc-facilities",
+      "requirement_id": "req-dg3-fail-feat",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:india-census-literacy-2011",
+      "requirement_id": "req-dg4-topic",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:india-census-literacy-2011",
+      "requirement_id": "req-dg4-geo",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:india-census-literacy-2011",
+      "requirement_id": "req-dg4-time",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:india-census-literacy-2011",
+      "requirement_id": "req-dg4-feat",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:india-census-literacy-2011",
+      "requirement_id": "req-dg4-fail-time",
+      "expected": "UNKNOWN",
+      "actual": "UNKNOWN",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:financial_phrasebank",
+      "requirement_id": "req-hf1-topic",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:financial_phrasebank",
+      "requirement_id": "req-hf1-feat",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:financial_phrasebank",
+      "requirement_id": "req-hf1-target",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:financial_phrasebank",
+      "requirement_id": "req-hf1-minrec",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:financial_phrasebank",
+      "requirement_id": "req-hf1-constraint",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:financial_phrasebank",
+      "requirement_id": "req-hf1-fail-records",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:squad",
+      "requirement_id": "req-hf2-topic",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:squad",
+      "requirement_id": "req-hf2-feat",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:squad",
+      "requirement_id": "req-hf2-time",
+      "expected": "UNKNOWN",
+      "actual": "UNKNOWN",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:squad",
+      "requirement_id": "req-hf2-unknown-geo",
+      "expected": "UNKNOWN",
+      "actual": "UNKNOWN",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:sst2",
+      "requirement_id": "req-hf3-topic",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:sst2",
+      "requirement_id": "req-hf3-feat",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:sst2",
+      "requirement_id": "req-hf3-target",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:sst2",
+      "requirement_id": "req-hf3-minrec",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:sst2",
+      "requirement_id": "req-hf3-fail-target",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:diabetes",
+      "requirement_id": "req-oml1-topic",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:diabetes",
+      "requirement_id": "req-oml1-target",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:diabetes",
+      "requirement_id": "req-oml1-feat",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:diabetes",
+      "requirement_id": "req-oml1-minrec",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:diabetes",
+      "requirement_id": "req-oml1-fail-minrec",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:diabetes",
+      "requirement_id": "req-oml1-fail-geo",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:creditcard-fraud",
+      "requirement_id": "req-oml2-topic",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:creditcard-fraud",
+      "requirement_id": "req-oml2-feat1",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:creditcard-fraud",
+      "requirement_id": "req-oml2-target",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:creditcard-fraud",
+      "requirement_id": "req-oml2-geo",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:creditcard-fraud",
+      "requirement_id": "req-oml2-minrec",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:creditcard-fraud",
+      "requirement_id": "req-oml2-time",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:creditcard-fraud",
+      "requirement_id": "req-oml2-fail-time",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:titanic",
+      "requirement_id": "req-oml3-topic",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:titanic",
+      "requirement_id": "req-oml3-target",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:titanic",
+      "requirement_id": "req-oml3-feat1",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:titanic",
+      "requirement_id": "req-oml3-feat2",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:titanic",
+      "requirement_id": "req-oml3-time",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:titanic",
+      "requirement_id": "req-oml3-minrec",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:gdp-per-capita",
+      "requirement_id": "req-wb1-topic",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:gdp-per-capita",
+      "requirement_id": "req-wb1-time",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:gdp-per-capita",
+      "requirement_id": "req-wb1-minrec",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:gdp-per-capita",
+      "requirement_id": "req-wb1-feat",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:gdp-per-capita",
+      "requirement_id": "req-wb1-target",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:gdp-per-capita",
+      "requirement_id": "req-wb1-geo",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:gdp-per-capita",
+      "requirement_id": "req-wb1-constraint",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:gdp-per-capita",
+      "requirement_id": "req-wb1-fail-feat",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:life-expectancy",
+      "requirement_id": "req-wb2-topic",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:life-expectancy",
+      "requirement_id": "req-wb2-time",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:life-expectancy",
+      "requirement_id": "req-wb2-target",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:life-expectancy",
+      "requirement_id": "req-wb2-minrec",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:life-expectancy",
+      "requirement_id": "req-wb2-fail-geo",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    }
+  ]
+}

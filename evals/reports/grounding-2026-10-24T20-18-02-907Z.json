@@ -1,0 +1,46 @@
+{
+  "report_schema": "grounding-evaluation-v1",
+  "evaluator_version": "explanation-validator-v1",
+  "quality_claim": "deterministic_synthetic_fixture_only",
+  "started_at": "2026-10-24T20:18:02.901Z",
+  "fixture_sha256": "86cee61869da7d3c88df98d213f7de7b73fc5c7090f1c1f66f4932cc31702a66",
+  "metrics": {
+    "cases": 5,
+    "expected_claims": 2,
+    "accepted_claims": 2,
+    "unsupported_claims_accepted": 0,
+    "exact_match_rate": 1
+  },
+  "cases": [
+    {
+      "case_id": "ground-001",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-002",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-003",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-004",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-005",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    }
+  ]
+}

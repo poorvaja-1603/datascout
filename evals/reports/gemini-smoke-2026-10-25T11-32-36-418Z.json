@@ -1,0 +1,17 @@
+{
+  "report_schema": "gemini-single-call-smoke-v1",
+  "quality_claim": "provider_connectivity_only_not_quality_evaluation",
+  "outcome": "passed",
+  "completed_at": "2026-10-25T11:32:35.230Z",
+  "provider": "gemini",
+  "model_id": "gemini-2.5-flash",
+  "http_status": 200,
+  "usage": {
+    "inputTokens": 26,
+    "outputTokens": 5
+  },
+  "latency_ms": 1188,
+  "requests_sent": 1,
+  "fallback_enabled": false,
+  "response_schema_valid": true
+}

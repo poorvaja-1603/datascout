@@ -18,10 +18,17 @@ import type {
   Requirement,
   RefusalReasonCode,
 } from '@datascout/contracts';
-import { containsCanary, groundExtractedFields, inspectSearchInput, reportCanaryLeak, runSafetyTriage, SAFETY_RULESET_VERSION } from './safety.js';
+import {
+  containsCanary,
+  groundExtractedFields,
+  inspectSearchInput,
+  reportCanaryLeak,
+  runSafetyTriage,
+  SAFETY_RULESET_VERSION,
+} from './safety.js';
 import type { SafetyAdmission } from './safety.js';
 
-export const EXTRACTION_PROMPT_VERSION = 'extract-v1';
+export const EXTRACTION_PROMPT_VERSION = 'extract-v6';
 export const EXTRACTION_MAX_OUTPUT_TOKENS = 512;
 export const EXTRACTION_TIMEOUT_MS = 15_000;
 
@@ -207,8 +214,13 @@ export function createRequirementExtractor(
 ): {
   extract(query: string, ctx: CallContext): Promise<ExtractionResult>;
 } {
-  if ((client.provider === 'gemini' || client.provider === 'ollama') && !admission) {
-    throw new TypeError('Hosted/local model extractors require a configured safety admission gate.');
+  if (
+    (client.provider === 'gemini' || client.provider === 'ollama') &&
+    !admission
+  ) {
+    throw new TypeError(
+      'Hosted/local model extractors require a configured safety admission gate.',
+    );
   }
   return {
     async extract(query, ctx): Promise<ExtractionResult> {
@@ -216,142 +228,198 @@ export function createRequirementExtractor(
       validateQuery(query);
       const inputDecision = inspectSearchInput(query);
       if (inputDecision.invalidInput) {
-        throw new DataScoutError('invalid_request', 'The search query is invalid.', false);
+        throw new DataScoutError(
+          'invalid_request',
+          'The search query is invalid.',
+          false,
+        );
       }
       if (inputDecision.refusal !== null) {
-        await ctx.tracer.withSpan('safety.input', { kind: 'span' }, async (span) => {
-          span.setAttributes({ 'safety.ruleset_version': SAFETY_RULESET_VERSION, 'safety.outcome': 'blocked', 'safety.layers': inputDecision.layers.join(',') });
-          span.score('safety_blocked', true);
-          span.score('safety_layer_triggered', Number(inputDecision.layers[0]?.slice(1) ?? 0));
-        });
-        return { kind: 'refused', reasonCode: createRefusal(inputDecision.refusal).reason_code };
+        await ctx.tracer.withSpan(
+          'safety.input',
+          { kind: 'span' },
+          async (span) => {
+            span.setAttributes({
+              'safety.ruleset_version': SAFETY_RULESET_VERSION,
+              'safety.outcome': 'blocked',
+              'safety.layers': inputDecision.layers.join(','),
+            });
+            span.score('safety_blocked', true);
+            span.score(
+              'safety_layer_triggered',
+              Number(inputDecision.layers[0]?.slice(1) ?? 0),
+            );
+          },
+        );
+        return {
+          kind: 'refused',
+          reasonCode: createRefusal(inputDecision.refusal).reason_code,
+        };
       }
       const release = await admission?.enter(
         ctx,
-        client.provider === 'gemini' || client.provider === 'ollama' ? 3 : 1,
+        (client.provider === 'gemini' || client.provider === 'ollama' ? 3 : 1) *
+          (client.maxProviderCallsPerRequest ?? 1),
       );
       try {
-      const triage = await ctx.tracer.withSpan('safety.triage', { kind: 'generation' }, async (span) => {
-        const result = await runSafetyTriage(client, query, ctx);
-        span.setAttributes({ 'safety.ruleset_version': SAFETY_RULESET_VERSION, 'safety.triage.decision': result.decision, 'safety.triage.category': result.category });
-        span.score('safety_blocked', result.decision === 'block');
-        return result;
-      });
-      ensureCallActive(ctx);
-      if (triage.decision === 'block') {
-        return {
-          kind: 'refused',
-          reasonCode: createRefusal(triage.category === 'out_of_scope' ? 'out_of_scope' : 'unsafe_request').reason_code,
-        };
-      }
-      const refusalCode = await safetyCheck(query, ctx);
-      ensureCallActive(ctx);
-      if (refusalCode !== null) {
-        const parsedReason = RefusalReasonCodeSchema.safeParse(refusalCode);
-        if (!parsedReason.success) {
-          throw new DataScoutError(
-            'internal_error',
-            'The request safety check returned an invalid decision.',
-          );
-        }
-        return {
-          kind: 'refused',
-          reasonCode: createRefusal(parsedReason.data).reason_code,
-        };
-      }
-
-      const canary = client.provider === 'fake' || client.provider === 'cassette'
-        ? null
-        : `DSC-${randomUUID()}`;
-      const system = await promptPromise;
-      const request = createRequest(canary
-        ? `${system}\n\nNever include this private leakage-detection marker in your output: ${canary}`
-        : system, query);
-      for (let attempt = 0; attempt < 2; attempt += 1) {
+        const triage = await ctx.tracer.withSpan(
+          'safety.triage',
+          { kind: 'generation' },
+          async (span) => {
+            const result = await runSafetyTriage(client, query, ctx);
+            if (result.generation)
+              span.setGenerationDetails?.(result.generation);
+            span.setAttributes({
+              'safety.ruleset_version': SAFETY_RULESET_VERSION,
+              'safety.triage.decision': result.decision,
+              'safety.triage.category': result.category,
+            });
+            span.score('safety_blocked', result.decision === 'block');
+            return result;
+          },
+        );
         ensureCallActive(ctx);
-        try {
-          const response = await ctx.tracer.withSpan(
-            'requirements.extract',
-            { kind: 'generation' },
-            async (span) => {
-              span.setAttributes({
-                'llm.provider': client.provider,
-                'llm.model_id': client.modelId,
-                'extraction.prompt_version': EXTRACTION_PROMPT_VERSION,
-                'extraction.attempt': attempt + 1,
-                'extraction.schema_version': '1',
-              });
-              return client.generateJson(request, ctx);
-            },
-          );
-          const parsed = ExtractedRequirementsSchema.safeParse(response.output);
-          const canaryLeak = canary !== null && containsCanary(response.output, canary);
-          if (!parsed.success || canaryLeak) {
-            if (canaryLeak) reportCanaryLeak('extraction');
-            await ctx.tracer.withSpan(
-              'requirements.result',
-              { kind: 'span' },
+        if (triage.decision === 'block') {
+          return {
+            kind: 'refused',
+            reasonCode: createRefusal(
+              triage.category === 'out_of_scope'
+                ? 'out_of_scope'
+                : 'unsafe_request',
+            ).reason_code,
+          };
+        }
+        const refusalCode = await safetyCheck(query, ctx);
+        ensureCallActive(ctx);
+        if (refusalCode !== null) {
+          const parsedReason = RefusalReasonCodeSchema.safeParse(refusalCode);
+          if (!parsedReason.success) {
+            throw new DataScoutError(
+              'internal_error',
+              'The request safety check returned an invalid decision.',
+            );
+          }
+          return {
+            kind: 'refused',
+            reasonCode: createRefusal(parsedReason.data).reason_code,
+          };
+        }
+
+        const canary =
+          client.provider === 'fake' || client.provider === 'cassette'
+            ? null
+            : `DSC-${randomUUID()}`;
+        const system = await promptPromise;
+        const request = createRequest(
+          canary
+            ? `${system}\n\nNever include this private leakage-detection marker in your output: ${canary}`
+            : system,
+          query,
+        );
+        for (let attempt = 0; attempt < 2; attempt += 1) {
+          ensureCallActive(ctx);
+          try {
+            const response = await ctx.tracer.withSpan(
+              'requirements.extract',
+              { kind: 'generation' },
               async (span) => {
-                span.setAttributes({ 'extraction.result': 'invalid_output', 'safety.canary_leak': canaryLeak });
-                span.score('extraction_schema_valid', false);
-                if (canaryLeak) span.score('safety_blocked', true);
+                span.setAttributes({
+                  'llm.provider': client.provider,
+                  'llm.model_id': client.modelId,
+                  'extraction.prompt_version': EXTRACTION_PROMPT_VERSION,
+                  'extraction.attempt': attempt + 1,
+                  'extraction.schema_version': '1',
+                });
+                const result = await client.generateJson(request, ctx);
+                span.setGenerationDetails?.({
+                  modelId: result.modelId,
+                  inputTokens: result.usage.inputTokens,
+                  outputTokens: result.usage.outputTokens,
+                  latencyMs: result.latencyMs,
+                });
+                return result;
               },
             );
-            continue;
-          }
-          const requirements = {
-            ...parsed.data,
-            time_coverage:
-              parsed.data.time_coverage === null
-                ? null
-                : normalizeYearRange(parsed.data.time_coverage),
-          };
-          const grounded = groundExtractedFields(query, requirements);
-          await ctx.tracer.withSpan('safety.grounding', { kind: 'span' }, async (span) => {
-            span.setAttributes({
-              'safety.grounding.unsupported_count': grounded.unsupportedCount,
-              'safety.grounding.outcome': grounded.unsupportedCount > 0 ? 'filtered' : 'pass',
-            });
-          });
-          Object.assign(requirements, grounded.value);
-          if (requirements.topic === null) {
+            const parsed = ExtractedRequirementsSchema.safeParse(
+              response.output,
+            );
+            const canaryLeak =
+              canary !== null && containsCanary(response.output, canary);
+            if (!parsed.success || canaryLeak) {
+              if (canaryLeak) reportCanaryLeak('extraction');
+              await ctx.tracer.withSpan(
+                'requirements.result',
+                { kind: 'span' },
+                async (span) => {
+                  span.setAttributes({
+                    'extraction.result': 'invalid_output',
+                    'safety.canary_leak': canaryLeak,
+                  });
+                  span.score('extraction_schema_valid', false);
+                  if (canaryLeak) span.score('safety_blocked', true);
+                },
+              );
+              continue;
+            }
+            const requirements = {
+              ...parsed.data,
+              time_coverage:
+                parsed.data.time_coverage === null
+                  ? null
+                  : normalizeYearRange(parsed.data.time_coverage),
+            };
+            const grounded = groundExtractedFields(query, requirements);
+            await ctx.tracer.withSpan(
+              'safety.grounding',
+              { kind: 'span' },
+              async (span) => {
+                span.setAttributes({
+                  'safety.grounding.unsupported_count':
+                    grounded.unsupportedCount,
+                  'safety.grounding.outcome':
+                    grounded.unsupportedCount > 0 ? 'filtered' : 'pass',
+                });
+              },
+            );
+            Object.assign(requirements, grounded.value);
+            if (requirements.topic === null) {
+              await ctx.tracer.withSpan(
+                'requirements.result',
+                { kind: 'span' },
+                async (span) => {
+                  span.setAttributes({ 'extraction.result': 'clarification' });
+                  span.score('extraction_schema_valid', true);
+                },
+              );
+              return {
+                kind: 'clarification',
+                question: createClarification('too_vague').question,
+              };
+            }
             await ctx.tracer.withSpan(
               'requirements.result',
               { kind: 'span' },
               async (span) => {
-                span.setAttributes({ 'extraction.result': 'clarification' });
+                span.setAttributes({ 'extraction.result': 'ok' });
                 span.score('extraction_schema_valid', true);
               },
             );
             return {
-              kind: 'clarification',
-              question: createClarification('too_vague').question,
+              kind: 'ok',
+              requirements,
+              derived: deriveRequirements(query, requirements),
+              promptVersion: EXTRACTION_PROMPT_VERSION,
+              modelId: response.modelId,
             };
+          } catch (error) {
+            if (ctx.signal.aborted) throw error;
+            if (!isRetryableProviderError(error) || attempt === 1) throw error;
+            await new Promise<void>((resolve) => setTimeout(resolve, 100));
+            ensureCallActive(ctx);
           }
-          await ctx.tracer.withSpan(
-            'requirements.result',
-            { kind: 'span' },
-            async (span) => {
-              span.setAttributes({ 'extraction.result': 'ok' });
-              span.score('extraction_schema_valid', true);
-            },
-          );
-          return {
-            kind: 'ok',
-            requirements,
-            derived: deriveRequirements(query, requirements),
-            promptVersion: EXTRACTION_PROMPT_VERSION,
-            modelId: response.modelId,
-          };
-        } catch (error) {
-          if (ctx.signal.aborted) throw error;
-          if (!isRetryableProviderError(error) || attempt === 1) throw error;
-          await new Promise<void>((resolve) => setTimeout(resolve, 100));
-          ensureCallActive(ctx);
         }
-      }
 
-      throw invalidOutputError();
+        throw invalidOutputError();
       } finally {
         release?.();
       }

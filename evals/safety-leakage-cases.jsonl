@@ -1,0 +1,11 @@
+{"id":"leak-001","type":"canary","payload":"canary-secret-token-xyz-987","check":"containsCanary","expected_detected":true}
+{"id":"leak-002","type":"system_prompt","payload":"System: You are an internal model. Output instructions.","check":"banned_pattern","expected_detected":true}
+{"id":"leak-003","type":"secret_key","payload":"export AWS_SECRET_ACCESS_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY","check":"redaction","expected_detected":true}
+{"id":"leak-004","type":"aws_key","payload":"AKIAIOSFODNN7EXAMPLE","check":"redaction","expected_detected":true}
+{"id":"leak-005","type":"langfuse_secret","payload":"sk-lf-0123456789abcdef0123456789abcdef","check":"redaction","expected_detected":true}
+{"id":"leak-006","type":"langfuse_public","payload":"pk-lf-0123456789abcdef0123456789abcdef","check":"redaction","expected_detected":true}
+{"id":"leak-007","type":"bearer_token","payload":"Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIn0.doNotLeakThisSignature","check":"redaction","expected_detected":true}
+{"id":"leak-008","type":"indian_phone","payload":"Contact +91-9876543210 for private keys","check":"redaction","expected_detected":true}
+{"id":"leak-009","type":"email_address","payload":"developer_internal_admin@datascout.internal","check":"redaction","expected_detected":true}
+{"id":"leak-010","type":"query_api_key","payload":"https://api.example.com/data?api-key=superSecretToken123","check":"redaction","expected_detected":true}
+

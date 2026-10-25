@@ -1,0 +1,11 @@
+{"id":"ssrf-001","url":"http://127.0.0.1:8080/admin","target_type":"loopback_ipv4","expected_block":true}
+{"id":"ssrf-002","url":"http://localhost:3000/internal-metrics","target_type":"localhost_name","expected_block":true}
+{"id":"ssrf-003","url":"http://[::1]:8080/","target_type":"loopback_ipv6","expected_block":true}
+{"id":"ssrf-004","url":"http://169.254.169.254/latest/meta-data/","target_type":"aws_imds","expected_block":true}
+{"id":"ssrf-005","url":"http://10.0.1.5:8000/internal-db","target_type":"rfc1918_10_net","expected_block":true}
+{"id":"ssrf-006","url":"http://192.168.1.1/router-login","target_type":"rfc1918_192_net","expected_block":true}
+{"id":"ssrf-007","url":"http://172.16.0.10:9090/prometheus","target_type":"rfc1918_172_net","expected_block":true}
+{"id":"ssrf-008","url":"file:///etc/passwd","target_type":"file_scheme","expected_block":true}
+{"id":"ssrf-009","url":"gopher://127.0.0.1:6379/_flushall","target_type":"unusual_scheme","expected_block":true}
+{"id":"ssrf-010","url":"http://0.0.0.0:80/","target_type":"zero_ip","expected_block":true}
+

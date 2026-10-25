@@ -1,0 +1,181 @@
+{
+  "report_schema": "retrieval-evaluation-v1",
+  "evaluator_version": "retrieval-evaluator-v1",
+  "quality_claim": "labeled_retrieval_set_baseline",
+  "started_at": "2026-10-25T11:45:39.954Z",
+  "dataset_sha256": "c9e20eb540f175fd42731abed746ecd9b6959f4ec64d464031fceeb7609a7d1b",
+  "metrics": {
+    "total_queries": 20,
+    "mean_recall_at_5": 1,
+    "mean_recall_at_10": 1,
+    "sources_covered": [
+      "datagovin",
+      "huggingface",
+      "openml",
+      "worldbank",
+      "fixture"
+    ]
+  },
+  "cases": [
+    {
+      "query_id": "ret-001",
+      "domain": "agriculture",
+      "target_source": "datagovin",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-002",
+      "domain": "environment",
+      "target_source": "datagovin",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-003",
+      "domain": "finance",
+      "target_source": "huggingface",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-004",
+      "domain": "nlp",
+      "target_source": "huggingface",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-005",
+      "domain": "nlp",
+      "target_source": "huggingface",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-006",
+      "domain": "healthcare",
+      "target_source": "openml",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-007",
+      "domain": "finance",
+      "target_source": "openml",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-008",
+      "domain": "benchmarks",
+      "target_source": "openml",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-009",
+      "domain": "economics",
+      "target_source": "worldbank",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-010",
+      "domain": "environment",
+      "target_source": "worldbank",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-011",
+      "domain": "health",
+      "target_source": "worldbank",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-012",
+      "domain": "health",
+      "target_source": "datagovin",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-013",
+      "domain": "demographics",
+      "target_source": "datagovin",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-014",
+      "domain": "meteorology",
+      "target_source": "fixture",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-015",
+      "domain": "energy",
+      "target_source": "datagovin",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-016",
+      "domain": "finance",
+      "target_source": "openml",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-017",
+      "domain": "healthcare",
+      "target_source": "openml",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-018",
+      "domain": "economics",
+      "target_source": "worldbank",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-019",
+      "domain": "nlp",
+      "target_source": "huggingface",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    },
+    {
+      "query_id": "ret-020",
+      "domain": "environment",
+      "target_source": "datagovin",
+      "relevant_count": 1,
+      "recall_at_5": 1,
+      "recall_at_10": 1
+    }
+  ]
+}

@@ -49,6 +49,7 @@ export interface LlmClient {
   readonly provider: 'fake' | 'cassette' | 'gemini' | 'ollama';
   readonly modelId: string;
   readonly safetyModelId?: string | undefined;
+  readonly maxProviderCallsPerRequest?: number | undefined;
   generateJson(req: LlmJsonRequest, ctx: CallContext): Promise<LlmJsonResponse>;
 }
 
@@ -152,6 +153,12 @@ export interface ExplanationService {
 
 export interface SpanHandle {
   setAttributes(attrs: Record<string, string | number | boolean>): void;
+  setGenerationDetails?(details: {
+    modelId: string;
+    inputTokens: number;
+    outputTokens: number;
+    latencyMs: number;
+  }): void;
   score(name: string, value: number | boolean, comment?: string): void;
 }
 

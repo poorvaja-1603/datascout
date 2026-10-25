@@ -1,0 +1,20 @@
+{
+  "output": {
+    "topic": "bike-share trips",
+    "geography": null,
+    "time_coverage": null,
+    "minimum_records": 50000,
+    "required_features": [
+      "start station",
+      "trip duration"
+    ],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

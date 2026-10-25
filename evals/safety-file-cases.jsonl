@@ -1,0 +1,11 @@
+{"id":"file-001","filename":"model.pkl","format":"pickle","reason":"Arbitrary code execution risk via python unpickle","expected_block":true}
+{"id":"file-002","filename":"exploit.py","format":"python_script","reason":"Direct script execution risk","expected_block":true}
+{"id":"file-003","filename":"pipeline.ipynb","format":"jupyter_notebook","reason":"Embedded code cells and metadata execution risk","expected_block":true}
+{"id":"file-004","filename":"bomb.zip","format":"zip_bomb","reason":"Recursive archive expansion DoS vulnerability","expected_block":true}
+{"id":"file-005","filename":"installer.exe","format":"binary_executable","reason":"Native OS binary executable","expected_block":true}
+{"id":"file-006","filename":"run.sh","format":"shell_script","reason":"Bash/sh script execution risk","expected_block":true}
+{"id":"file-007","filename":"data.tar.gz","format":"nested_archive","reason":"Unbounded nested compression archive","expected_block":true}
+{"id":"file-008","filename":"payload.bin","format":"raw_binary","reason":"Unsupported unstructured binary","expected_block":true}
+{"id":"file-009","filename":"data.csv","format":"csv","reason":"Standard delimited text tabular data","expected_block":false}
+{"id":"file-010","filename":"observations.parquet","format":"parquet","reason":"Standard safe columnar tabular data","expected_block":false}
+

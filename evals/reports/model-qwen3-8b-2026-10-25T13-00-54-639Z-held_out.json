@@ -1,0 +1,1188 @@
+{
+  "report_schema": "live-extraction-report-v3",
+  "evaluator_version": "model-extraction-evaluator-v4",
+  "quality_claim": "measured_model_output_not_release_approval",
+  "run": {
+    "run_id": "2026-10-25T13-00-54-639Z-held_out",
+    "started_at": "2026-10-25T13:00:54.639Z",
+    "split": "held_out",
+    "provider": "ollama",
+    "model_id": "qwen3:8b",
+    "prompt_version": "extract-v6",
+    "extraction_schema": "ExtractedRequirements",
+    "extraction_schema_version": "1",
+    "corpus_sha256": "bd4c7101b0e9f44ba07c3fc5069daf6a12b8f186a4d8ff08d6405e7da652d12f",
+    "case_count": 10,
+    "timeout_ms": 120000,
+    "safety_triage": "enabled_with_local_in_memory_budget",
+    "safety_ruleset_version": "safety-rules-v3",
+    "safety_triage_prompt_version": "safety-triage-v3"
+  },
+  "metrics": {
+    "cases": 10,
+    "all_fields_exact_match_cases": 3,
+    "all_fields_exact_match_rate": 0.3,
+    "result_kinds": {
+      "ok": 8,
+      "clarification": 0,
+      "refused": 2,
+      "error": 0
+    },
+    "per_field": {
+      "topic": {
+        "exact_matches": 7,
+        "cases": 10,
+        "exact_match_rate": 0.7,
+        "true_positives": 7,
+        "false_positives": 1,
+        "false_negatives": 2,
+        "precision": 0.875,
+        "recall": 0.7777777777777778,
+        "f1": 0.823529411764706
+      },
+      "geography": {
+        "exact_matches": 8,
+        "cases": 10,
+        "exact_match_rate": 0.8,
+        "true_positives": 6,
+        "false_positives": 0,
+        "false_negatives": 1,
+        "precision": 1,
+        "recall": 0.8571428571428571,
+        "f1": 0.923076923076923
+      },
+      "time_coverage": {
+        "exact_matches": 8,
+        "cases": 10,
+        "exact_match_rate": 0.8,
+        "true_positives": 3,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "minimum_records": {
+        "exact_matches": 8,
+        "cases": 10,
+        "exact_match_rate": 0.8,
+        "true_positives": 3,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": 1,
+        "recall": 1,
+        "f1": 1
+      },
+      "required_features": {
+        "exact_matches": 6,
+        "cases": 10,
+        "exact_match_rate": 0.6,
+        "true_positives": 15,
+        "false_positives": 1,
+        "false_negatives": 4,
+        "precision": 0.9375,
+        "recall": 0.7894736842105263,
+        "f1": 0.8571428571428572
+      },
+      "target": {
+        "exact_matches": 5,
+        "cases": 10,
+        "exact_match_rate": 0.5,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 3,
+        "precision": null,
+        "recall": 0,
+        "f1": null
+      },
+      "preferences": {
+        "exact_matches": 8,
+        "cases": 10,
+        "exact_match_rate": 0.8,
+        "true_positives": 0,
+        "false_positives": 0,
+        "false_negatives": 0,
+        "precision": null,
+        "recall": null,
+        "f1": null
+      },
+      "constraints": {
+        "exact_matches": 7,
+        "cases": 10,
+        "exact_match_rate": 0.7,
+        "true_positives": 2,
+        "false_positives": 0,
+        "false_negatives": 3,
+        "precision": 1,
+        "recall": 0.4,
+        "f1": 0.5714285714285715
+      }
+    }
+  },
+  "cases": [
+    {
+      "case_id": "REQE-041",
+      "split": "held_out",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "safety_triage": {
+        "decision": "skipped",
+        "category": "triage_unavailable"
+      },
+      "fields": {
+        "topic": {
+          "expected": "flood forecasting",
+          "actual": "flood forecasting",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "geography": {
+          "expected": "Assam",
+          "actual": "Assam",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "time_coverage": {
+          "expected": "2010-2020",
+          "actual": "2010-2020",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "minimum_records": {
+          "expected": 15000,
+          "actual": 15000,
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "required_features": {
+          "expected": [
+            "rainfall",
+            "river level",
+            "flood status"
+          ],
+          "actual": [
+            "rainfall",
+            "river level",
+            "flood status"
+          ],
+          "exact_match": true,
+          "true_positives": 3,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "target": {
+          "expected": "flood status",
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 1,
+          "precision": null,
+          "recall": 0,
+          "f1": null
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      }
+    },
+    {
+      "case_id": "REQE-042",
+      "split": "held_out",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "safety_triage": {
+        "decision": "allow",
+        "category": "none"
+      },
+      "fields": {
+        "topic": {
+          "expected": "population growth",
+          "actual": "population growth",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "geography": {
+          "expected": "Rwanda",
+          "actual": "Rwanda",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "required_features": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "constraints": {
+          "expected": [
+            "World Bank Indicators"
+          ],
+          "actual": [
+            "World Bank Indicators"
+          ],
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        }
+      }
+    },
+    {
+      "case_id": "REQE-043",
+      "split": "held_out",
+      "result_kind": "refused",
+      "model_id": "qwen3:8b",
+      "refusal_reason_code": "out_of_scope",
+      "safety_triage": {
+        "decision": "block",
+        "category": "out_of_scope"
+      },
+      "fields": {
+        "topic": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "required_features": {
+          "expected": [],
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "preferences": {
+          "expected": [],
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "constraints": {
+          "expected": [
+            "perfect accuracy",
+            "no limitations"
+          ],
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 2,
+          "precision": null,
+          "recall": 0,
+          "f1": null
+        }
+      }
+    },
+    {
+      "case_id": "REQE-044",
+      "split": "held_out",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "safety_triage": {
+        "decision": "allow",
+        "category": "none"
+      },
+      "fields": {
+        "topic": {
+          "expected": "transit delay",
+          "actual": "public transit delay",
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 1,
+          "false_negatives": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": null
+        },
+        "geography": {
+          "expected": "Toronto",
+          "actual": "Toronto",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "required_features": {
+          "expected": [
+            "route",
+            "scheduled time",
+            "actual time",
+            "delay minutes"
+          ],
+          "actual": [
+            "route",
+            "scheduled time",
+            "actual time",
+            "delay minutes"
+          ],
+          "exact_match": true,
+          "true_positives": 4,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      }
+    },
+    {
+      "case_id": "REQE-045",
+      "split": "held_out",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "safety_triage": {
+        "decision": "allow",
+        "category": "none"
+      },
+      "fields": {
+        "topic": {
+          "expected": "typhoon counts",
+          "actual": "typhoon counts",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "geography": {
+          "expected": "Philippines",
+          "actual": "Philippines",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "time_coverage": {
+          "expected": "2000-2020",
+          "actual": "2000-2020",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "required_features": {
+          "expected": [
+            "monthly counts"
+          ],
+          "actual": [
+            "monthly measurements"
+          ],
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 1,
+          "false_negatives": 1,
+          "precision": 0,
+          "recall": 0,
+          "f1": null
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      }
+    },
+    {
+      "case_id": "REQE-046",
+      "split": "held_out",
+      "result_kind": "refused",
+      "model_id": "qwen3:8b",
+      "refusal_reason_code": "unsafe_request",
+      "safety_triage": {
+        "decision": "block",
+        "category": "unsafe_request"
+      },
+      "fields": {
+        "topic": {
+          "expected": "wheat yield",
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 1,
+          "precision": null,
+          "recall": 0,
+          "f1": null
+        },
+        "geography": {
+          "expected": "Punjab",
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 1,
+          "precision": null,
+          "recall": 0,
+          "f1": null
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "required_features": {
+          "expected": [
+            "year",
+            "yield per hectare"
+          ],
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 2,
+          "precision": null,
+          "recall": 0,
+          "f1": null
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "preferences": {
+          "expected": [],
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "constraints": {
+          "expected": [],
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      }
+    },
+    {
+      "case_id": "REQE-047",
+      "split": "held_out",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "safety_triage": {
+        "decision": "allow",
+        "category": "none"
+      },
+      "fields": {
+        "topic": {
+          "expected": "land-cover classification",
+          "actual": "land-cover classification",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "minimum_records": {
+          "expected": 75000,
+          "actual": 75000,
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "required_features": {
+          "expected": [
+            "satellite images",
+            "class labels",
+            "acquisition dates"
+          ],
+          "actual": [
+            "class labels",
+            "acquisition dates"
+          ],
+          "exact_match": false,
+          "true_positives": 2,
+          "false_positives": 0,
+          "false_negatives": 1,
+          "precision": 1,
+          "recall": 0.6666666666666666,
+          "f1": 0.8
+        },
+        "target": {
+          "expected": "class labels",
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 1,
+          "precision": null,
+          "recall": 0,
+          "f1": null
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      }
+    },
+    {
+      "case_id": "REQE-048",
+      "split": "held_out",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "safety_triage": {
+        "decision": "allow",
+        "category": "none"
+      },
+      "fields": {
+        "topic": {
+          "expected": "e-waste recycling",
+          "actual": "e-waste recycling",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "geography": {
+          "expected": "Accra",
+          "actual": "Accra",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "required_features": {
+          "expected": [
+            "material type",
+            "amount collected"
+          ],
+          "actual": [
+            "material type",
+            "amount collected"
+          ],
+          "exact_match": true,
+          "true_positives": 2,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      }
+    },
+    {
+      "case_id": "REQE-049",
+      "split": "held_out",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "safety_triage": {
+        "decision": "allow",
+        "category": "none"
+      },
+      "fields": {
+        "topic": {
+          "expected": "groundwater measurements",
+          "actual": "groundwater measurements",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "geography": {
+          "expected": "Arizona",
+          "actual": "Arizona",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "time_coverage": {
+          "expected": "2017-2021",
+          "actual": "2017-2021",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "minimum_records": {
+          "expected": 2400,
+          "actual": 2400,
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "required_features": {
+          "expected": [
+            "weekly measurements"
+          ],
+          "actual": [
+            "weekly measurements"
+          ],
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "target": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "constraints": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        }
+      }
+    },
+    {
+      "case_id": "REQE-050",
+      "split": "held_out",
+      "result_kind": "ok",
+      "model_id": "qwen3:8b",
+      "safety_triage": {
+        "decision": "allow",
+        "category": "none"
+      },
+      "fields": {
+        "topic": {
+          "expected": "question-answering",
+          "actual": "question-answering",
+          "exact_match": true,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "geography": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "time_coverage": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "minimum_records": {
+          "expected": null,
+          "actual": null,
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "required_features": {
+          "expected": [
+            "question",
+            "context",
+            "answer"
+          ],
+          "actual": [
+            "question",
+            "context",
+            "answer"
+          ],
+          "exact_match": true,
+          "true_positives": 3,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": 1,
+          "recall": 1,
+          "f1": 1
+        },
+        "target": {
+          "expected": "answer",
+          "actual": null,
+          "exact_match": false,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 1,
+          "precision": null,
+          "recall": 0,
+          "f1": null
+        },
+        "preferences": {
+          "expected": [],
+          "actual": [],
+          "exact_match": true,
+          "true_positives": 0,
+          "false_positives": 0,
+          "false_negatives": 0,
+          "precision": null,
+          "recall": null,
+          "f1": null
+        },
+        "constraints": {
+          "expected": [
+            "Hugging Face Datasets",
+            "public dataset"
+          ],
+          "actual": [
+            "Hugging Face Datasets"
+          ],
+          "exact_match": false,
+          "true_positives": 1,
+          "false_positives": 0,
+          "false_negatives": 1,
+          "precision": 1,
+          "recall": 0.5,
+          "f1": 0.6666666666666666
+        }
+      }
+    }
+  ]
+}

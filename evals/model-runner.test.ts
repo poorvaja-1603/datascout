@@ -72,4 +72,32 @@ describe('local model evaluation runner', () => {
     expect(report.cases[1]?.error_code).toBe('timeout');
     expect(JSON.stringify(report)).not.toContain('do not expose this message');
   });
+
+  it('reports micro precision, recall and F1 for exact extracted values', async () => {
+    const corpusText = row('field-metrics', 'development', 'Find data.');
+    const report = await evaluateModel({
+      corpusText,
+      modelId: 'qwen3:8b',
+      timeoutMs: 120_000,
+      extract: async () => ({
+        kind: 'ok',
+        requirements: {
+          ...emptyRequirements,
+          topic: 'rainfall',
+          geography: 'India',
+          required_features: ['district', 'wrong-column'],
+        },
+        derived: [],
+        promptVersion: 'test',
+        modelId: 'qwen3:8b',
+      }),
+      now: new Date('2026-10-25T00:00:00.000Z'),
+    });
+
+    const topic = report.cases[0]!.fields.topic;
+    expect(topic).toMatchObject({ true_positives: 0, false_positives: 1, false_negatives: 0, precision: 0, recall: null, f1: null });
+    const features = report.cases[0]!.fields.required_features;
+    expect(features).toMatchObject({ true_positives: 0, false_positives: 2, false_negatives: 0, precision: 0, recall: null, f1: null });
+    expect(report.metrics.per_field.required_features.false_positives).toBe(2);
+  });
 });

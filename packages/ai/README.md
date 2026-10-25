@@ -19,6 +19,9 @@ use `generateJson(req, ctx)` for every provider.
 | `LLM_MAX_CONCURRENT`    | `4`                  | Per-process concurrency limit.                                                                |
 | `LLM_PER_USER_DAILY_LIMIT` | `30`              | Daily principal cap passed to the atomic budget store.                                        |
 | `LLM_GLOBAL_DAILY_LIMIT` | `300`               | Daily global cap passed to the atomic budget store.                                            |
+| `LLM_FALLBACK_PROVIDER` | — | Optional `gemini` or `ollama` fallback after retryable primary-provider failure; never fake/cassette. |
+| `GEMINI_FALLBACK_MODEL_ID` | `GEMINI_MODEL_ID` | Optional Gemini fallback model override; uses the configured Gemini key. |
+| `OLLAMA_FALLBACK_MODEL_ID` | `OLLAMA_MODEL_ID` | Optional Ollama fallback model override; uses the configured loopback endpoint. |
 
 Gemini calls use its native JSON response schema; Ollama calls use the native
 `/api/chat` JSON-schema format with thinking disabled to reduce latency and
@@ -55,6 +58,8 @@ applies the kill switch, per-process concurrency limit, and an atomic
 daily-budget store contract. The store must atomically
 reserve `callCount` against user and global caps. Extraction reserves three
 calls (triage plus an extraction retry); explanations reserve one per item.
+When a fallback is configured, reservations multiply by the maximum provider
+attempts so failover cannot bypass the daily budget.
 `createInMemorySafetyBudgetStore()` is for local development/tests only; it
 cannot enforce limits across Lambda instances. Production must inject a
 DynamoDB-backed atomic store.
@@ -66,6 +71,12 @@ clarification question. Invalid
 model output is retried once and then fails with a safe `extraction_failed`
 error; timeouts receive one retry and caller cancellation/deadlines are passed
 through the existing `CallContext`.
+
+With a fallback configured, only retryable upstream failures fail over. Three
+consecutive primary failures open a per-process circuit for 30 seconds; calls
+during that window use the fallback directly, then probe the primary again.
+This is not a distributed circuit breaker. Include fallback cost in deployment
+budgeting; prefer local Ollama for a no-cloud-cost fallback.
 
 Development-corpus cassette tests are derived only from the 40 annotated
 development cases. They are schema/normalization fixtures, not recorded model

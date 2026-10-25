@@ -21,7 +21,17 @@
     "format:check": "npm run format:check --workspaces --if-present",
     "mock": "npm run mock --workspace=@datascout/contracts",
     "langfuse:smoke": "npm run smoke --workspace=@datascout/observability",
-    "validate:corpus": "python evals/validate_dataset.py"
+    "validate:corpus": "python evals/validate_dataset.py",
+    "eval:safety": "tsx evals/safety-runner.ts",
+    "eval:safety:triage": "tsx evals/triage-runner.ts",
+    "eval:verdict": "tsx evals/verdict-runner.ts",
+    "eval:grounding": "tsx evals/grounding-runner.ts",
+    "eval:retrieval": "tsx evals/retrieval-runner.ts",
+    "eval:cassettes": "tsx evals/generate-dev-cassettes.ts",
+    "gemini:connectivity": "node --env-file-if-exists=evals/.env evals/gemini-connectivity.mjs --confirm-connectivity-check",
+    "langfuse:dataset": "node --env-file-if-exists=evals/.env evals/upload-langfuse-dataset.mjs",
+    "langfuse:experiment": "node --env-file-if-exists=evals/.env evals/run-langfuse-experiment.mjs",
+    "langfuse:dashboard": "node --env-file-if-exists=evals/.env evals/create-langfuse-dashboard.mjs"
   },
   "dependencies": {
     "@opentelemetry/api": "1.10.0"

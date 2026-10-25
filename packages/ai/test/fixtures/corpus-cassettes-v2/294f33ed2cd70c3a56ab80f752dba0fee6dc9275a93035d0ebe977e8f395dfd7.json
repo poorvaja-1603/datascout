@@ -1,0 +1,17 @@
+{
+  "output": {
+    "topic": "traffic observations",
+    "geography": "California",
+    "time_coverage": "2020-2024",
+    "minimum_records": 250000,
+    "required_features": [],
+    "target": null,
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

@@ -1,0 +1,19 @@
+{
+  "output": {
+    "topic": "winning lottery numbers",
+    "geography": null,
+    "time_coverage": "next year",
+    "minimum_records": null,
+    "required_features": [],
+    "target": null,
+    "preferences": [],
+    "constraints": [
+      "public dataset"
+    ]
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

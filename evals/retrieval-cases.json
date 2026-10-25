@@ -1,0 +1,143 @@
+[
+  {
+    "query_id": "ret-001",
+    "query": "Predicting crop yields in Maharashtra using seasonal rainfall and temperature data",
+    "relevant_dataset_ids": ["datagovin:crop-yield-maharashtra"],
+    "domain": "agriculture",
+    "target_source": "datagovin"
+  },
+  {
+    "query_id": "ret-002",
+    "query": "Hourly air quality monitoring in Delhi with PM2.5 and PM10 levels",
+    "relevant_dataset_ids": ["datagovin:delhi-air-quality"],
+    "domain": "environment",
+    "target_source": "datagovin"
+  },
+  {
+    "query_id": "ret-003",
+    "query": "Financial news sentiment classification with positive and negative labels",
+    "relevant_dataset_ids": ["huggingface:financial_phrasebank"],
+    "domain": "finance",
+    "target_source": "huggingface"
+  },
+  {
+    "query_id": "ret-004",
+    "query": "Question answering benchmark on reading comprehension passages",
+    "relevant_dataset_ids": ["huggingface:squad"],
+    "domain": "nlp",
+    "target_source": "huggingface"
+  },
+  {
+    "query_id": "ret-005",
+    "query": "Binary sentiment analysis on movie review sentences",
+    "relevant_dataset_ids": ["huggingface:sst2"],
+    "domain": "nlp",
+    "target_source": "huggingface"
+  },
+  {
+    "query_id": "ret-006",
+    "query": "Pima Indians diabetes classification with diagnostic medical indicators",
+    "relevant_dataset_ids": ["openml:diabetes"],
+    "domain": "healthcare",
+    "target_source": "openml"
+  },
+  {
+    "query_id": "ret-007",
+    "query": "Anonymized European credit card fraud transaction anomaly detection",
+    "relevant_dataset_ids": ["openml:creditcard-fraud"],
+    "domain": "finance",
+    "target_source": "openml"
+  },
+  {
+    "query_id": "ret-008",
+    "query": "Titanic passenger survival prediction based on passenger demographics",
+    "relevant_dataset_ids": ["openml:titanic"],
+    "domain": "benchmarks",
+    "target_source": "openml"
+  },
+  {
+    "query_id": "ret-009",
+    "query": "World GDP per capita annual time series across countries",
+    "relevant_dataset_ids": ["worldbank:gdp-per-capita"],
+    "domain": "economics",
+    "target_source": "worldbank"
+  },
+  {
+    "query_id": "ret-010",
+    "query": "Global carbon dioxide emissions by country from fossil fuels",
+    "relevant_dataset_ids": ["worldbank:EN.ATM.CO2E.KT"],
+    "domain": "environment",
+    "target_source": "worldbank"
+  },
+  {
+    "query_id": "ret-011",
+    "query": "Life expectancy at birth indicators across nations from 1960 onwards",
+    "relevant_dataset_ids": ["worldbank:life-expectancy"],
+    "domain": "health",
+    "target_source": "worldbank"
+  },
+  {
+    "query_id": "ret-012",
+    "query": "Karnataka government primary health centers and hospital bed capacity",
+    "relevant_dataset_ids": ["datagovin:karnataka-phc-facilities"],
+    "domain": "health",
+    "target_source": "datagovin"
+  },
+  {
+    "query_id": "ret-013",
+    "query": "Indian 2011 census district-level literacy rates and total population",
+    "relevant_dataset_ids": ["datagovin:india-census-literacy-2011"],
+    "domain": "demographics",
+    "target_source": "datagovin"
+  },
+  {
+    "query_id": "ret-014",
+    "query": "Atmospheric weather observations in Ontario with precipitation in millimeters",
+    "relevant_dataset_ids": ["fixture:grounding-evaluation"],
+    "domain": "meteorology",
+    "target_source": "fixture"
+  },
+  {
+    "query_id": "ret-015",
+    "query": "Indian rural village electrification census tracking",
+    "relevant_dataset_ids": ["datagovin:rural-electrification-census"],
+    "domain": "energy",
+    "target_source": "datagovin"
+  },
+  {
+    "query_id": "ret-016",
+    "query": "European direct bank marketing deposit subscription prediction",
+    "relevant_dataset_ids": ["openml:creditcard-fraud"],
+    "domain": "finance",
+    "target_source": "openml"
+  },
+  {
+    "query_id": "ret-017",
+    "query": "Classic tabular diabetes diagnostic records for classification",
+    "relevant_dataset_ids": ["openml:diabetes"],
+    "domain": "healthcare",
+    "target_source": "openml"
+  },
+  {
+    "query_id": "ret-018",
+    "query": "Global economic indicators and annual GDP per capita growth",
+    "relevant_dataset_ids": ["worldbank:gdp-per-capita"],
+    "domain": "economics",
+    "target_source": "worldbank"
+  },
+  {
+    "query_id": "ret-019",
+    "query": "Reading comprehension and QA passage understanding benchmark",
+    "relevant_dataset_ids": ["huggingface:squad"],
+    "domain": "nlp",
+    "target_source": "huggingface"
+  },
+  {
+    "query_id": "ret-020",
+    "query": "Air pollution monitoring in Indian cities during winter months with PM2.5",
+    "relevant_dataset_ids": ["datagovin:delhi-air-quality"],
+    "domain": "environment",
+    "target_source": "datagovin"
+  }
+]
+

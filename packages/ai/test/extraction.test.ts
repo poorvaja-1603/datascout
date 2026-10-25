@@ -43,7 +43,7 @@ const corpusPath = fileURLToPath(
   new URL('../../../evals/requirements-v0.1.jsonl', import.meta.url),
 );
 const cassetteDirectory = fileURLToPath(
-  new URL('./fixtures/corpus-cassettes/', import.meta.url),
+  new URL('./fixtures/corpus-cassettes-v3/', import.meta.url),
 );
 const promptPath = fileURLToPath(
   new URL('../prompts/extract.v1.md', import.meta.url),

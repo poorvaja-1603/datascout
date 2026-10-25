@@ -101,6 +101,7 @@ Goal: unblock all three streams with the smallest set of shared artifacts. Items
 ### Schemas to freeze
 
 - `ExtractedRequirements` (model output, exactly these fields, no extras): `topic`, `geography`, `time_coverage`, `minimum_records`, `required_features[]`, `target`, `preferences[]`, `constraints[]`. This matches the reviewed evaluation corpus so evals and production share one shape. Normalization rules from the corpus apply: numeric year ranges become `YYYY-YYYY`; non-range expressions such as `next year` are preserved as written until a rule is added.
+- `constraints` includes every explicitly named source (using its canonical name) and explicit access/license filters such as `public dataset`. Do not interpret domain phrases like `public health` or `public transport` as access constraints.
 - `Requirement` (derived deterministically from `ExtractedRequirements`, never by the model): `requirement_id`, `type`, `value`, `unit`, `priority` (required or preferred), `aliases[]`, `source_span` (found by string search in the original request, null if not found).
 - `Dataset`: `dataset_id`, `source`, `source_url`, `title`, `description`, `license`, `access_type`, `api_endpoint`, `file_formats[]`, `record_count`, `columns[]`, `geography`, `time_coverage`, `tags[]`, `last_updated`, `retrieved_at`, `raw_snapshot_key`, `verification_level`, and per-field `provenance` (source field path plus retrieval time).
 - `Evidence`: `evidence_id`, `dataset_id`, `field`, `value`, `provenance`.
@@ -283,7 +284,7 @@ Managed guardrails were only ever a convenience layer. The controls that protect
 
 The gateway is a defense in depth: no single layer is trusted alone, and the model has no authority over verdicts, scores, or ranking regardless of what any layer lets through. Claims of strength are measured, not assumed: the safety suite (Section 11) reports, for every injection case, which layer stopped it, and the release gates cover both injection success rate and the false-positive rate on normal queries.
 
-**Implementation status:** Stream A implements L0 input rejection, a versioned but currently English-focused L1 signature list, hosted-provider L2 structured triage (fake/cassette skip it), L3 constrained extraction, L4 token/number grounding, L5 refusal/clarification mapping, L7 source-text quarantine for explanations, L8 per-request canary scanning and safe alert logs, and L9 egress redaction. L6 has an admission gate with a kill switch, per-process concurrency, and an atomic daily-budget store interface; it reserves worst-case calls so retries cannot exceed caps. The production DynamoDB atomic-reservation adapter and authenticated principal wiring belong to the API/Lambda integration (Stream B); do not deploy hosted calls without wiring this gate. The full Section 11 adversarial safety suite, broader multilingual rule coverage, and deployed metric/alert delivery remain release work.
+**Implementation status:** Stream A implements L0 input rejection, versioned English/Spanish/Hindi signature checks with Unicode NFKC normalization, structured L2 triage for hosted providers (fake/cassette skip it), L3 constrained extraction, L4 token/number grounding, L5 refusal/clarification mapping, L7 source-text quarantine, L8 per-request canary scanning, and L9 egress redaction. Deterministic checks cover 66 cases and local Qwen L2 triage measures 51 synthetic cases; these are diagnostics, not production safety evidence. L6 has an admission gate with a kill switch, per-process concurrency, and an atomic daily-budget store interface; it reserves worst-case calls so retries cannot exceed caps. The production DynamoDB atomic-reservation adapter and authenticated principal wiring belong to API/Lambda integration (Stream B); do not deploy hosted calls without wiring this gate. Broader adversarial coverage, live telemetry/alert delivery, and production verification remain release work.
 
 ## 10. Langfuse Monitoring
 
@@ -307,7 +308,7 @@ Use the Langfuse TypeScript SDK (OpenTelemetry based): `@langfuse/tracing` and `
 
 ### Offline evaluation in Langfuse
 
-- Create datasets from the reviewed corpus: `datascout-requirements-dev` (40 cases) and `datascout-requirements-heldout` (10 cases, run only at gates).
+- Create a development dataset from the reviewed corpus (40 cases). Keep the 10 held-out cases local until prompt, schema, and evaluator are frozen and the team explicitly starts the final gate.
 - Each experiment run is tagged with corpus hash, prompt version, model ID, schema version, evaluator version, split, and timestamp, matching the rule in `evals/BASELINE.md`.
 - Dashboards: latency p50/p95 per stage, cost per request, token use, source success rates, validation failures, safety blocks by layer, provider error rate, score trends.
 
@@ -437,7 +438,7 @@ See Section 5. Tasks P0-1 to P0-6, about 5 to 7 hours total; P0-1 to P0-4 are th
 | ID | Task | Needs | Done when | Est |
 | --- | --- | --- | --- | --- |
 | A1 | LLM client: `fake`, `cassette`, `gemini`, `ollama` providers, fallback, retry and circuit breaker, timeouts, token caps, config; decision note D1 | P0-4 | Same calling code works against all providers; cassette replay is deterministic in CI | 4 |
-| A2 | Requirement extraction: prompt v1, strict Zod parse, normalization, derive `Requirement[]` and spans, clarification/refusal path | A1 | Schema-valid output for all dev cases with the fake/cassette; malformed-output tests pass | 5 |
+| A2 | Requirement extraction: versioned prompt, strict Zod parse, normalization, derive `Requirement[]` and spans, clarification/refusal path | A1 | Schema-valid output for all dev cases with the fake/cassette; malformed-output tests pass | 5 |
 | A3 | Evaluation runner for extraction: metrics, per-field report, split handling, run metadata, `BASELINE.md` update script | A2, corpus | One command produces a report with corpus hash and versions; dev-only unless `--heldout` | 5 |
 | A4 | Observability package: Langfuse init, redaction, tracer wrapper, flush with timeout, score reporting, smoke script | P0-4 | Smoke trace visible in Langfuse; redaction tests pass; invalid keys do not break calls | 4 |
 | A5 | Matching and verdict rules (pure functions) with UNKNOWN handling | P0-5 | All labeled fixture verdicts match; zero false-PASS on fixtures | 5 |
@@ -448,6 +449,8 @@ See Section 5. Tasks P0-1 to P0-6, about 5 to 7 hours total; P0-1 to P0-4 are th
 | A10 | Langfuse datasets, experiments, dashboards, score configs; release report | A3, A4, A9 | Dev and held-out datasets uploaded; dashboard shows latency/cost/scores; gate report written | 4 |
 
 Suggested order: P0, A4 smoke script, A1, A2, A3, A5, A6, A7, A8, A9, A10. A9 and A10 are the safest to trim if time is short, but the false-PASS and unsupported-claim checks inside them are release gates.
+
+**Stream A status (2026-10-25):** Core implementation, local checks, development extraction baseline, safety/triage fixtures, verdict/grounding runners, and development Langfuse dataset/experiment/dashboard are in place; the detailed evidence is in `evals/BASELINE.md`. The current `extract-v5` local Ollama result is 13/40 all-fields exact, which is diagnostic and not a release pass; a quality threshold is not agreed. The reviewed 50-case corpus passed structural and contract validation, including the owner's approved source/public-dataset normalization. Gemini metadata connectivity now passes (HTTP 200 for `gemini-3.8-flash`, `generateContent` supported), but three earlier generation requests timed out/failed before a valid response and no usage metadata was returned. The Gemini client is configured for low thinking and omits `temperature`; generation still needs a single authorized, observed request before deployment approval. Synthetic safety (66 deterministic, 51 local triage), verdict (10), and grounding (5) checks are diagnostics only, not production evidence. No held-out cases were run/uploaded. **Remaining A-owned work is evidence completion and release sign-off, not missing core implementation:** use B/C's saved source snapshots and adapter outputs to build the required 60+ verdict pairs across four sources, 20+ retrieval queries, and 40+ grounded explanations; extend indirect-source safety cases against those snapshots; then review results, agree/freeze thresholds and artifacts, and run held-out gates once authorized. Production trace/latency/cost checks wait for B/C deployment. Do not claim Stream A release-complete before these evidence and integration gates pass.
 
 ### Stream B: Data and Cloud
 

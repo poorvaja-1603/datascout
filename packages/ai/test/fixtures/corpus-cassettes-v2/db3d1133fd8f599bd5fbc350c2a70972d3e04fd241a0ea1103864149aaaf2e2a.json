@@ -1,0 +1,21 @@
+{
+  "output": {
+    "topic": "plant photos",
+    "geography": null,
+    "time_coverage": null,
+    "minimum_records": 1000,
+    "required_features": [
+      "labeled images",
+      "species names",
+      "image files"
+    ],
+    "target": "species names",
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

@@ -196,7 +196,7 @@ export async function evaluate(options: EvaluationOptions): Promise<EvaluationRe
 
   const startedAt = (options.now ?? new Date()).toISOString();
   const defaultCassetteDirectory = fileURLToPath(
-    new URL('../packages/ai/test/fixtures/corpus-cassettes/', import.meta.url),
+    new URL('../packages/ai/test/fixtures/corpus-cassettes-v3/', import.meta.url),
   );
   const cassetteDirectory =
     provider === 'cassette'

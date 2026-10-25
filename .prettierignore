@@ -2,3 +2,4 @@ docs/
 evals/
 README.md
 package-lock.json
+packages/ai/test/fixtures/corpus-cassettes*/

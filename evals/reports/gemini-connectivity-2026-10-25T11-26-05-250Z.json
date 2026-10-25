@@ -1,0 +1,13 @@
+{
+  "report_schema": "gemini-metadata-connectivity-v1",
+  "request_type": "models.get_no_generation",
+  "provider": "gemini",
+  "model_id": "gemini-3.8-flash",
+  "started_at": "2026-10-25T11:26:04.832Z",
+  "http_status": 200,
+  "outcome": "passed",
+  "model_name": "models/gemini-3.8-flash",
+  "display_name": "Gemini 3.8 Flash",
+  "supports_generate_content": true,
+  "completed_at": "2026-10-25T11:26:05.248Z"
+}

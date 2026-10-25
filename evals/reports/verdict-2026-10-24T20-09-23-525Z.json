@@ -1,0 +1,85 @@
+{
+  "report_schema": "verdict-evaluation-v1",
+  "evaluator_version": "match-fixture-evaluator-v1",
+  "quality_claim": "labeled_synthetic_fixture_only",
+  "started_at": "2026-10-24T20:09:23.524Z",
+  "fixture_sha256": "0bbccf7b108b16ecb48988e1100f26b9cddbce4395445e56073d1373447781d3",
+  "metrics": {
+    "verdicts": 10,
+    "exact_match_rate": 1,
+    "false_pass_count": 0,
+    "false_pass_rate": 0
+  },
+  "cases": [
+    {
+      "dataset_id": "datagovin:fixture-rainfall-monthly",
+      "requirement_id": "fixture-01-rainfall",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "datagovin:fixture-crop-yield-metadata",
+      "requirement_id": "fixture-02-climate-features",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "huggingface:datascout-fixtures/air-quality-pm10",
+      "requirement_id": "fixture-03-pm25",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:datascout-fixtures/health-survey-unknown",
+      "requirement_id": "fixture-04-geography",
+      "expected": "UNKNOWN",
+      "actual": "UNKNOWN",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "openml:datascout-fixtures/diagnosis-table",
+      "requirement_id": "fixture-05-diagnosis",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "worldbank:datascout-fixtures/population-urban",
+      "requirement_id": "fixture-06-indicators",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "uci:datascout-fixtures/monthly-energy",
+      "requirement_id": "fixture-07-daily",
+      "expected": "FAIL",
+      "actual": "FAIL",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "zenodo:datascout-fixtures/unknown-target",
+      "requirement_id": "fixture-08-label",
+      "expected": "UNKNOWN",
+      "actual": "UNKNOWN",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "dataverse:datascout-fixtures/climate-stations",
+      "requirement_id": "fixture-09-temperature",
+      "expected": "PASS",
+      "actual": "PASS",
+      "false_pass": false
+    },
+    {
+      "dataset_id": "ckan:datascout-fixtures/district-transport",
+      "requirement_id": "fixture-10-district",
+      "expected": "PARTIAL",
+      "actual": "PARTIAL",
+      "false_pass": false
+    }
+  ]
+}

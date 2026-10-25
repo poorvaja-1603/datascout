@@ -135,6 +135,43 @@ const groundedClaim = {
 };
 
 describe('grounded explanation service', () => {
+  it('passes labeled grounding fixtures and rejects unsupported or cross-dataset claims', () => {
+    const cases = [
+      {
+        text: 'The columns include precipitation_mm.',
+        evidence_ids: ['e-columns'],
+        accepted: true,
+      },
+      {
+        text: 'The dataset contains 900000 rows.',
+        evidence_ids: ['e-columns'],
+        accepted: false,
+      },
+      {
+        text: 'The columns include precipitation_mm.',
+        evidence_ids: ['foreign-evidence'],
+        accepted: false,
+      },
+      {
+        text: 'This dataset guarantees accurate results.',
+        evidence_ids: ['e-columns'],
+        accepted: false,
+      },
+    ];
+    const actual = cases.map(
+      (item) =>
+        validateExplanationClaims(
+          { claims: [{ text: item.text, evidence_ids: item.evidence_ids }] },
+          createItem(),
+        )?.length === 1,
+    );
+
+    expect(actual).toEqual(cases.map(({ accepted }) => accepted));
+    expect(
+      actual.filter((accepted, index) => accepted && !cases[index]?.accepted),
+    ).toHaveLength(0);
+  });
+
   it('generates schema-constrained claims from bounded, delimited result facts', async () => {
     let request: LlmJsonRequest | undefined;
     const spans: string[] = [];

@@ -1,0 +1,21 @@
+{
+  "output": {
+    "topic": "wildfire risk prediction",
+    "geography": "Australia",
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": [
+      "humidity",
+      "wind speed",
+      "fire occurrence"
+    ],
+    "target": "fire occurrence",
+    "preferences": [],
+    "constraints": []
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

@@ -133,6 +133,7 @@ function createHandle(
   observation: LangfuseSpan | LangfuseGeneration,
   client: LangfuseClient,
   warn: (message: string) => void,
+  isGeneration: boolean,
 ): SpanHandle {
   return {
     setAttributes(attrs) {
@@ -161,6 +162,30 @@ function createHandle(
         warn('Langfuse score could not be recorded.');
       }
     },
+    setGenerationDetails(details) {
+      if (
+        !isGeneration ||
+        !Number.isFinite(details.latencyMs) ||
+        !Number.isSafeInteger(details.inputTokens) ||
+        details.inputTokens < 0 ||
+        !Number.isSafeInteger(details.outputTokens) ||
+        details.outputTokens < 0
+      )
+        return;
+      try {
+        (observation as LangfuseGeneration).update({
+          model: redactSensitiveText(details.modelId),
+          usageDetails: {
+            promptTokens: details.inputTokens,
+            completionTokens: details.outputTokens,
+            totalTokens: details.inputTokens + details.outputTokens,
+          },
+          metadata: sanitizeAttributes({ 'llm.latency_ms': details.latencyMs }),
+        });
+      } catch {
+        warn('Langfuse generation details could not be recorded.');
+      }
+    },
   };
 }
 
@@ -180,7 +205,12 @@ export class LangfuseTracer implements Tracer {
       const run = async (observation: LangfuseSpan | LangfuseGeneration) => {
         callbackStarted = true;
         return fn(
-          createHandle(observation, this.activeRuntime.client, this.warn),
+          createHandle(
+            observation,
+            this.activeRuntime.client,
+            this.warn,
+            opts.kind === 'generation',
+          ),
         );
       };
       const safeName = redactSensitiveText(name);

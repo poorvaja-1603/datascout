@@ -37,11 +37,59 @@ export interface LlmClientDependencies {
   fetch?: typeof fetch;
 }
 
+const CIRCUIT_FAILURE_THRESHOLD = 3;
+const CIRCUIT_RESET_MS = 30_000;
+
+class FallbackLlmClient implements LlmClient {
+  readonly provider: LlmClient['provider'];
+  readonly modelId: string;
+  readonly safetyModelId: string | undefined;
+  readonly maxProviderCallsPerRequest = 2;
+  private failures = 0;
+  private openedAt = 0;
+
+  constructor(
+    private readonly primary: LlmClient,
+    private readonly fallback: LlmClient,
+  ) {
+    this.provider = primary.provider;
+    this.modelId = primary.modelId;
+    this.safetyModelId = primary.safetyModelId;
+  }
+
+  async generateJson(
+    req: LlmJsonRequest,
+    ctx: CallContext,
+  ): Promise<LlmJsonResponse> {
+    const circuitOpen =
+      this.openedAt > 0 && Date.now() - this.openedAt < CIRCUIT_RESET_MS;
+    if (!circuitOpen) {
+      try {
+        const result = await this.primary.generateJson(req, ctx);
+        this.failures = 0;
+        this.openedAt = 0;
+        return result;
+      } catch (error) {
+        if (
+          ctx.signal.aborted ||
+          !(error instanceof DataScoutError) ||
+          !error.retryable
+        )
+          throw error;
+        this.failures += 1;
+        if (this.failures >= CIRCUIT_FAILURE_THRESHOLD)
+          this.openedAt = Date.now();
+      }
+    }
+    const fallbackRequest = { ...req };
+    delete fallbackRequest.modelId;
+    return this.fallback.generateJson(fallbackRequest, ctx);
+  }
+}
+
 function assertConfig(config: LlmConfig): void {
   if (
-    !['fake', 'cassette', 'gemini', 'ollama'].includes(
-      config.provider,
-    ) ||
+    !['fake', 'cassette', 'gemini', 'ollama'].includes(config.provider) ||
     !Number.isSafeInteger(config.timeoutMs) ||
     config.timeoutMs < 1 ||
     config.timeoutMs > 300_000 ||
@@ -111,9 +159,10 @@ class ConfiguredLlmClient implements LlmClient {
   ): Promise<LlmJsonResponse> {
     throwIfAborted(ctx.signal);
     const maxOutputTokens = validateRequest(req, this.config);
-    const timeoutMs = this.provider === 'ollama' && req.task !== 'safety_triage'
-      ? this.config.timeoutMs
-      : Math.min(req.timeoutMs, this.config.timeoutMs);
+    const timeoutMs =
+      this.provider === 'ollama' && req.task !== 'safety_triage'
+        ? this.config.timeoutMs
+        : Math.min(req.timeoutMs, this.config.timeoutMs);
     if (!Number.isFinite(ctx.deadlineMs)) {
       throw new DataScoutError(
         'invalid_request',
@@ -364,36 +413,49 @@ function createRemoteClient(
     invoke: async (req, signal) => {
       try {
         const modelId = req.modelId ?? config.modelId;
-        const endpoint = provider === 'gemini'
-          ? `${config.baseUrl}/models/${encodeURIComponent(modelId)}:generateContent`
-          : `${config.baseUrl}/api/chat`;
+        const endpoint =
+          provider === 'gemini'
+            ? `${config.baseUrl}/models/${encodeURIComponent(modelId)}:generateContent`
+            : `${config.baseUrl}/api/chat`;
         const headers: Record<string, string> = {
           'content-type': 'application/json',
         };
         const system = redactSensitiveText(req.system);
         if (provider === 'gemini') headers['x-goog-api-key'] = config.apiKey!;
-        const body = provider === 'gemini'
-          ? {
-              systemInstruction: { parts: [{ text: system }] },
-              contents: [{ role: 'user', parts: [{ text: redactSensitiveText(req.user) }] }],
-              generationConfig: {
-                temperature: 0,
-                maxOutputTokens: req.maxOutputTokens,
-                responseMimeType: 'application/json',
-                responseJsonSchema: req.jsonSchema,
-              },
-            }
-          : {
-              model: modelId,
-              stream: false,
-              think: false,
-              messages: [
-                { role: 'system', content: `${system}\n\nReturn JSON matching this schema: ${JSON.stringify(req.jsonSchema)}` },
-                { role: 'user', content: redactSensitiveText(req.user) },
-              ],
-              format: req.jsonSchema,
-              options: { temperature: 0, num_predict: req.maxOutputTokens },
-            };
+        const body =
+          provider === 'gemini'
+            ? {
+                systemInstruction: { parts: [{ text: system }] },
+                contents: [
+                  {
+                    role: 'user',
+                    parts: [{ text: redactSensitiveText(req.user) }],
+                  },
+                ],
+                generationConfig: {
+                  maxOutputTokens: req.maxOutputTokens,
+                  thinkingConfig:
+                    modelId.includes('2.5') || modelId.includes('2.0')
+                      ? { thinkingBudget: 0 }
+                      : { thinkingLevel: 'low' },
+                  responseMimeType: 'application/json',
+                  responseJsonSchema: req.jsonSchema,
+                },
+              }
+            : {
+                model: modelId,
+                stream: false,
+                think: false,
+                messages: [
+                  {
+                    role: 'system',
+                    content: `${system}\n\nReturn JSON matching this schema: ${JSON.stringify(req.jsonSchema)}`,
+                  },
+                  { role: 'user', content: redactSensitiveText(req.user) },
+                ],
+                format: req.jsonSchema,
+                options: { temperature: 0, num_predict: req.maxOutputTokens },
+              };
         const response = await send(endpoint, {
           method: 'POST',
           headers,
@@ -414,24 +476,47 @@ function createRemoteClient(
         let inputTokens = 0;
         let outputTokens = 0;
         if (provider === 'gemini') {
-          const candidates = Array.isArray(data['candidates']) ? data['candidates'] : [];
-          const content = candidates[0] && typeof candidates[0] === 'object'
-            ? (candidates[0] as Record<string, unknown>)['content'] : undefined;
-          const parts = content && typeof content === 'object'
-            ? (content as Record<string, unknown>)['parts'] : undefined;
-          const text = Array.isArray(parts) && parts[0] && typeof parts[0] === 'object'
-            ? (parts[0] as Record<string, unknown>)['text'] : undefined;
+          const candidates = Array.isArray(data['candidates'])
+            ? data['candidates']
+            : [];
+          const content =
+            candidates[0] && typeof candidates[0] === 'object'
+              ? (candidates[0] as Record<string, unknown>)['content']
+              : undefined;
+          const parts =
+            content && typeof content === 'object'
+              ? (content as Record<string, unknown>)['parts']
+              : undefined;
+          const text =
+            Array.isArray(parts) && parts[0] && typeof parts[0] === 'object'
+              ? (parts[0] as Record<string, unknown>)['text']
+              : undefined;
           output = parseJsonContent(text);
-          const usage = typeof data['usageMetadata'] === 'object' && data['usageMetadata'] !== null
-            ? data['usageMetadata'] as Record<string, unknown> : {};
-          inputTokens = typeof usage['promptTokenCount'] === 'number' ? usage['promptTokenCount'] : 0;
-          outputTokens = typeof usage['candidatesTokenCount'] === 'number' ? usage['candidatesTokenCount'] : 0;
+          const usage =
+            typeof data['usageMetadata'] === 'object' &&
+            data['usageMetadata'] !== null
+              ? (data['usageMetadata'] as Record<string, unknown>)
+              : {};
+          inputTokens =
+            typeof usage['promptTokenCount'] === 'number'
+              ? usage['promptTokenCount']
+              : 0;
+          outputTokens =
+            typeof usage['candidatesTokenCount'] === 'number'
+              ? usage['candidatesTokenCount']
+              : 0;
         } else {
-          const message = typeof data['message'] === 'object' && data['message'] !== null
-            ? data['message'] as Record<string, unknown> : {};
+          const message =
+            typeof data['message'] === 'object' && data['message'] !== null
+              ? (data['message'] as Record<string, unknown>)
+              : {};
           output = parseJsonContent(message['content']);
-          inputTokens = typeof data['prompt_eval_count'] === 'number' ? data['prompt_eval_count'] : 0;
-          outputTokens = typeof data['eval_count'] === 'number' ? data['eval_count'] : 0;
+          inputTokens =
+            typeof data['prompt_eval_count'] === 'number'
+              ? data['prompt_eval_count']
+              : 0;
+          outputTokens =
+            typeof data['eval_count'] === 'number' ? data['eval_count'] : 0;
         }
         return {
           output,
@@ -460,10 +545,11 @@ export function createLlmClient(
   dependencies: LlmClientDependencies = {},
 ): LlmClient {
   assertConfig(config);
+  let client: LlmClient;
   switch (config.provider) {
     case 'fake': {
       const fake = new FakeLlmClient();
-      return new ConfiguredLlmClient({
+      client = new ConfiguredLlmClient({
         provider: 'fake',
         modelId: fake.modelId,
         config,
@@ -488,13 +574,31 @@ export function createLlmClient(
           };
         },
       });
+      break;
     }
     case 'cassette':
-      return createCassetteClient(config);
+      client = createCassetteClient(config);
+      break;
     case 'gemini':
     case 'ollama':
-      return createRemoteClient(config, dependencies);
+      client = createRemoteClient(config, dependencies);
+      break;
   }
+  const fallback = config.fallback;
+  if (!fallback) return client;
+  const fallbackBaseConfig = { ...config };
+  delete fallbackBaseConfig.fallback;
+  const fallbackConfig: LlmConfig = {
+    ...fallbackBaseConfig,
+    provider: fallback.provider,
+    modelId: fallback.modelId,
+    baseUrl: fallback.baseUrl,
+    ...(fallback.apiKey ? { apiKey: fallback.apiKey } : {}),
+  };
+  return new FallbackLlmClient(
+    client,
+    createRemoteClient(fallbackConfig, dependencies),
+  );
 }
 
 export { stableRequestKey as getCassetteKey };

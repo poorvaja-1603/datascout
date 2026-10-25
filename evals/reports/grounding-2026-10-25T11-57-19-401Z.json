@@ -1,0 +1,268 @@
+{
+  "report_schema": "grounding-evaluation-v2",
+  "evaluator_version": "explanation-validator-v2",
+  "quality_claim": "deterministic_synthetic_fixture_only",
+  "started_at": "2026-10-25T11:57:19.382Z",
+  "fixture_sha256": "5202784e8338b796018e15bab6a680612e45487c4ee6d979e04b7f980bee4166",
+  "metrics": {
+    "cases": 42,
+    "expected_claims": 12,
+    "accepted_claims": 12,
+    "unsupported_claims_accepted": 0,
+    "exact_match_rate": 1
+  },
+  "cases": [
+    {
+      "case_id": "ground-001",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-002",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-003",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-004",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-005",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-006",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-007",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-008",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-009",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-010",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-011",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-012",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-013",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-014",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-015",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-016",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-017",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-018",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-019",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-020",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-021",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-022",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-023",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-024",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-025",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-026",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-027",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-028",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-029",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-030",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-031",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-032",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-033",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-034",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-035",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-036",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-037",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-038",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-039",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    },
+    {
+      "case_id": "ground-040",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-041",
+      "expected_claims": 0,
+      "accepted_claims": 0,
+      "pass": true
+    },
+    {
+      "case_id": "ground-042",
+      "expected_claims": 1,
+      "accepted_claims": 1,
+      "pass": true
+    }
+  ]
+}

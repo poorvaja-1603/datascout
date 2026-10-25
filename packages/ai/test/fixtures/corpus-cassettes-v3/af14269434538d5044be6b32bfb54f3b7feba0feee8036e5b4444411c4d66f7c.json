@@ -1,0 +1,23 @@
+{
+  "output": {
+    "topic": "food prices",
+    "geography": "Lagos",
+    "time_coverage": null,
+    "minimum_records": null,
+    "required_features": [
+      "product name",
+      "market",
+      "price"
+    ],
+    "target": null,
+    "preferences": [],
+    "constraints": [
+      "public dataset"
+    ]
+  },
+  "modelId": "development-gold-fixture-v0.1",
+  "usage": {
+    "inputTokens": 0,
+    "outputTokens": 0
+  }
+}

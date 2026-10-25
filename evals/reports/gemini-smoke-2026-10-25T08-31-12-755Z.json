@@ -1,0 +1,15 @@
+{
+  "report_schema": "gemini-single-call-smoke-v1",
+  "quality_claim": "provider_connectivity_only_not_quality_evaluation",
+  "outcome": "failed",
+  "completed_at": "2026-10-25T08:30:42.731Z",
+  "provider": "gemini",
+  "model_id": "gemini-3.8-flash",
+  "http_status": null,
+  "safe_error_code": "timeout",
+  "transport_error_type": "AbortError",
+  "requests_sent": 1,
+  "fallback_enabled": false,
+  "response_schema_valid": false,
+  "usage": null
+}

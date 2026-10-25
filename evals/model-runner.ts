@@ -7,14 +7,17 @@ import {
   createInMemorySafetyBudgetStore,
   createLlmClient,
   createRequirementExtractor,
+  EXTRACTION_PROMPT_VERSION,
   createSafetyAdmission,
   loadLlmConfig,
+  SAFETY_RULESET_VERSION,
+  SAFETY_TRIAGE_PROMPT_VERSION,
 } from '../packages/ai/src/index.js';
 import { FIELD_NAMES, parseCorpus } from './runner.js';
 import type { FieldName, FieldValue, Split } from './runner.js';
 
-export const MODEL_EVALUATOR_VERSION = 'model-extraction-evaluator-v2';
-export const MODEL_REPORT_SCHEMA = 'live-extraction-report-v1';
+export const MODEL_EVALUATOR_VERSION = 'model-extraction-evaluator-v4';
+export const MODEL_REPORT_SCHEMA = 'live-extraction-report-v3';
 
 type ResultKind = ExtractionResult['kind'] | 'error';
 
@@ -24,10 +27,18 @@ interface ModelCaseResult {
   result_kind: ResultKind;
   model_id: string | null;
   error_code?: string;
+  refusal_reason_code?: string;
+  safety_triage?: { decision: string; category: string } | undefined;
   fields: Record<FieldName, {
     expected: FieldValue;
     actual: FieldValue | null;
     exact_match: boolean;
+    true_positives: number;
+    false_positives: number;
+    false_negatives: number;
+    precision: number | null;
+    recall: number | null;
+    f1: number | null;
   }>;
 }
 
@@ -41,13 +52,15 @@ export interface ModelEvaluationReport {
     split: Split;
     provider: 'ollama';
     model_id: string;
-    prompt_version: 'extract-v1';
+    prompt_version: string;
     extraction_schema: 'ExtractedRequirements';
     extraction_schema_version: '1';
     corpus_sha256: string;
     case_count: number;
     timeout_ms: number;
     safety_triage: 'enabled_with_local_in_memory_budget';
+    safety_ruleset_version: typeof SAFETY_RULESET_VERSION;
+    safety_triage_prompt_version: typeof SAFETY_TRIAGE_PROMPT_VERSION;
   };
   metrics: {
     cases: number;
@@ -58,6 +71,12 @@ export interface ModelEvaluationReport {
       exact_matches: number;
       cases: number;
       exact_match_rate: number;
+      true_positives: number;
+      false_positives: number;
+      false_negatives: number;
+      precision: number | null;
+      recall: number | null;
+      f1: number | null;
     }>;
   };
   cases: ModelCaseResult[];
@@ -70,6 +89,7 @@ export interface ModelEvaluationOptions {
   timeoutMs: number;
   now?: Date;
   extract: (input: string, caseId: string) => Promise<ExtractionResult>;
+  safetyTriage?: (caseId: string) => { decision: string; category: string } | undefined;
 }
 
 function emptyRequirements(): ExtractedRequirements {
@@ -100,6 +120,32 @@ function sameValue(expected: FieldValue, actual: FieldValue | null): boolean {
   return expected === actual;
 }
 
+function valueItems(value: FieldValue | null): string[] {
+  if (value === null) return [];
+  return (Array.isArray(value) ? value : [value]).map((item) => JSON.stringify(item));
+}
+
+function itemCounts(expected: FieldValue, actual: FieldValue | null) {
+  const expectedItems = valueItems(expected);
+  const actualItems = valueItems(actual);
+  const remaining = new Map<string, number>();
+  for (const item of expectedItems) remaining.set(item, (remaining.get(item) ?? 0) + 1);
+  let truePositives = 0;
+  let falsePositives = 0;
+  for (const item of actualItems) {
+    const count = remaining.get(item) ?? 0;
+    if (count > 0) {
+      truePositives += 1;
+      remaining.set(item, count - 1);
+    } else falsePositives += 1;
+  }
+  return {
+    truePositives,
+    falsePositives,
+    falseNegatives: expectedItems.length - truePositives,
+  };
+}
+
 function safeErrorCode(error: unknown): string {
   if (typeof error === 'object' && error !== null && 'code' in error &&
     typeof error.code === 'string' && /^[a-z_]{1,64}$/u.test(error.code)) {
@@ -127,10 +173,23 @@ export async function evaluateModel(options: ModelEvaluationOptions): Promise<Mo
     const fields = Object.fromEntries(FIELD_NAMES.map((field) => {
       const actual = result === null ? null : actualFields(result)?.[field] ?? null;
       const expected = testCase.expected[field];
+      const counts = itemCounts(expected, actual);
+      const precision = counts.truePositives + counts.falsePositives === 0
+        ? null : counts.truePositives / (counts.truePositives + counts.falsePositives);
+      const recall = counts.truePositives + counts.falseNegatives === 0
+        ? null : counts.truePositives / (counts.truePositives + counts.falseNegatives);
+      const f1 = precision === null || recall === null || precision + recall === 0
+        ? null : 2 * precision * recall / (precision + recall);
       return [field, {
         expected,
         actual,
         exact_match: result !== null && result.kind !== 'refused' && sameValue(expected, actual),
+        true_positives: counts.truePositives,
+        false_positives: counts.falsePositives,
+        false_negatives: counts.falseNegatives,
+        precision,
+        recall,
+        f1,
       }];
     })) as ModelCaseResult['fields'];
     cases.push({
@@ -139,6 +198,10 @@ export async function evaluateModel(options: ModelEvaluationOptions): Promise<Mo
       result_kind: result?.kind ?? 'error',
       model_id: result?.kind === 'ok' ? result.modelId : options.modelId,
       ...(errorCode ? { error_code: errorCode } : {}),
+      ...(result?.kind === 'refused' ? { refusal_reason_code: result.reasonCode } : {}),
+      ...(options.safetyTriage?.(testCase.case_id)
+        ? { safety_triage: options.safetyTriage(testCase.case_id) }
+        : {}),
       fields,
     });
     console.log(`Evaluated ${index + 1}/${selected.length}: ${testCase.case_id} (${result?.kind ?? errorCode})`);
@@ -153,7 +216,18 @@ export async function evaluateModel(options: ModelEvaluationOptions): Promise<Mo
   for (const item of cases) resultKinds[item.result_kind] += 1;
   const perField = Object.fromEntries(FIELD_NAMES.map((field) => {
     const exactMatches = cases.filter((item) => item.fields[field].exact_match).length;
-    return [field, { exact_matches: exactMatches, cases: cases.length, exact_match_rate: exactMatches / cases.length }];
+    const truePositives = cases.reduce((sum, item) => sum + item.fields[field].true_positives, 0);
+    const falsePositives = cases.reduce((sum, item) => sum + item.fields[field].false_positives, 0);
+    const falseNegatives = cases.reduce((sum, item) => sum + item.fields[field].false_negatives, 0);
+    const precision = truePositives + falsePositives === 0 ? null : truePositives / (truePositives + falsePositives);
+    const recall = truePositives + falseNegatives === 0 ? null : truePositives / (truePositives + falseNegatives);
+    const f1 = precision === null || recall === null || precision + recall === 0
+      ? null : 2 * precision * recall / (precision + recall);
+    return [field, {
+      exact_matches: exactMatches, cases: cases.length, exact_match_rate: exactMatches / cases.length,
+      true_positives: truePositives, false_positives: falsePositives, false_negatives: falseNegatives,
+      precision, recall, f1,
+    }];
   })) as ModelEvaluationReport['metrics']['per_field'];
   const allFieldsExact = cases.filter((item) => FIELD_NAMES.every((field) => item.fields[field].exact_match)).length;
 
@@ -167,13 +241,15 @@ export async function evaluateModel(options: ModelEvaluationOptions): Promise<Mo
       split,
       provider: 'ollama',
       model_id: options.modelId,
-      prompt_version: 'extract-v1',
+      prompt_version: EXTRACTION_PROMPT_VERSION,
       extraction_schema: 'ExtractedRequirements',
       extraction_schema_version: '1',
       corpus_sha256: createHash('sha256').update(options.corpusText).digest('hex'),
       case_count: cases.length,
       timeout_ms: options.timeoutMs,
       safety_triage: 'enabled_with_local_in_memory_budget',
+      safety_ruleset_version: SAFETY_RULESET_VERSION,
+      safety_triage_prompt_version: SAFETY_TRIAGE_PROMPT_VERSION,
     },
     metrics: {
       cases: cases.length,
@@ -186,14 +262,23 @@ export async function evaluateModel(options: ModelEvaluationOptions): Promise<Mo
   };
 }
 
-function noOpContext(caseId: string, timeoutMs: number): CallContext {
+function noOpContext(
+  caseId: string,
+  timeoutMs: number,
+  onSafetyTriage: (attributes: Record<string, string | number | boolean>) => void,
+): CallContext {
   return {
     requestId: `local-eval-${caseId}`,
     principalId: 'local-evaluation',
     signal: new AbortController().signal,
     deadlineMs: Date.now() + timeoutMs * 2 + 30_000,
     tracer: {
-      withSpan: async (_name, _options, callback) => callback({ setAttributes: () => undefined, score: () => undefined }),
+      withSpan: async (name, _options, callback) => callback({
+        setAttributes: (attributes) => {
+          if (name === 'safety.triage') onSafetyTriage(attributes);
+        },
+        score: () => undefined,
+      }),
       flush: async () => undefined,
     },
   };
@@ -235,12 +320,20 @@ export async function runModelEvaluationCli(args: string[]): Promise<void> {
     store: createInMemorySafetyBudgetStore(),
   });
   const extractor = createRequirementExtractor(client, undefined, admission);
+  const triageResults = new Map<string, { decision: string; category: string }>();
   const report = await evaluateModel({
     corpusText,
     split,
     modelId: client.modelId,
     timeoutMs,
-    extract: (input, caseId) => extractor.extract(input, noOpContext(caseId, timeoutMs)),
+    extract: (input, caseId) => extractor.extract(input, noOpContext(caseId, timeoutMs, (attributes) => {
+      const decision = attributes['safety.triage.decision'];
+      const category = attributes['safety.triage.category'];
+      if (typeof decision === 'string' && typeof category === 'string') {
+        triageResults.set(caseId, { decision, category });
+      }
+    })),
+    safetyTriage: (caseId) => triageResults.get(caseId),
   });
   const outputDirectory = resolve(dirname(corpusPath), 'reports');
   await mkdir(outputDirectory, { recursive: true });

@@ -1,6 +1,6 @@
 # DataScout LLM evaluation (provisional v0.1)
 
-This is the reviewed v0.1 extraction corpus, confirmed by the project owner on 2026-10-24. Its eight expected fields match the `ExtractedRequirements` schema in `contracts/`. Keep held-out examples reserved for final evaluation.
+This is the reviewed v0.1 extraction corpus. The project owner confirmed the original annotations on 2026-10-24 and approved source/access normalization on 2026-10-25. Its eight expected fields match the `ExtractedRequirements` schema in `contracts/`. Keep held-out examples reserved for final evaluation.
 
 ## Corpus
 
@@ -9,6 +9,8 @@ This is the reviewed v0.1 extraction corpus, confirmed by the project owner on 2
 Each non-null/non-empty gold field has one or more exact evidence snippets in `evidence`. These are user-request spans for extraction evaluation, not dataset-source evidence. Source-backed retrieval/verdict labels are intentionally absent because no source adapters, retrieved fixtures, or evidence contract exist yet. Do not score dataset verification, false-PASS, or groundedness from this corpus.
 
 For consistent provisional labels, normalize numeric year ranges in `time_coverage` to `YYYY-YYYY` (for example, `2018-2023`), while keeping the original wording in `evidence`. Preserve non-range expressions such as `next year` or `summer 2019` until the frozen backend contract defines their normalization.
+
+Every explicitly named dataset source is a `constraints` value using its canonical name, regardless of whether the request says "from", "in", "use", or "look in". Explicit access/license requests such as "public dataset" are also constraints; phrases such as "public health" and "public transport" describe the subject and are not access constraints.
 
 `held_out` cases are reserved for final evaluation. Do not tune prompts or rules against them. Split membership is part of the versioned dataset.
 
@@ -74,10 +76,26 @@ separately labeled record. It refuses held-out reports and requires the
 explicit opt-in flag. Structural records never change the model-quality status
 or quality rows. Do not use them to claim accuracy.
 
+## Gemini metadata connectivity check
+
+This single-request check calls Google's `models.get` endpoint. It verifies
+that the configured API key, network path, and model ID can access model
+metadata, and reports whether `generateContent` is supported. It does not
+generate text and cannot prove that generation succeeds or measure generation
+latency, quota, or billing. It reads `GEMINI_API_KEY` and `GEMINI_MODEL_ID`
+from `evals/.env`, writes a sanitized report, and never prints the key:
+
+```powershell
+npm run gemini:connectivity
+```
+
+Do not use this as a substitute for an authorized generation smoke test.
+
 ## Local Ollama model evaluation
 
-After the extraction prompt and schema are frozen, run the real development
-split against local Ollama:
+Run the development split against local Ollama for exploratory measurements
+while tuning the prompt. This does not freeze the prompt or authorize a
+held-out run:
 
 ```powershell
 npx tsx evals\model-runner.ts --model qwen3:8b --timeout-ms 120000
@@ -87,11 +105,14 @@ This makes local inference calls only; it does not use Gemini or AWS. The
 runner enables the application safety gate with an in-memory evaluation budget,
 uses the reviewed development split by default, and writes a report under
 `evals/reports/`. Reports contain field comparisons and safe error codes, not
-raw request text. Clarifications compare as empty requirements; refusals and
+raw request text. In addition to strict exact-match rates, the report includes
+micro value-level precision/recall/F1: array/scalar values count as exact items,
+and fields empty in both gold and prediction contribute to exact-match rates
+but not micro P/R/F1. Clarifications compare as empty requirements; refusals and
 failed calls count as extraction mismatches. The output measures this
 model/prompt run and is not by itself a release approval. Do not tune against
 held-out examples; select them only with `--heldout` after freezing the prompt,
-schema, and evaluator.
+schema, evaluator, and release thresholds.
 
 To append a verified development-only model report to `BASELINE.md`:
 
@@ -104,21 +125,22 @@ changing the baseline status.
 
 ## Baseline status
 
-The shared extraction schema and implementation are present. A local Ollama
-development baseline has been recorded; held-out quality and release gates
-remain unrun. See `BASELINE.md`; structural replay metrics are not model-quality
-evidence.
+The current prompt is extract-v5, and its local Ollama development result is
+13/40 all-fields exact match (40 development cases). This is diagnostic, not a
+release pass; no prompt/schema freeze or release threshold has been approved.
+Held-out quality remains unrun. See
+`BASELINE.md`; structural replay metrics are not model-quality evidence.
 
 ## Langfuse status and redaction
 
-The project owner reports creating a hosted Langfuse project and configuring its API keys locally. A non-production smoke span and boolean score were delivered to the configured project and inspected; this verifies the smoke integration only, not production application traffic. The latest smoke was run after disabling automatic process/host resource detection, and the inspected metadata contained no process or host identifiers. An earlier pre-fix smoke trace may still retain local process and host metadata; remove it from Langfuse if it should not be retained. Configure retention and separate development/production environments in the team's Langfuse setup. Supply runtime credentials through the approved secret store; never commit credentials or paste them into chat.
+The reviewed 40-case development dataset and recorded local experiment results are in the single project. A synthetic generation smoke was read back with model ID, token usage, and latency, and contained no prompt/completion. The `DataScout Development Quality` dashboard displays development exact-match scores; it does not change the project Home dashboard and is not production monitoring. Use environment tags (`dev`, `eval`, `prod`) within the single project and configure retention. Supply runtime credentials through the approved secret store; never commit credentials or paste them into chat.
 
 Before transmitting data to Langfuse:
 
 - Send only the minimum fields needed for observability: request correlation ID, stage, model/prompt/schema versions, timings, token counts where available, source status/counts, and programmatic evaluation outcomes.
 - Do not export raw user queries, raw model prompts/responses, dataset rows/cards, access tokens, credentials, signed URLs, or user identity by default.
-- If text capture is explicitly enabled for a controlled development environment, redact likely PII and secrets before export and use a separate development project with short retention.
+- If text capture is explicitly enabled for a controlled development environment, redact likely PII and secrets before export and use the `dev` environment tag with short retention.
 - Treat all redaction as a pre-export application responsibility; verify it with tests before enabling trace delivery.
-- Configure separate development and production projects/environments and least-privilege keys. Keep runtime trace delivery optional so Langfuse outages cannot fail searches.
+- Use environment tags within the single project and least-privilege keys. Keep runtime trace delivery optional so Langfuse outages cannot fail searches.
 
 These are required setup controls. Unit tests cover the application redaction patterns, but do not prove every possible secret or personally identifying value will be caught. The smoke trace verifies telemetry delivery only; no production application traffic has been traced.

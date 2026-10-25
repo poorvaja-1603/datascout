@@ -24,6 +24,27 @@ try {
         smokeTest: true,
       });
       span.score('observability_smoke', true, 'SDK export smoke test');
+      await tracer.withSpan(
+        'datascout.observability.smoke_generation',
+        { kind: 'generation' },
+        async (generation) => {
+          generation.setAttributes({
+            component: 'datascout-observability',
+            smokeTest: true,
+          });
+          generation.setGenerationDetails?.({
+            modelId: 'datascout-synthetic-smoke',
+            inputTokens: 12,
+            outputTokens: 4,
+            latencyMs: 42,
+          });
+          generation.score(
+            'generation_metadata_smoke',
+            true,
+            'Synthetic metadata only; no prompt or completion sent.',
+          );
+        },
+      );
     },
   );
   await tracer.flush(10_000);
