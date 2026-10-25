@@ -1,7 +1,4 @@
-import type {
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-} from 'aws-lambda';
+import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {
   CompareRequestSchema,
   CompareResponseSchema,
@@ -26,18 +23,29 @@ export async function handler(
   try {
     parsedJson = JSON.parse(event.body);
   } catch {
-    return errorResponse('invalid_request', 'Malformed JSON in request body.', requestId);
+    return errorResponse(
+      'invalid_request',
+      'Malformed JSON in request body.',
+      requestId,
+    );
   }
 
   const parseResult = CompareRequestSchema.safeParse(parsedJson);
   if (!parseResult.success) {
-    const issue = parseResult.error.issues[0]?.message ?? 'Invalid compare request schema.';
+    const issue =
+      parseResult.error.issues[0]?.message ?? 'Invalid compare request schema.';
     return errorResponse('invalid_request', issue, requestId);
   }
 
-  const datasets = await getDatasetsStore().batchGetComparisons(parseResult.data.dataset_ids);
+  const datasets = await getDatasetsStore().batchGetComparisons(
+    parseResult.data.dataset_ids,
+  );
   if (datasets.length !== parseResult.data.dataset_ids.length) {
-    return errorResponse('not_found', 'One or more datasets were not found.', requestId);
+    return errorResponse(
+      'not_found',
+      'One or more datasets were not found.',
+      requestId,
+    );
   }
   const response = {
     datasets,

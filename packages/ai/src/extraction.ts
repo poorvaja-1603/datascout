@@ -38,9 +38,7 @@ export type SafetyCheck = (
 ) => Promise<SafetyDecision> | SafetyDecision;
 
 export type SafetyDecision =
-  | RefusalReasonCode
-  | { sanitizedQuery: string }
-  | null;
+  RefusalReasonCode | { sanitizedQuery: string } | null;
 
 const extractionSchema = toJsonSchemas().ExtractedRequirements as object;
 const promptPromise = readFile(

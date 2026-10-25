@@ -10,7 +10,14 @@
     "api_endpoint": null,
     "file_formats": ["csv"],
     "record_count": 480,
-    "columns": ["district", "year", "month", "crop_yield", "rainfall_mm", "temperature_c"],
+    "columns": [
+      "district",
+      "year",
+      "month",
+      "crop_yield",
+      "rainfall_mm",
+      "temperature_c"
+    ],
     "geography": "Maharashtra, India",
     "time_coverage": "2010-2024",
     "tags": ["synthetic", "crop-yield", "rainfall"],
@@ -34,7 +41,14 @@
       "evidence_id": "fixture-detail-rainfall-columns",
       "dataset_id": "datagovin:fixture-crop-yield",
       "field": "columns",
-      "value": ["district", "year", "month", "crop_yield", "rainfall_mm", "temperature_c"],
+      "value": [
+        "district",
+        "year",
+        "month",
+        "crop_yield",
+        "rainfall_mm",
+        "temperature_c"
+      ],
       "provenance": {
         "source_field_path": "sample.header",
         "retrieved_at": "2026-01-15T00:00:00Z"

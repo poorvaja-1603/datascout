@@ -184,20 +184,10 @@ export class BoundedInspector implements Inspector {
         );
       } else if (sniff.kind === 'json' || sniff.kind === 'jsonl') {
         const text = new TextDecoder('utf-8').decode(bytes);
-        table = parseJson(
-          text,
-          limits,
-          options.deadlineMs,
-          options.signal,
-        );
+        table = parseJson(text, limits, options.deadlineMs, options.signal);
       } else {
         const text = new TextDecoder('utf-8').decode(bytes);
-        table = parseCsv(
-          text,
-          limits,
-          options.deadlineMs,
-          options.signal,
-        );
+        table = parseCsv(text, limits, options.deadlineMs, options.signal);
       }
     } catch (err: unknown) {
       if (err instanceof DeadlineExceededError) {

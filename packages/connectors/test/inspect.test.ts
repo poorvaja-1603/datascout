@@ -1,7 +1,11 @@
 import fs from 'node:fs';
 import path from 'node:path';
 import { describe, expect, it } from 'vitest';
-import type { CallContext, Dataset, InspectionLimits } from '@datascout/contracts';
+import type {
+  CallContext,
+  Dataset,
+  InspectionLimits,
+} from '@datascout/contracts';
 import {
   BoundedInspector,
   DEFAULT_INSPECTION_LIMITS,
@@ -22,7 +26,8 @@ function createMockDataset(overrides: Partial<Dataset> = {}): Dataset {
     description: 'Sample description for testing inspection.',
     license: 'mit',
     access_type: 'open',
-    api_endpoint: 'https://datasets-server.huggingface.co/rows?dataset=test%2Fsample-dataset',
+    api_endpoint:
+      'https://datasets-server.huggingface.co/rows?dataset=test%2Fsample-dataset',
     file_formats: ['csv'],
     record_count: 100,
     columns: ['id', 'name'],
@@ -38,7 +43,10 @@ function createMockDataset(overrides: Partial<Dataset> = {}): Dataset {
   };
 }
 
-function createCallContext(signal?: AbortSignal, deadlineMs?: number): CallContext {
+function createCallContext(
+  signal?: AbortSignal,
+  deadlineMs?: number,
+): CallContext {
   return {
     requestId: 'req-inspect-1',
     timestamp: '2026-01-01T00:00:00.000Z',
@@ -96,7 +104,9 @@ describe('Bounded Dataset Inspection', () => {
     expect(evidenceFields).toContain('record_count');
     expect(evidenceFields).toContain('time_coverage');
 
-    const recordCountEv = inspection.evidence.find((e) => e.field === 'record_count');
+    const recordCountEv = inspection.evidence.find(
+      (e) => e.field === 'record_count',
+    );
     expect(recordCountEv?.value).toBe(4);
     expect(recordCountEv?.provenance.source_field_path).toBe('sample.rows');
   });
@@ -116,7 +126,11 @@ describe('Bounded Dataset Inspection', () => {
     expect(inspection.status).toBe('ok');
     expect(inspection.verificationLevel).toBe('sample_checked');
     expect(inspection.rowsExamined).toBe(2);
-    expect(inspection.columns.map((c) => c.name)).toEqual(['id', 'country', 'value']);
+    expect(inspection.columns.map((c) => c.name)).toEqual([
+      'id',
+      'country',
+      'value',
+    ]);
   });
 
   it('inspects JSON Lines (NDJSON) correctly', async () => {
@@ -192,7 +206,9 @@ describe('Bounded Dataset Inspection', () => {
   describe('Security Rejections', () => {
     it('blocks binary pickle payload protocol 2/4', async () => {
       // Protocol 2 starts with \x80\x02, Protocol 4 starts with \x80\x04
-      const pklBytes = new Uint8Array([0x80, 0x04, 0x95, 0x0a, 0x00, 0x00, 0x00]);
+      const pklBytes = new Uint8Array([
+        0x80, 0x04, 0x95, 0x0a, 0x00, 0x00, 0x00,
+      ]);
       const dataset = createMockDataset();
 
       const inspection = await inspectBytes(dataset, pklBytes, {
@@ -208,9 +224,13 @@ describe('Bounded Dataset Inspection', () => {
       const textPickle = 'c__builtin__\nglobals\n(dp0\n';
       const dataset = createMockDataset();
 
-      const inspection = await inspectBytes(dataset, encoder.encode(textPickle), {
-        filename: 'data.txt',
-      });
+      const inspection = await inspectBytes(
+        dataset,
+        encoder.encode(textPickle),
+        {
+          filename: 'data.txt',
+        },
+      );
 
       expect(inspection.status).toBe('blocked');
       expect(inspection.verificationLevel).toBe('metadata_only');
@@ -261,7 +281,9 @@ describe('Bounded Dataset Inspection', () => {
 
     it('blocks ZIP archive files without decompressing', async () => {
       // Standard ZIP magic bytes: PK\x03\x04
-      const zipBytes = new Uint8Array([0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00]);
+      const zipBytes = new Uint8Array([
+        0x50, 0x4b, 0x03, 0x04, 0x14, 0x00, 0x00, 0x00,
+      ]);
       const dataset = createMockDataset();
 
       const inspect1 = await inspectBytes(dataset, zipBytes);
@@ -269,14 +291,20 @@ describe('Bounded Dataset Inspection', () => {
       expect(inspect1.verificationLevel).toBe('metadata_only');
 
       // Empty ZIP magic bytes: PK\x05\x06
-      const emptyZipBytes = new Uint8Array([0x50, 0x4b, 0x05, 0x06, 0x00, 0x00]);
+      const emptyZipBytes = new Uint8Array([
+        0x50, 0x4b, 0x05, 0x06, 0x00, 0x00,
+      ]);
       const inspect2 = await inspectBytes(dataset, emptyZipBytes);
       expect(inspect2.status).toBe('blocked');
 
       // By extension
-      const inspect3 = await inspectBytes(dataset, encoder.encode('some-data'), {
-        filename: 'bundle.zip',
-      });
+      const inspect3 = await inspectBytes(
+        dataset,
+        encoder.encode('some-data'),
+        {
+          filename: 'bundle.zip',
+        },
+      );
       expect(inspect3.status).toBe('blocked');
     });
   });
@@ -397,12 +425,16 @@ describe('Bounded Dataset Inspection', () => {
     expect(row['prototype']).toBeUndefined();
 
     // Verify global Object prototype was not polluted
-    expect((Object.prototype as unknown as Record<string, unknown>)['polluted']).toBeUndefined();
+    expect(
+      (Object.prototype as unknown as Record<string, unknown>)['polluted'],
+    ).toBeUndefined();
   });
 
   // 10. Binary-as-CSV: NUL bytes and invalid UTF-8
   it('rejects binary files containing NUL bytes as unsupported_format, never CSV', async () => {
-    const binaryData = new Uint8Array([0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x57, 0x6f, 0x72]);
+    const binaryData = new Uint8Array([
+      0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x00, 0x57, 0x6f, 0x72,
+    ]);
     const dataset = createMockDataset();
 
     const inspection = await inspectBytes(dataset, binaryData, {
@@ -442,12 +474,17 @@ describe('Bounded Dataset Inspection', () => {
 
   // 12. Truncated JSON array
   it('handles truncated JSON array gracefully returning failed without throwing', async () => {
-    const truncatedJson = '[{"id": 1, "name": "alice"}, {"id": 2, "name": "bob"';
+    const truncatedJson =
+      '[{"id": 1, "name": "alice"}, {"id": 2, "name": "bob"';
     const dataset = createMockDataset();
 
-    const inspection = await inspectBytes(dataset, encoder.encode(truncatedJson), {
-      filename: 'partial.json',
-    });
+    const inspection = await inspectBytes(
+      dataset,
+      encoder.encode(truncatedJson),
+      {
+        filename: 'partial.json',
+      },
+    );
 
     expect(inspection.status).toBe('failed');
     expect(inspection.verificationLevel).toBe('metadata_only');
@@ -479,7 +516,11 @@ describe('Bounded Dataset Inspection', () => {
       const dataset = createMockDataset();
       const ctx = createCallContext();
 
-      const result = await inspector.inspect(dataset, DEFAULT_INSPECTION_LIMITS, ctx);
+      const result = await inspector.inspect(
+        dataset,
+        DEFAULT_INSPECTION_LIMITS,
+        ctx,
+      );
 
       expect(result.status).toBe('ok');
       expect(result.verificationLevel).toBe('metadata_only');
@@ -502,7 +543,11 @@ describe('Bounded Dataset Inspection', () => {
       const dataset = createMockDataset();
       const ctx = createCallContext();
 
-      const result = await inspector.inspect(dataset, DEFAULT_INSPECTION_LIMITS, ctx);
+      const result = await inspector.inspect(
+        dataset,
+        DEFAULT_INSPECTION_LIMITS,
+        ctx,
+      );
 
       expect(result.status).toBe('ok');
       expect(result.verificationLevel).toBe('sample_checked');
@@ -519,7 +564,11 @@ describe('Bounded Dataset Inspection', () => {
       const dataset = createMockDataset();
       const ctx = createCallContext();
 
-      const result = await inspector.inspect(dataset, DEFAULT_INSPECTION_LIMITS, ctx);
+      const result = await inspector.inspect(
+        dataset,
+        DEFAULT_INSPECTION_LIMITS,
+        ctx,
+      );
 
       expect(result.status).toBe('failed');
       expect(result.verificationLevel).toBe('metadata_only');

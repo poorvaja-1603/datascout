@@ -128,38 +128,71 @@ export function createRequestSafetyCheck(): (
     const offsets: number[] = [];
     let sourceOffset = 0;
     for (const character of query) {
-      const value = character.normalize('NFKC').replace(/[\u200B-\u200D\uFEFF]/gu, '');
+      const value = character
+        .normalize('NFKC')
+        .replace(/[\u200B-\u200D\uFEFF]/gu, '');
       normalized += value;
-      for (let index = 0; index < value.length; index += 1) offsets.push(sourceOffset);
+      for (let index = 0; index < value.length; index += 1)
+        offsets.push(sourceOffset);
       sourceOffset += character.length;
     }
 
-    const direct = SANITIZABLE_INJECTION_PATTERNS
-      .map((pattern) => pattern.exec(normalized)?.index ?? -1)
-      .filter((index) => index >= 0)
-      .sort((left, right) => left - right)[0] ?? -1;
+    const direct =
+      SANITIZABLE_INJECTION_PATTERNS.map(
+        (pattern) => pattern.exec(normalized)?.index ?? -1,
+      )
+        .filter((index) => index >= 0)
+        .sort((left, right) => left - right)[0] ?? -1;
     let encoded = -1;
     for (const match of normalized.matchAll(/\b[A-Za-z0-9+/]{20,}={0,2}/gu)) {
       const decoded = Buffer.from(match[0], 'base64').toString('utf8');
-      if ([...decoded].every((character) => {
-        const code = character.charCodeAt(0);
-        return code === 9 || code === 10 || code === 13 || (code >= 32 && code <= 126);
-      }) && SANITIZABLE_INJECTION_PATTERNS.some((pattern) => pattern.test(decoded))) {
+      if (
+        [...decoded].every((character) => {
+          const code = character.charCodeAt(0);
+          return (
+            code === 9 ||
+            code === 10 ||
+            code === 13 ||
+            (code >= 32 && code <= 126)
+          );
+        }) &&
+        SANITIZABLE_INJECTION_PATTERNS.some((pattern) => pattern.test(decoded))
+      ) {
         encoded = match.index ?? -1;
         break;
       }
     }
-    const matchIndex = [direct, encoded].filter((index) => index >= 0)
-      .sort((left, right) => left - right)[0] ?? -1;
+    const matchIndex =
+      [direct, encoded]
+        .filter((index) => index >= 0)
+        .sort((left, right) => left - right)[0] ?? -1;
     if (matchIndex < 0) return null;
 
     const sourceIndex = offsets[matchIndex] ?? query.length;
     const sourcePrefix = query.slice(0, sourceIndex);
-    const marker = /\b(?:dataset\s+note|dataset\s+card|source\s+text|quoted\s+text)\s*:/iu.exec(sourcePrefix);
-    const safePrefix = (marker?.index === undefined ? sourcePrefix : sourcePrefix.slice(0, marker.index)).trim();
-    const normalizedMarker = /\b(?:dataset\s+note|dataset\s+card|source\s+text|quoted\s+text)\s*:/iu.exec(normalized.slice(0, matchIndex));
-    const normalizedPrefix = (normalizedMarker?.index === undefined ? normalized.slice(0, matchIndex) : normalized.slice(0, normalizedMarker.index)).trim();
-    const isClearSearch = (value: string) => value.length >= 20 && /^\s*(?:please\s+)?(?:find|search|look\s+for|get|recommend|i\s+need)\b/iu.test(value);
+    const marker =
+      /\b(?:dataset\s+note|dataset\s+card|source\s+text|quoted\s+text)\s*:/iu.exec(
+        sourcePrefix,
+      );
+    const safePrefix = (
+      marker?.index === undefined
+        ? sourcePrefix
+        : sourcePrefix.slice(0, marker.index)
+    ).trim();
+    const normalizedMarker =
+      /\b(?:dataset\s+note|dataset\s+card|source\s+text|quoted\s+text)\s*:/iu.exec(
+        normalized.slice(0, matchIndex),
+      );
+    const normalizedPrefix = (
+      normalizedMarker?.index === undefined
+        ? normalized.slice(0, matchIndex)
+        : normalized.slice(0, normalizedMarker.index)
+    ).trim();
+    const isClearSearch = (value: string) =>
+      value.length >= 20 &&
+      /^\s*(?:please\s+)?(?:find|search|look\s+for|get|recommend|i\s+need)\b/iu.test(
+        value,
+      );
     if (isClearSearch(normalizedPrefix) && isClearSearch(safePrefix)) {
       return { sanitizedQuery: safePrefix };
     }
@@ -174,7 +207,10 @@ interface SearchSafetyDecision {
 }
 
 export function inspectSearchInput(query: string): SearchSafetyDecision {
-  if (query.length > SEARCH_QUERY_MAX_LENGTH || INVALID_INPUT_PATTERNS.some((pattern) => pattern.test(query))) {
+  if (
+    query.length > SEARCH_QUERY_MAX_LENGTH ||
+    INVALID_INPUT_PATTERNS.some((pattern) => pattern.test(query))
+  ) {
     return { refusal: null, layers: ['L0'], invalidInput: true };
   }
   const normalizedQuery = normalizePolicyText(query);

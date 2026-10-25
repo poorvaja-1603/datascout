@@ -69,7 +69,10 @@ export function parseCsv(
   while (i < len) {
     // Cooperative deadline and cancellation check
     if (linesParsed % 20 === 0) {
-      if (signal?.aborted || (deadlineMs !== undefined && Date.now() > deadlineMs)) {
+      if (
+        signal?.aborted ||
+        (deadlineMs !== undefined && Date.now() > deadlineMs)
+      ) {
         throw new DeadlineExceededError();
       }
     }
@@ -181,7 +184,11 @@ export function parseCsv(
     const rowCells = rows[r]!;
 
     // Check for truncated/ragged final line
-    if (r === rows.length - 1 && rowCells.length < expectedColumnCount && droppedPartialLine) {
+    if (
+      r === rows.length - 1 &&
+      rowCells.length < expectedColumnCount &&
+      droppedPartialLine
+    ) {
       // Drop partial last line
       break;
     }

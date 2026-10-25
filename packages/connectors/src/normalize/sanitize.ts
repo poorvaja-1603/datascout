@@ -29,7 +29,11 @@ export function sanitizeText(
   rawText: string | null | undefined,
   maxLength: number,
 ): string | null {
-  if (rawText === null || rawText === undefined || typeof rawText !== 'string') {
+  if (
+    rawText === null ||
+    rawText === undefined ||
+    typeof rawText !== 'string'
+  ) {
     return null;
   }
 
@@ -88,9 +92,7 @@ export function sanitizeText(
   return text.length > 0 ? text : null;
 }
 
-export function sanitizeTitle(
-  title: string | null | undefined,
-): string | null {
+export function sanitizeTitle(title: string | null | undefined): string | null {
   return sanitizeText(title, MAX_TITLE_LENGTH);
 }
 

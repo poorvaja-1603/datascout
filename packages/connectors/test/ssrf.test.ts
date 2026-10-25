@@ -101,15 +101,22 @@ describe('SSRF Guard', () => {
     });
 
     it('allows valid public host with public IP resolution', async () => {
-      const mockResolver = async () => [{ address: '93.184.216.34', family: 4 }];
-      const valid = await validateUrlForSsrf('https://api.data.gov.in/resource', {
-        dnsResolver: mockResolver,
-      });
+      const mockResolver = async () => [
+        { address: '93.184.216.34', family: 4 },
+      ];
+      const valid = await validateUrlForSsrf(
+        'https://api.data.gov.in/resource',
+        {
+          dnsResolver: mockResolver,
+        },
+      );
       expect(valid.hostname).toBe('api.data.gov.in');
     });
 
     it('enforces allowedHosts allowlist when configured', async () => {
-      const mockResolver = async () => [{ address: '93.184.216.34', family: 4 }];
+      const mockResolver = async () => [
+        { address: '93.184.216.34', family: 4 },
+      ];
       await expect(
         validateUrlForSsrf('https://untrusted-portal.org/data', {
           allowedHosts: ['data.gov.in', 'huggingface.co'],

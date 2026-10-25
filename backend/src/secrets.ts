@@ -17,7 +17,8 @@ async function fetchSecret(secretArn: string): Promise<string | undefined> {
       new GetSecretValueCommand({ SecretId: secretArn }),
     );
     if (typeof result.SecretString === 'string') return result.SecretString;
-    if (result.SecretBinary) return Buffer.from(result.SecretBinary).toString('utf8');
+    if (result.SecretBinary)
+      return Buffer.from(result.SecretBinary).toString('utf8');
     return undefined;
   } catch {
     // Never include SDK errors, secret identifiers, or secret values in logs.
@@ -28,7 +29,10 @@ async function fetchSecret(secretArn: string): Promise<string | undefined> {
 export function createRuntimeSecretLoader(
   readSecret: SecretFetcher = fetchSecret,
   environment: Record<string, string | undefined> = process.env,
-): (arnVariable: string, localValueVariable: string) => Promise<string | undefined> {
+): (
+  arnVariable: string,
+  localValueVariable: string,
+) => Promise<string | undefined> {
   return async (arnVariable, localValueVariable) => {
     const secretArn = environment[arnVariable]?.trim();
     if (!secretArn) {
@@ -41,14 +45,21 @@ export function createRuntimeSecretLoader(
     const pending = inFlight.get(secretArn);
     if (pending) return pending;
 
-    const load = readSecret(secretArn).then((value) => {
-      const secret = value?.trim();
-      if (!secret) throw new Error('Configured upstream credential is empty.');
-      cache.set(secretArn, { value: secret, expiresAt: Date.now() + CACHE_TTL_MS });
-      return secret;
-    }).catch(() => {
-      throw new Error('Configured upstream credential could not be loaded.');
-    }).finally(() => inFlight.delete(secretArn));
+    const load = readSecret(secretArn)
+      .then((value) => {
+        const secret = value?.trim();
+        if (!secret)
+          throw new Error('Configured upstream credential is empty.');
+        cache.set(secretArn, {
+          value: secret,
+          expiresAt: Date.now() + CACHE_TTL_MS,
+        });
+        return secret;
+      })
+      .catch(() => {
+        throw new Error('Configured upstream credential could not be loaded.');
+      })
+      .finally(() => inFlight.delete(secretArn));
     inFlight.set(secretArn, load);
     return load;
   };

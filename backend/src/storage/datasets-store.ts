@@ -16,13 +16,24 @@ import {
 
 export interface DatasetsStore {
   getDataset(datasetId: string): Promise<DatasetDetail | null>;
-  putDataset(dataset: DatasetDetail, score?: number, score_breakdown?: ScoreBreakdown): Promise<void>;
+  putDataset(
+    dataset: DatasetDetail,
+    score?: number,
+    score_breakdown?: ScoreBreakdown,
+  ): Promise<void>;
   batchGetDatasets(datasetIds: string[]): Promise<DatasetDetail[]>;
   batchGetComparisons(datasetIds: string[]): Promise<CompareDataset[]>;
 }
 
 export class InMemoryDatasetsStore implements DatasetsStore {
-  private readonly items = new Map<string, { detail: DatasetDetail; score?: number | undefined; score_breakdown?: ScoreBreakdown | undefined }>();
+  private readonly items = new Map<
+    string,
+    {
+      detail: DatasetDetail;
+      score?: number | undefined;
+      score_breakdown?: ScoreBreakdown | undefined;
+    }
+  >();
 
   async getDataset(datasetId: string): Promise<DatasetDetail | null> {
     const item = this.items.get(datasetId)?.detail;
@@ -32,9 +43,17 @@ export class InMemoryDatasetsStore implements DatasetsStore {
     return DatasetDetailSchema.parse(item);
   }
 
-  async putDataset(dataset: DatasetDetail, score?: number, score_breakdown?: ScoreBreakdown): Promise<void> {
+  async putDataset(
+    dataset: DatasetDetail,
+    score?: number,
+    score_breakdown?: ScoreBreakdown,
+  ): Promise<void> {
     const validated = DatasetDetailSchema.parse(dataset);
-    this.items.set(validated.dataset.dataset_id, { detail: validated, score, score_breakdown });
+    this.items.set(validated.dataset.dataset_id, {
+      detail: validated,
+      score,
+      score_breakdown,
+    });
   }
 
   async batchGetDatasets(datasetIds: string[]): Promise<DatasetDetail[]> {
@@ -53,7 +72,15 @@ export class InMemoryDatasetsStore implements DatasetsStore {
       const item = this.items.get(id);
       if (!item || item.score === undefined || !item.score_breakdown) return [];
       const { dataset, evidence, matches } = item.detail;
-      return [CompareDatasetSchema.parse({ dataset, evidence, matches, score: item.score, score_breakdown: item.score_breakdown })];
+      return [
+        CompareDatasetSchema.parse({
+          dataset,
+          evidence,
+          matches,
+          score: item.score,
+          score_breakdown: item.score_breakdown,
+        }),
+      ];
     });
   }
 
@@ -103,7 +130,11 @@ export class DynamoDbDatasetsStore implements DatasetsStore {
     }
   }
 
-  async putDataset(dataset: DatasetDetail, score?: number, score_breakdown?: ScoreBreakdown): Promise<void> {
+  async putDataset(
+    dataset: DatasetDetail,
+    score?: number,
+    score_breakdown?: ScoreBreakdown,
+  ): Promise<void> {
     const validated = DatasetDetailSchema.parse(dataset);
     try {
       await this.docClient.send(
@@ -113,7 +144,9 @@ export class DynamoDbDatasetsStore implements DatasetsStore {
             dataset_id: validated.dataset.dataset_id,
             detail: JSON.stringify(validated),
             ...(score !== undefined ? { score } : {}),
-            ...(score_breakdown ? { score_breakdown: JSON.stringify(score_breakdown) } : {}),
+            ...(score_breakdown
+              ? { score_breakdown: JSON.stringify(score_breakdown) }
+              : {}),
           },
         }),
       );
@@ -177,22 +210,47 @@ export class DynamoDbDatasetsStore implements DatasetsStore {
     for (let i = 0; i < uniqueIds.length; i += 25) {
       const chunk = uniqueIds.slice(i, i + 25);
       try {
-        const response = await this.docClient.send(new BatchGetCommand({
-          RequestItems: { [this.tableName]: { Keys: chunk.map((id) => ({ dataset_id: id })) } },
-        }));
+        const response = await this.docClient.send(
+          new BatchGetCommand({
+            RequestItems: {
+              [this.tableName]: {
+                Keys: chunk.map((id) => ({ dataset_id: id })),
+              },
+            },
+          }),
+        );
         for (const item of response.Responses?.[this.tableName] ?? []) {
           if (typeof item.score !== 'number' || !item.score_breakdown) continue;
-          const detail = DatasetDetailSchema.parse(typeof item.detail === 'string' ? JSON.parse(item.detail) : item.detail);
-          const breakdown = typeof item.score_breakdown === 'string' ? JSON.parse(item.score_breakdown) : item.score_breakdown;
-          results.set(detail.dataset.dataset_id, CompareDatasetSchema.parse({
-            dataset: detail.dataset, evidence: detail.evidence, matches: detail.matches,
-            score: item.score, score_breakdown: breakdown,
-          }));
+          const detail = DatasetDetailSchema.parse(
+            typeof item.detail === 'string'
+              ? JSON.parse(item.detail)
+              : item.detail,
+          );
+          const breakdown =
+            typeof item.score_breakdown === 'string'
+              ? JSON.parse(item.score_breakdown)
+              : item.score_breakdown;
+          results.set(
+            detail.dataset.dataset_id,
+            CompareDatasetSchema.parse({
+              dataset: detail.dataset,
+              evidence: detail.evidence,
+              matches: detail.matches,
+              score: item.score,
+              score_breakdown: breakdown,
+            }),
+          );
         }
       } catch {
-        throw new DataScoutError('internal_error', 'Failed to batch get comparison records.', false);
+        throw new DataScoutError(
+          'internal_error',
+          'Failed to batch get comparison records.',
+          false,
+        );
       }
     }
-    return datasetIds.flatMap((id) => results.has(id) ? [results.get(id)!] : []);
+    return datasetIds.flatMap((id) =>
+      results.has(id) ? [results.get(id)!] : [],
+    );
   }
 }

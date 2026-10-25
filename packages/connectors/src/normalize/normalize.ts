@@ -88,8 +88,7 @@ export function normalizeDataset(
   raw: RawCandidate,
   retrievedAt?: string,
 ): NormalizedCandidate {
-  const timestamp =
-    toValidIsoDatetime(retrievedAt) ?? new Date().toISOString();
+  const timestamp = toValidIsoDatetime(retrievedAt) ?? new Date().toISOString();
 
   // 1. Build and strictly validate dataset_id
   const source = raw.source.trim().toLowerCase();

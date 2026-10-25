@@ -97,7 +97,12 @@ describe('Retry Toolkit', () => {
             // Server says wait 86400 seconds (1 day) — unacceptable
             throw new RetryableError('Rate limited', 429, 86_400_000);
           },
-          { maxRetries: 3, initialDelayMs: 10, maxDelayMs: 5000, jitter: false },
+          {
+            maxRetries: 3,
+            initialDelayMs: 10,
+            maxDelayMs: 5000,
+            jitter: false,
+          },
         ),
       ).rejects.toThrow('Rate limited');
       const elapsed = Date.now() - start;

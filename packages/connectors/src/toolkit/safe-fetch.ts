@@ -1,6 +1,11 @@
 import { validateUrlForSsrf, type SsrfGuardOptions } from './ssrf.js';
 import { redactUrl, redactErrorMessage } from './redaction.js';
-import { parseRetryAfter, RetryableError, withRetry, type RetryOptions } from './retry.js';
+import {
+  parseRetryAfter,
+  RetryableError,
+  withRetry,
+  type RetryOptions,
+} from './retry.js';
 
 export interface SafeFetchOptions extends RequestInit {
   timeoutMs?: number | undefined;
@@ -39,7 +44,8 @@ export async function safeFetch(
   };
 
   return withRetry(async () => {
-    let currentUrl = typeof targetUrl === 'string' ? new URL(targetUrl) : targetUrl;
+    let currentUrl =
+      typeof targetUrl === 'string' ? new URL(targetUrl) : targetUrl;
     let redirectCount = 0;
 
     while (true) {
@@ -51,7 +57,8 @@ export async function safeFetch(
       const controller = new AbortController();
 
       const timer = setTimeout(
-        () => controller.abort(new Error(`Request timed out after ${timeoutMs}ms`)),
+        () =>
+          controller.abort(new Error(`Request timed out after ${timeoutMs}ms`)),
         timeoutMs,
       );
 
@@ -78,11 +85,15 @@ export async function safeFetch(
         clearTimeout(timer);
         callerSignal?.removeEventListener('abort', onCallerAbort);
         const errObj = err as Error;
-        const safeMsg = redactErrorMessage(errObj.message || 'Network fetch failed');
+        const safeMsg = redactErrorMessage(
+          errObj.message || 'Network fetch failed',
+        );
         if (errObj.name === 'AbortError') {
           // Distinguish caller abort from timeout.
           if (callerSignal?.aborted) {
-            throw new Error(`Fetch cancelled by caller: ${safeMsg}`, { cause: err });
+            throw new Error(`Fetch cancelled by caller: ${safeMsg}`, {
+              cause: err,
+            });
           }
           throw new RetryableError(`Fetch timeout: ${safeMsg}`);
         }
@@ -97,12 +108,16 @@ export async function safeFetch(
         callerSignal?.removeEventListener('abort', onCallerAbort);
         redirectCount++;
         if (redirectCount > maxRedirects) {
-          throw new Error(`Exceeded maximum allowed redirects (${maxRedirects})`);
+          throw new Error(
+            `Exceeded maximum allowed redirects (${maxRedirects})`,
+          );
         }
 
         const location = response.headers.get('location');
         if (!location) {
-          throw new Error(`Redirect response (${response.status}) missing Location header`);
+          throw new Error(
+            `Redirect response (${response.status}) missing Location header`,
+          );
         }
 
         currentUrl = new URL(location, currentUrl);
@@ -112,7 +127,9 @@ export async function safeFetch(
       if (response.status === 429) {
         clearTimeout(timer);
         callerSignal?.removeEventListener('abort', onCallerAbort);
-        const retryAfterMs = parseRetryAfter(response.headers.get('retry-after'));
+        const retryAfterMs = parseRetryAfter(
+          response.headers.get('retry-after'),
+        );
         throw new RetryableError(
           `Rate limited (429) by ${redactUrl(currentUrl)}`,
           429,
@@ -183,7 +200,9 @@ export async function safeFetch(
               reject(reason);
               reader.cancel().catch(() => {});
             };
-            controller.signal.addEventListener('abort', onAbort, { once: true });
+            controller.signal.addEventListener('abort', onAbort, {
+              once: true,
+            });
           });
 
           try {

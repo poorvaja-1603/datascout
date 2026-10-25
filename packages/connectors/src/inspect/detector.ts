@@ -100,7 +100,10 @@ export function sniffFormat(
     lowerCt.includes('tar') ||
     lowerCt.includes('gzip')
   ) {
-    return { kind: 'blocked', reason: 'Archive files (ZIP) are blocked from in-memory inspection' };
+    return {
+      kind: 'blocked',
+      reason: 'Archive files (ZIP) are blocked from in-memory inspection',
+    };
   }
 
   // 2. Binary signatures
@@ -144,7 +147,11 @@ export function sniffFormat(
   }
 
   // Check for notebook contents inside JSON text
-  if (trimmed.startsWith('{') && trimmed.includes('"cells"') && trimmed.includes('"nbformat"')) {
+  if (
+    trimmed.startsWith('{') &&
+    trimmed.includes('"cells"') &&
+    trimmed.includes('"nbformat"')
+  ) {
     return { kind: 'blocked', reason: 'Jupyter notebook detected and blocked' };
   }
 
@@ -153,7 +160,10 @@ export function sniffFormat(
     trimmed.startsWith('#!/usr/bin/env python') ||
     trimmed.startsWith('#!/usr/bin/python')
   ) {
-    return { kind: 'blocked', reason: 'Python executable script detected and blocked' };
+    return {
+      kind: 'blocked',
+      reason: 'Python executable script detected and blocked',
+    };
   }
 
   // 5. JSON formats

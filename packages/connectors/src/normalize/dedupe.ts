@@ -1,10 +1,11 @@
 import type { Dataset } from '@datascout/contracts';
 
-const VERIFICATION_LEVEL_WEIGHT: Record<Dataset['verification_level'], number> = {
-  full_dataset: 3,
-  sample_checked: 2,
-  metadata_only: 1,
-};
+const VERIFICATION_LEVEL_WEIGHT: Record<Dataset['verification_level'], number> =
+  {
+    full_dataset: 3,
+    sample_checked: 2,
+    metadata_only: 1,
+  };
 
 function countPopulatedFields(dataset: Dataset): number {
   let count = 0;

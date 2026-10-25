@@ -12,7 +12,11 @@ export class RetryableError extends Error {
   readonly status: number | undefined;
   readonly retryAfterMs: number | undefined;
 
-  constructor(message: string, status?: number | undefined, retryAfterMs?: number | undefined) {
+  constructor(
+    message: string,
+    status?: number | undefined,
+    retryAfterMs?: number | undefined,
+  ) {
     super(message);
     this.name = 'RetryableError';
     this.status = status;
@@ -20,7 +24,9 @@ export class RetryableError extends Error {
   }
 }
 
-export function parseRetryAfter(headerValue: string | null | undefined): number | undefined {
+export function parseRetryAfter(
+  headerValue: string | null | undefined,
+): number | undefined {
   if (!headerValue) return undefined;
 
   const seconds = Number(headerValue);
@@ -52,17 +58,24 @@ export function isTransientStatus(status: number): boolean {
  * completed delay for the caller — the caller is responsible for checking
  * signal.aborted after the sleep.
  */
-export function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
+export function abortableSleep(
+  ms: number,
+  signal?: AbortSignal,
+): Promise<void> {
   return new Promise<void>((resolve) => {
     if (signal?.aborted) {
       resolve();
       return;
     }
     const timer = setTimeout(resolve, ms);
-    signal?.addEventListener('abort', () => {
-      clearTimeout(timer);
-      resolve();
-    }, { once: true });
+    signal?.addEventListener(
+      'abort',
+      () => {
+        clearTimeout(timer);
+        resolve();
+      },
+      { once: true },
+    );
   });
 }
 
@@ -101,7 +114,10 @@ export async function withRetry<T>(
       if (error instanceof RetryableError) {
         shouldRetry = true;
         explicitDelayMs = error.retryAfterMs;
-      } else if (typeof err?.['status'] === 'number' && isTransientStatus(err['status'] as number)) {
+      } else if (
+        typeof err?.['status'] === 'number' &&
+        isTransientStatus(err['status'] as number)
+      ) {
         shouldRetry = true;
       } else if (
         err?.['name'] === 'FetchError' ||
@@ -124,12 +140,17 @@ export async function withRetry<T>(
 
       // Abort check after catching — don't sleep if already cancelled.
       if (signal?.aborted) {
-        throw new Error('Operation aborted during retry backoff', { cause: error });
+        throw new Error('Operation aborted during retry backoff', {
+          cause: error,
+        });
       }
 
       let delay = explicitDelayMs;
       if (delay === undefined) {
-        delay = Math.min(initialDelay * Math.pow(factor, attempt - 1), maxDelay);
+        delay = Math.min(
+          initialDelay * Math.pow(factor, attempt - 1),
+          maxDelay,
+        );
         if (useJitter) {
           delay = delay * (0.5 + Math.random() * 0.5);
         }
@@ -139,7 +160,9 @@ export async function withRetry<T>(
 
       // If signal fired during sleep, stop retrying.
       if (signal?.aborted) {
-        throw new Error('Operation aborted during retry backoff', { cause: error });
+        throw new Error('Operation aborted during retry backoff', {
+          cause: error,
+        });
       }
     }
   }

@@ -7,7 +7,11 @@ function toSafeRowObject(
   rawItem: unknown,
   allowedHeaders: string[],
 ): Record<string, unknown> | null {
-  if (typeof rawItem !== 'object' || rawItem === null || Array.isArray(rawItem)) {
+  if (
+    typeof rawItem !== 'object' ||
+    rawItem === null ||
+    Array.isArray(rawItem)
+  ) {
     return null;
   }
 
@@ -69,7 +73,10 @@ export function parseJson(
 
     for (let i = 0; i < lines.length; i++) {
       if (i % 20 === 0) {
-        if (signal?.aborted || (deadlineMs !== undefined && Date.now() > deadlineMs)) {
+        if (
+          signal?.aborted ||
+          (deadlineMs !== undefined && Date.now() > deadlineMs)
+        ) {
           throw new DeadlineExceededError();
         }
       }
@@ -117,7 +124,10 @@ export function parseJson(
 
   for (let i = 0; i < rawItems.length; i++) {
     if (i % 20 === 0) {
-      if (signal?.aborted || (deadlineMs !== undefined && Date.now() > deadlineMs)) {
+      if (
+        signal?.aborted ||
+        (deadlineMs !== undefined && Date.now() > deadlineMs)
+      ) {
         throw new DeadlineExceededError();
       }
     }

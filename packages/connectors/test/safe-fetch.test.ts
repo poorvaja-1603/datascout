@@ -35,12 +35,18 @@ const publicDns = {
 describe('safeFetch', () => {
   it('blocks requests to private IP ranges before sending', async () => {
     await expect(safeFetch('https://127.0.0.1/api')).rejects.toThrow(SsrfError);
-    await expect(safeFetch('https://169.254.169.254/latest/meta-data')).rejects.toThrow(SsrfError);
+    await expect(
+      safeFetch('https://169.254.169.254/latest/meta-data'),
+    ).rejects.toThrow(SsrfError);
   });
 
   it('rejects non-HTTPS schemes', async () => {
-    await expect(safeFetch('http://example.com')).rejects.toThrow(/Only HTTPS is permitted/);
-    await expect(safeFetch('file:///etc/hosts')).rejects.toThrow(/Only HTTPS is permitted/);
+    await expect(safeFetch('http://example.com')).rejects.toThrow(
+      /Only HTTPS is permitted/,
+    );
+    await expect(safeFetch('file:///etc/hosts')).rejects.toThrow(
+      /Only HTTPS is permitted/,
+    );
   });
 
   it('enforces maximum response bytes limit', async () => {
@@ -98,7 +104,9 @@ describe('safeFetch', () => {
     });
 
     expect(res.status).toBe(200);
-    const json = await res.json<{ datasets: Array<{ id: string; name: string }> }>();
+    const json = await res.json<{
+      datasets: Array<{ id: string; name: string }>;
+    }>();
     expect(json.datasets).toHaveLength(1);
     expect(json.datasets[0]?.name).toBe('rainfall');
 

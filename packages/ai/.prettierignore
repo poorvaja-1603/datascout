@@ -1,2 +1,3 @@
 README.md
-test/fixtures/corpus-cassettes-v*/
+dist/
+test/fixtures/corpus-cassettes*/

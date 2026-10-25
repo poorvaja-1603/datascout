@@ -21,6 +21,7 @@ sam --version
 ```
 
 If SAM CLI is not installed, install it via `winget`:
+
 ```powershell
 winget install Amazon.SAM-CLI
 ```
@@ -108,46 +109,46 @@ successful `sts get-caller-identity` call.
 
 The deployment identity needs permission to:
 
-* Operate the named CloudFormation stack and its change sets: `CreateStack`,
+- Operate the named CloudFormation stack and its change sets: `CreateStack`,
   `UpdateStack`, `DeleteStack`, `DescribeStacks`, `DescribeStackEvents`,
   `ListStackResources`, `CreateChangeSet`, `DescribeChangeSet`,
   `ExecuteChangeSet`, `DeleteChangeSet`, `GetTemplate`,
   `GetTemplateSummary`, and `ValidateTemplate`.
-* Upload/read deployment artifacts in the SAM-managed S3 bucket:
+- Upload/read deployment artifacts in the SAM-managed S3 bucket:
   `s3:CreateBucket` when using `--resolve-s3`, `s3:GetBucketLocation`,
   `s3:ListBucket`, `s3:PutObject`, `s3:GetObject`, and `s3:DeleteObject` for
   that bucket.
-* Let CloudFormation create and pass the function execution roles:
+- Let CloudFormation create and pass the function execution roles:
   `iam:CreateRole`, `iam:GetRole`, `iam:DeleteRole`, `iam:TagRole`,
   `iam:UntagRole`, `iam:PutRolePolicy`, `iam:GetRolePolicy`,
   `iam:DeleteRolePolicy`, `iam:AttachRolePolicy`, `iam:DetachRolePolicy`, and
   `iam:PassRole` restricted to the roles in this stack and the Lambda service.
-* Create/update/delete the stack's resources with these service actions:
-  * Lambda: `CreateFunction`, `UpdateFunctionCode`,
+- Create/update/delete the stack's resources with these service actions:
+  - Lambda: `CreateFunction`, `UpdateFunctionCode`,
     `UpdateFunctionConfiguration`, `DeleteFunction`, `GetFunction`,
     `GetFunctionConfiguration`, `AddPermission`, `RemovePermission`,
     `GetPolicy`, `TagResource`, and `UntagResource`.
-  * API Gateway REST API: `apigateway:GET`, `POST`, `PUT`, `PATCH`, and
+  - API Gateway REST API: `apigateway:GET`, `POST`, `PUT`, `PATCH`, and
     `DELETE` for the stack's REST API resources.
-  * Cognito: `CreateUserPool`, `DescribeUserPool`, `UpdateUserPool`,
+  - Cognito: `CreateUserPool`, `DescribeUserPool`, `UpdateUserPool`,
     `DeleteUserPool`, `CreateUserPoolClient`, `DescribeUserPoolClient`,
     `UpdateUserPoolClient`, `DeleteUserPoolClient`, `CreateResourceServer`,
     `DescribeResourceServer`, `UpdateResourceServer`, `DeleteResourceServer`,
     `ListTagsForResource`, `TagResource`, and `UntagResource`.
-  * DynamoDB: `CreateTable`, `DescribeTable`, `UpdateTable`, `DeleteTable`,
+  - DynamoDB: `CreateTable`, `DescribeTable`, `UpdateTable`, `DeleteTable`,
     `DescribeTimeToLive`, `UpdateTimeToLive`, `TagResource`, and `UntagResource`.
-  * S3 bucket configuration: `CreateBucket`, `DeleteBucket`, `GetBucketLocation`,
+  - S3 bucket configuration: `CreateBucket`, `DeleteBucket`, `GetBucketLocation`,
     `GetBucketPublicAccessBlock`, `PutBucketPublicAccessBlock`,
     `GetEncryptionConfiguration`, `PutEncryptionConfiguration`,
     `GetLifecycleConfiguration`, `PutLifecycleConfiguration`,
     `GetBucketTagging`, `PutBucketTagging`, and `DeleteBucketTagging`.
-  * EventBridge: `PutRule`, `DescribeRule`, `EnableRule`, `DisableRule`,
+  - EventBridge: `PutRule`, `DescribeRule`, `EnableRule`, `DisableRule`,
     `DeleteRule`, `PutTargets`, `ListTargetsByRule`, `RemoveTargets`,
     `ListTagsForResource`, `TagResource`, and `UntagResource`.
-  * CloudWatch alarms: `PutMetricAlarm`, `DescribeAlarms`, and `DeleteAlarms`.
-  Scope service actions to the deployment account, region, stack resources, and
-  required resource names wherever AWS supports it.
-* If `--resolve-s3` must create the SAM artifact bucket, allow bucket creation
+  - CloudWatch alarms: `PutMetricAlarm`, `DescribeAlarms`, and `DeleteAlarms`.
+    Scope service actions to the deployment account, region, stack resources, and
+    required resource names wherever AWS supports it.
+- If `--resolve-s3` must create the SAM artifact bucket, allow bucket creation
   and configuration in the chosen region. Prefer a pre-created, dedicated
   deployment bucket when organizational policy requires one.
 
@@ -175,22 +176,23 @@ not need these write permissions.
 ## 4. Review resources and external credentials
 
 The `backend/template.yaml` defines:
-* **Amazon Cognito User Pool**: Email-verified user pool, resource server (`datascout-api`), and scopes (`search`, `read`, `compare`).
-* **Amazon API Gateway REST API**: With Cognito User Pool authorizer and GatewayResponses for 401, 403, 413, 429, 504 returning `ErrorObject`.
-* **Amazon DynamoDB**:
-  * `datascout-results-${Environment}`: Pay-per-request billing, `pk` key, TTL attribute `ttl`.
-  * `datascout-datasets-${Environment}`: Pay-per-request billing, `dataset_id` key.
-* **Amazon S3**: `datascout-snapshots-...` private bucket with public access block, AES-256 encryption, and 30-day lifecycle rule.
-* **Secrets**: Store each external token as the raw `SecretString` of a separate AWS Secrets Manager secret named `datascout/<Environment>/data-govin-api-key` or `datascout/<Environment>/huggingface-api-token`. Pass only the secret ARN using `DataGovInApiSecretArn` or `HuggingFaceApiSecretArn`. Lambda receives secret ARNs, reads values at runtime, and caches them for five minutes. Values are not CloudFormation parameters, Lambda environment values, build arguments, or artifacts.
-* **External credentials**: The data.gov.in API key is optional for protected resource details and sample retrieval; public catalog search works without it. The Hugging Face token is optional for higher Hub/viewer limits; gated datasets remain excluded. No AWS service API key or LLM-provider key is required for the current `fake`/`cassette` modes. AWS deployment access is through the AWS CLI profile, not `.env` access keys.
-* **Local development only**: `.env` may hold `DATAGOVIN_API_KEY` and `HUGGINGFACE_API_TOKEN` for local use; keep it untracked and never include it in packages. `.env.example` contains only empty placeholders.
-* **LLM**: the stack supports `fake` and `cassette` providers.
-* **AWS Lambda Functions**:
-  * `SearchFunction` (`POST /search` with `datascout-api/search` scope)
-  * `ResultsFunction` (`GET /results/{request_id}` with `datascout-api/read` scope)
-  * `DatasetFunction` (`GET /dataset/{dataset_id}` with `datascout-api/read` scope)
-  * `CompareFunction` (`POST /compare` with `datascout-api/compare` scope)
-  * `RefreshFunction` (EventBridge daily rate schedule)
+
+- **Amazon Cognito User Pool**: Email-verified user pool, resource server (`datascout-api`), and scopes (`search`, `read`, `compare`).
+- **Amazon API Gateway REST API**: With Cognito User Pool authorizer and GatewayResponses for 401, 403, 413, 429, 504 returning `ErrorObject`.
+- **Amazon DynamoDB**:
+  - `datascout-results-${Environment}`: Pay-per-request billing, `pk` key, TTL attribute `ttl`.
+  - `datascout-datasets-${Environment}`: Pay-per-request billing, `dataset_id` key.
+- **Amazon S3**: `datascout-snapshots-...` private bucket with public access block, AES-256 encryption, and 30-day lifecycle rule.
+- **Secrets**: Store each external token as the raw `SecretString` of a separate AWS Secrets Manager secret named `datascout/<Environment>/data-govin-api-key` or `datascout/<Environment>/huggingface-api-token`. Pass only the secret ARN using `DataGovInApiSecretArn` or `HuggingFaceApiSecretArn`. Lambda receives secret ARNs, reads values at runtime, and caches them for five minutes. Values are not CloudFormation parameters, Lambda environment values, build arguments, or artifacts.
+- **External credentials**: The data.gov.in API key is optional for protected resource details and sample retrieval; public catalog search works without it. The Hugging Face token is optional for higher Hub/viewer limits; gated datasets remain excluded. No AWS service API key or LLM-provider key is required for the current `fake`/`cassette` modes. AWS deployment access is through the AWS CLI profile, not `.env` access keys.
+- **Local development only**: `.env` may hold `DATAGOVIN_API_KEY` and `HUGGINGFACE_API_TOKEN` for local use; keep it untracked and never include it in packages. `.env.example` contains only empty placeholders.
+- **LLM**: the stack supports `fake` and `cassette` providers.
+- **AWS Lambda Functions**:
+  - `SearchFunction` (`POST /search` with `datascout-api/search` scope)
+  - `ResultsFunction` (`GET /results/{request_id}` with `datascout-api/read` scope)
+  - `DatasetFunction` (`GET /dataset/{dataset_id}` with `datascout-api/read` scope)
+  - `CompareFunction` (`POST /compare` with `datascout-api/compare` scope)
+  - `RefreshFunction` (EventBridge daily rate schedule)
 
 ---
 
@@ -210,6 +212,7 @@ sam deploy --guided `
 ```
 
 For subsequent deployments:
+
 ```powershell
 sam deploy --stack-name datascout-backend-dev --region ap-south-1 --resolve-s3 --capabilities CAPABILITY_IAM
 ```
@@ -228,6 +231,7 @@ aws cloudformation describe-stacks `
 ```
 
 Outputs returned:
+
 1. `ApiEndpoint`: The base URL for the deployed REST API (e.g., `https://<api-id>.execute-api.ap-south-1.amazonaws.com/dev`).
 2. `CognitoUserPoolId`: The user pool identifier.
 3. `CognitoUserPoolClientId`: The public SPA client ID.

@@ -1,11 +1,5 @@
-import type {
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-} from 'aws-lambda';
-import {
-  DatasetDetailSchema,
-  DATASET_ID_PATTERN,
-} from '@datascout/contracts';
+import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
+import { DatasetDetailSchema, DATASET_ID_PATTERN } from '@datascout/contracts';
 import {
   extractContextInfo,
   jsonResponse,
@@ -23,7 +17,11 @@ export async function handler(
   const rawDatasetId = event.pathParameters?.dataset_id;
 
   if (!rawDatasetId) {
-    return errorResponse('invalid_request', 'Missing dataset_id path parameter.', requestId);
+    return errorResponse(
+      'invalid_request',
+      'Missing dataset_id path parameter.',
+      requestId,
+    );
   }
 
   const datasetId = decodeURIComponent(rawDatasetId);
@@ -40,7 +38,11 @@ export async function handler(
     const stored = await getDatasetsStore().getDataset(datasetId);
     if (stored) return jsonResponse(200, DatasetDetailSchema.parse(stored));
   } catch {
-    return errorResponse('internal_error', 'Dataset detail could not be loaded.', requestId);
+    return errorResponse(
+      'internal_error',
+      'Dataset detail could not be loaded.',
+      requestId,
+    );
   }
 
   const response = {

@@ -136,7 +136,9 @@ export function computeInspectionMetrics(
 
   for (const row of table.rows) {
     // Deterministic row fingerprint
-    const fingerprint = table.columns.map((col) => String(row[col])).join('\x1F');
+    const fingerprint = table.columns
+      .map((col) => String(row[col]))
+      .join('\x1F');
     if (seenRowHashes.has(fingerprint)) {
       duplicateCount++;
     } else {
@@ -148,7 +150,9 @@ export function computeInspectionMetrics(
     rowCount > 0 ? Math.round((duplicateCount / rowCount) * 1000) / 1000 : 0;
 
   const dateRange =
-    minDate !== null && maxDate !== null ? { start: minDate, end: maxDate } : null;
+    minDate !== null && maxDate !== null
+      ? { start: minDate, end: maxDate }
+      : null;
 
   // 3. Evidence generation strictly matching packages/verify consumed fields:
   // 'columns', 'record_count', 'time_coverage'

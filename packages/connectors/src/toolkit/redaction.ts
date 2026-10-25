@@ -24,7 +24,8 @@ const SENSITIVE_HEADERS = new Set([
 
 export function redactUrl(urlInput: string | URL): string {
   try {
-    const url = typeof urlInput === 'string' ? new URL(urlInput) : new URL(urlInput.href);
+    const url =
+      typeof urlInput === 'string' ? new URL(urlInput) : new URL(urlInput.href);
     for (const [key] of url.searchParams.entries()) {
       if (SENSITIVE_QUERY_PARAMS.has(key.toLowerCase())) {
         url.searchParams.set(key, '[REDACTED]');

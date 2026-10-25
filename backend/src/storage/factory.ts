@@ -1,7 +1,10 @@
 import type { ResultsStore } from './results-store.js';
 import type { DatasetsStore } from './datasets-store.js';
 import { DynamoDbResultsStore, InMemoryResultsStore } from './results-store.js';
-import { DynamoDbDatasetsStore, InMemoryDatasetsStore } from './datasets-store.js';
+import {
+  DynamoDbDatasetsStore,
+  InMemoryDatasetsStore,
+} from './datasets-store.js';
 
 let resultsStoreInstance: ResultsStore | null = null;
 let datasetsStoreInstance: DatasetsStore | null = null;

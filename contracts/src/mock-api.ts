@@ -145,14 +145,17 @@ async function loadFixtures(): Promise<{
 export async function createMockApiServer() {
   const fixtures = await loadFixtures();
   const handlers = [
-    http.options(/.*/, () =>
-      new HttpResponse(null, {
-        headers: {
-          'Access-Control-Allow-Origin': '*',
-          'Access-Control-Allow-Headers': 'Authorization, Content-Type, Prefer',
-          'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-        },
-      }),
+    http.options(
+      /.*/,
+      () =>
+        new HttpResponse(null, {
+          headers: {
+            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Headers':
+              'Authorization, Content-Type, Prefer',
+            'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
+          },
+        }),
     ),
     http.post('/search', async ({ request }) => {
       const authFailure = authorize(request, 'search', fixtures.errors);

@@ -89,7 +89,9 @@ export function isPrivateIp(ip: string): boolean {
 export interface SsrfGuardOptions {
   allowHttpForTesting?: boolean;
   allowedHosts?: readonly string[];
-  dnsResolver?: (hostname: string) => Promise<{ address: string; family: number }[]>;
+  dnsResolver?: (
+    hostname: string,
+  ) => Promise<{ address: string; family: number }[]>;
 }
 
 export async function validateUrlForSsrf(
@@ -110,24 +112,37 @@ export async function validateUrlForSsrf(
   const hostname = parsed.hostname.toLowerCase();
 
   // Reject empty or local hostnames
-  if (!hostname || hostname === 'localhost' || hostname.endsWith('.local') || hostname.endsWith('.internal')) {
-    throw new SsrfError(`Access to host '${hostname}' is blocked by SSRF guard.`);
+  if (
+    !hostname ||
+    hostname === 'localhost' ||
+    hostname.endsWith('.local') ||
+    hostname.endsWith('.internal')
+  ) {
+    throw new SsrfError(
+      `Access to host '${hostname}' is blocked by SSRF guard.`,
+    );
   }
 
   // 2. Check Host Allowlist if configured
   if (options.allowedHosts && options.allowedHosts.length > 0) {
     const isAllowed = options.allowedHosts.some(
-      (allowed) => hostname === allowed.toLowerCase() || hostname.endsWith(`.${allowed.toLowerCase()}`),
+      (allowed) =>
+        hostname === allowed.toLowerCase() ||
+        hostname.endsWith(`.${allowed.toLowerCase()}`),
     );
     if (!isAllowed) {
-      throw new SsrfError(`Host '${hostname}' is not in the allowed sources list.`);
+      throw new SsrfError(
+        `Host '${hostname}' is not in the allowed sources list.`,
+      );
     }
   }
 
   // 3. If hostname is a literal IP address, validate immediately
   if (isIP(hostname)) {
     if (isPrivateIp(hostname)) {
-      throw new SsrfError(`Target IP '${hostname}' belongs to a private/reserved address space.`);
+      throw new SsrfError(
+        `Target IP '${hostname}' belongs to a private/reserved address space.`,
+      );
     }
     return parsed;
   }
@@ -152,7 +167,9 @@ export async function validateUrlForSsrf(
   }
 
   if (!records || records.length === 0) {
-    throw new SsrfError(`DNS resolution returned no IP records for '${hostname}'.`);
+    throw new SsrfError(
+      `DNS resolution returned no IP records for '${hostname}'.`,
+    );
   }
 
   for (const record of records) {

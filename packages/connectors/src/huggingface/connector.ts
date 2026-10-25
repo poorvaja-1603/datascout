@@ -13,7 +13,6 @@ import { normalizeDataset } from '../normalize/index.js';
 import type { RawCandidate } from '../normalize/index.js';
 import { inspectBytes } from '../inspect/inspector.js';
 
-
 export interface HuggingFaceConnectorOptions {
   hubApiBaseUrl?: string;
   viewerApiBaseUrl?: string;
@@ -139,7 +138,8 @@ export class HuggingFaceConnector implements Connector {
         // Try to retrieve schema info from dataset-viewer API if available
         let columns: string[] = [];
         let recordCount: number | null = null;
-        const verificationLevel: Dataset['verification_level'] = 'metadata_only';
+        const verificationLevel: Dataset['verification_level'] =
+          'metadata_only';
 
         try {
           const infoUrl = `${this.viewerApiBaseUrl}/info?dataset=${encodeURIComponent(nativeId)}`;
@@ -157,9 +157,7 @@ export class HuggingFaceConnector implements Connector {
             if (datasetInfo?.features) {
               columns = Object.keys(datasetInfo.features);
             }
-            if (
-              typeof datasetInfo?.splits?.train?.num_examples === 'number'
-            ) {
+            if (typeof datasetInfo?.splits?.train?.num_examples === 'number') {
               recordCount = datasetInfo.splits.train.num_examples;
             }
           }
@@ -328,8 +326,12 @@ export class HuggingFaceConnector implements Connector {
         allowedContentTypes: ['application/json'],
       });
       if (splitsResponse.status !== 200) return empty('failed');
-      const splitPayload = await splitsResponse.json<{ splits?: Array<{ config?: string; split?: string }> }>();
-      const firstSplit = splitPayload.splits?.find((item) => item.config && item.split);
+      const splitPayload = await splitsResponse.json<{
+        splits?: Array<{ config?: string; split?: string }>;
+      }>();
+      const firstSplit = splitPayload.splits?.find(
+        (item) => item.config && item.split,
+      );
       if (!firstSplit?.config || !firstSplit.split) return empty('failed');
 
       const rowsUrl = new URL(`${this.viewerApiBaseUrl}/rows`);
@@ -346,9 +348,15 @@ export class HuggingFaceConnector implements Connector {
         allowedContentTypes: ['application/json'],
       });
       if (response.status !== 200) return empty('failed');
-      const payload = await response.json<{ rows?: Array<{ row?: Record<string, unknown> }> }>();
+      const payload = await response.json<{
+        rows?: Array<{ row?: Record<string, unknown> }>;
+      }>();
       const rows = Array.isArray(payload.rows)
-        ? payload.rows.flatMap((item) => item && typeof item.row === 'object' && item.row !== null ? [item.row] : [])
+        ? payload.rows.flatMap((item) =>
+            item && typeof item.row === 'object' && item.row !== null
+              ? [item.row]
+              : [],
+          )
         : [];
       if (rows.length === 0) return empty('failed');
       const bytes = new TextEncoder().encode(JSON.stringify(rows));

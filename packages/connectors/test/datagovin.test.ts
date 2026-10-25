@@ -5,7 +5,12 @@ import {
   type CachedCatalogEntry,
 } from '../src/datagovin/connector.js';
 import * as safeFetchModule from '../src/toolkit/safe-fetch.js';
-import type { CallContext, ConnectorSearchRequest, Dataset, InspectionLimits } from '@datascout/contracts';
+import type {
+  CallContext,
+  ConnectorSearchRequest,
+  Dataset,
+  InspectionLimits,
+} from '@datascout/contracts';
 
 function createMockContext(signal?: AbortSignal): CallContext {
   return {
@@ -24,7 +29,9 @@ const CANARY_KEY = 'CANARY_KEY_SEC_998877_XYZ';
 describe('DataGovInConnector', () => {
   describe('Native ID Validation', () => {
     it('validates UUIDs, numeric IDs, and kebab-case slugs', () => {
-      expect(isValidNativeId('9ef84268-d588-465a-a308-a864a43d0070')).toBe(true);
+      expect(isValidNativeId('9ef84268-d588-465a-a308-a864a43d0070')).toBe(
+        true,
+      );
       expect(isValidNativeId('crop-yield-maharashtra-resource-01')).toBe(true);
       expect(isValidNativeId('1234')).toBe(true);
       expect(isValidNativeId('census_data_2021')).toBe(true);
@@ -44,7 +51,13 @@ describe('DataGovInConnector', () => {
     it('searches the harvested local catalog without a resource API key', async () => {
       const connector = new DataGovInConnector({
         apiKey: undefined,
-        cachedCatalog: [{ id: 'agriculture-01', title: 'Agriculture data', desc: 'Agriculture statistics' }],
+        cachedCatalog: [
+          {
+            id: 'agriculture-01',
+            title: 'Agriculture data',
+            desc: 'Agriculture statistics',
+          },
+        ],
       });
       const req: ConnectorSearchRequest = {
         requirements: {
@@ -69,7 +82,10 @@ describe('DataGovInConnector', () => {
     });
 
     it('returns partial status with warning when cached catalog is empty', async () => {
-      const connector = new DataGovInConnector({ apiKey: 'VALID_KEY', cachedCatalog: [] });
+      const connector = new DataGovInConnector({
+        apiKey: 'VALID_KEY',
+        cachedCatalog: [],
+      });
       const req: ConnectorSearchRequest = {
         requirements: {
           topic: 'agriculture',
@@ -133,7 +149,9 @@ describe('DataGovInConnector', () => {
       expect(result.status.status).toBe('success');
       expect(result.datasets).toHaveLength(1);
       const dataset = result.datasets[0]!;
-      expect(dataset.dataset_id).toBe('datagovin:crop-yield-maharashtra-resource-01');
+      expect(dataset.dataset_id).toBe(
+        'datagovin:crop-yield-maharashtra-resource-01',
+      );
       expect(dataset.title).toContain('Crop Production Statistics');
 
       // Assert no invented fields
@@ -144,9 +162,15 @@ describe('DataGovInConnector', () => {
       expect(dataset.record_count).toBeNull(); // Not invented
 
       // Provenance only for fields actually read
-      expect(dataset.provenance['title']?.source_field_path).toBe('catalog.title');
-      expect(dataset.provenance['description']?.source_field_path).toBe('catalog.desc');
-      expect(dataset.provenance['tags']?.source_field_path).toBe('catalog.sector');
+      expect(dataset.provenance['title']?.source_field_path).toBe(
+        'catalog.title',
+      );
+      expect(dataset.provenance['description']?.source_field_path).toBe(
+        'catalog.desc',
+      );
+      expect(dataset.provenance['tags']?.source_field_path).toBe(
+        'catalog.sector',
+      );
       expect(dataset.provenance['license']).toBeUndefined();
       expect(dataset.provenance['geography']).toBeUndefined();
     });
@@ -190,9 +214,15 @@ describe('DataGovInConnector', () => {
   describe('getDetails', () => {
     it('returns null for invalid datasetId format or path traversal ID', async () => {
       const connector = new DataGovInConnector({ apiKey: 'VALID_KEY' });
-      expect(await connector.getDetails('huggingface:123', createMockContext())).toBeNull();
-      expect(await connector.getDetails('datagovin:../secret', createMockContext())).toBeNull();
-      expect(await connector.getDetails('datagovin:', createMockContext())).toBeNull();
+      expect(
+        await connector.getDetails('huggingface:123', createMockContext()),
+      ).toBeNull();
+      expect(
+        await connector.getDetails('datagovin:../secret', createMockContext()),
+      ).toBeNull();
+      expect(
+        await connector.getDetails('datagovin:', createMockContext()),
+      ).toBeNull();
     });
 
     it('returns dataset from local cache without network call', async () => {
@@ -206,8 +236,14 @@ describe('DataGovInConnector', () => {
         },
       ];
 
-      const connector = new DataGovInConnector({ apiKey: 'VALID_KEY', cachedCatalog });
-      const ds = await connector.getDetails('datagovin:resource-cached-1', createMockContext());
+      const connector = new DataGovInConnector({
+        apiKey: 'VALID_KEY',
+        cachedCatalog,
+      });
+      const ds = await connector.getDetails(
+        'datagovin:resource-cached-1',
+        createMockContext(),
+      );
 
       expect(fetchSpy).not.toHaveBeenCalled();
       expect(ds).not.toBeNull();
@@ -224,7 +260,8 @@ describe('DataGovInConnector', () => {
         statusText: 'OK',
         headers: new Headers({ 'content-type': 'application/json' }),
         url: 'https://api.data.gov.in/resource/live-01?api-key=VALID_KEY',
-        redactedUrl: 'https://api.data.gov.in/resource/live-01?api-key=%5BREDACTED%5D',
+        redactedUrl:
+          'https://api.data.gov.in/resource/live-01?api-key=%5BREDACTED%5D',
         bytes: async () => new Uint8Array(),
         text: async () => '',
         json: async () => ({
@@ -236,8 +273,14 @@ describe('DataGovInConnector', () => {
         }),
       });
 
-      const connector = new DataGovInConnector({ apiKey: 'VALID_KEY', cachedCatalog: [] });
-      const ds = await connector.getDetails('datagovin:live-01', createMockContext());
+      const connector = new DataGovInConnector({
+        apiKey: 'VALID_KEY',
+        cachedCatalog: [],
+      });
+      const ds = await connector.getDetails(
+        'datagovin:live-01',
+        createMockContext(),
+      );
 
       expect(ds).not.toBeNull();
       expect(ds?.title).toBe('Live Resource Data');
@@ -249,7 +292,9 @@ describe('DataGovInConnector', () => {
       expect(ds?.file_formats).toEqual([]);
       expect(ds?.verification_level).toBe('metadata_only');
       expect(ds?.provenance['title']?.source_field_path).toBe('resource.title');
-      expect(ds?.provenance['record_count']?.source_field_path).toBe('resource.total');
+      expect(ds?.provenance['record_count']?.source_field_path).toBe(
+        'resource.total',
+      );
       vi.restoreAllMocks();
     });
   });
@@ -266,9 +311,22 @@ describe('DataGovInConnector', () => {
           new TextEncoder().encode(
             JSON.stringify({
               records: [
-                { id: 'valid-res-1', title: 'Water Quality Survey', desc: 'pH and hardness' },
-                { id: '../invalid-res', title: 'Malicious Path ID', desc: 'Should skip' },
-                { id: 'valid-res-2', title: 'Power Grid Load', desc: 'Hourly megawatts', sector: 'Power' },
+                {
+                  id: 'valid-res-1',
+                  title: 'Water Quality Survey',
+                  desc: 'pH and hardness',
+                },
+                {
+                  id: '../invalid-res',
+                  title: 'Malicious Path ID',
+                  desc: 'Should skip',
+                },
+                {
+                  id: 'valid-res-2',
+                  title: 'Power Grid Load',
+                  desc: 'Hourly megawatts',
+                  sector: 'Power',
+                },
               ],
             }),
           ),
@@ -286,7 +344,11 @@ describe('DataGovInConnector', () => {
           new TextEncoder().encode(
             JSON.stringify({
               records: [
-                { id: 'valid-res-3', title: 'Rainfall Statistics', desc: 'Monsoon metrics' },
+                {
+                  id: 'valid-res-3',
+                  title: 'Rainfall Statistics',
+                  desc: 'Monsoon metrics',
+                },
               ],
             }),
           ),
@@ -294,11 +356,14 @@ describe('DataGovInConnector', () => {
         json: async () => ({}),
       };
 
-      const fetchSpy = vi.spyOn(safeFetchModule, 'safeFetch')
+      const fetchSpy = vi
+        .spyOn(safeFetchModule, 'safeFetch')
         .mockResolvedValueOnce(page1Response)
         .mockResolvedValueOnce(page2Response);
 
-      const connector = new DataGovInConnector({ apiBaseUrl: 'https://api.data.gov.in' });
+      const connector = new DataGovInConnector({
+        apiBaseUrl: 'https://api.data.gov.in',
+      });
       const harvestResult = await connector.harvestCatalog({
         pageSize: 3,
         maxRecords: 10,
@@ -311,9 +376,15 @@ describe('DataGovInConnector', () => {
       expect(harvestResult.counts.skipped).toBe(1); // '../invalid-res' was skipped
       expect(harvestResult.datasets).toHaveLength(3);
       expect(harvestResult.rawEntries).toHaveLength(3);
-      expect(harvestResult.datasets[0]?.dataset_id).toBe('datagovin:valid-res-1');
-      expect(harvestResult.datasets[1]?.dataset_id).toBe('datagovin:valid-res-2');
-      expect(harvestResult.datasets[2]?.dataset_id).toBe('datagovin:valid-res-3');
+      expect(harvestResult.datasets[0]?.dataset_id).toBe(
+        'datagovin:valid-res-1',
+      );
+      expect(harvestResult.datasets[1]?.dataset_id).toBe(
+        'datagovin:valid-res-2',
+      );
+      expect(harvestResult.datasets[2]?.dataset_id).toBe(
+        'datagovin:valid-res-3',
+      );
 
       vi.restoreAllMocks();
     });
@@ -328,7 +399,10 @@ describe('DataGovInConnector', () => {
         bytes: async () =>
           new TextEncoder().encode(
             JSON.stringify({
-              records: [{ id: 'p1', title: 'Item 1' }, { id: 'p2', title: 'Item 2' }],
+              records: [
+                { id: 'p1', title: 'Item 1' },
+                { id: 'p2', title: 'Item 2' },
+              ],
             }),
           ),
         text: async () => '',
@@ -345,7 +419,9 @@ describe('DataGovInConnector', () => {
       });
 
       expect(result.pagesFetched).toBe(2);
-      expect(result.warnings.some((w) => w.includes('maximum page limit of 2'))).toBe(true);
+      expect(
+        result.warnings.some((w) => w.includes('maximum page limit of 2')),
+      ).toBe(true);
       vi.restoreAllMocks();
     });
   });
@@ -358,7 +434,8 @@ describe('DataGovInConnector', () => {
         statusText: 'OK',
         headers: new Headers({ 'content-type': 'text/csv' }),
         url: `https://api.data.gov.in/resource/health-01?api-key=${CANARY_KEY}&format=json`,
-        redactedUrl: 'https://api.data.gov.in/resource/health-01?api-key=%5BREDACTED%5D',
+        redactedUrl:
+          'https://api.data.gov.in/resource/health-01?api-key=%5BREDACTED%5D',
         bytes: async () => new TextEncoder().encode(csvData),
         text: async () => csvData,
         json: async () => ({}),
@@ -374,7 +451,11 @@ describe('DataGovInConnector', () => {
       expect(sample.format).toBe('csv');
       expect(sample.columns).toEqual(['district', 'cases', 'cured']);
       expect(sample.records).toHaveLength(2);
-      expect(sample.records[0]).toEqual({ district: 'Solapur', cases: '120', cured: '115' });
+      expect(sample.records[0]).toEqual({
+        district: 'Solapur',
+        cases: '120',
+        cured: '115',
+      });
       vi.restoreAllMocks();
     });
 
@@ -394,7 +475,8 @@ describe('DataGovInConnector', () => {
         statusText: 'OK',
         headers: new Headers({ 'content-type': 'application/json' }),
         url: `https://api.data.gov.in/resource/edu-01?api-key=${CANARY_KEY}`,
-        redactedUrl: 'https://api.data.gov.in/resource/edu-01?api-key=%5BREDACTED%5D',
+        redactedUrl:
+          'https://api.data.gov.in/resource/edu-01?api-key=%5BREDACTED%5D',
         bytes: async () => new TextEncoder().encode(jsonData),
         text: async () => jsonData,
         json: async () => JSON.parse(jsonData),
@@ -430,21 +512,31 @@ describe('DataGovInConnector', () => {
         timeoutMs: 5000,
       };
 
-      const inspection = await connector.inspectSample(dataset, limits, createMockContext());
+      const inspection = await connector.inspectSample(
+        dataset,
+        limits,
+        createMockContext(),
+      );
       expect(inspection.status).toBe('ok');
       expect(inspection.verificationLevel).toBe('sample_checked');
       expect(inspection.rowsExamined).toBe(2);
-      expect(inspection.columns.map((c) => c.name)).toEqual(['school_id', 'students', 'pass_rate']);
+      expect(inspection.columns.map((c) => c.name)).toEqual([
+        'school_id',
+        'students',
+        'pass_rate',
+      ]);
       vi.restoreAllMocks();
     });
   });
 
   describe('Security and Canary Redaction', () => {
     it('guarantees that API key never appears in error messages when safeFetch throws', async () => {
-      vi.spyOn(safeFetchModule, 'safeFetch').mockImplementationOnce(async (url) => {
-        // Intentionally throw an error that contains the full URL with CANARY_KEY
-        throw new Error(`Connection failed to endpoint: ${url}`);
-      });
+      vi.spyOn(safeFetchModule, 'safeFetch').mockImplementationOnce(
+        async (url) => {
+          // Intentionally throw an error that contains the full URL with CANARY_KEY
+          throw new Error(`Connection failed to endpoint: ${url}`);
+        },
+      );
 
       const connector = new DataGovInConnector({ apiKey: CANARY_KEY });
 
@@ -464,9 +556,11 @@ describe('DataGovInConnector', () => {
     });
 
     it('redacts canary key in catalog harvest failures', async () => {
-      vi.spyOn(safeFetchModule, 'safeFetch').mockImplementationOnce(async (url) => {
-        throw new Error(`Upstream 429 received from: ${url}`);
-      });
+      vi.spyOn(safeFetchModule, 'safeFetch').mockImplementationOnce(
+        async (url) => {
+          throw new Error(`Upstream 429 received from: ${url}`);
+        },
+      );
 
       const connector = new DataGovInConnector({ apiKey: CANARY_KEY });
       const harvest = await connector.harvestCatalog({ maxPages: 1 });

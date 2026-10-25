@@ -100,7 +100,9 @@ export class DataGovInConnector implements Connector {
   constructor(options: DataGovInConnectorOptions = {}) {
     this.apiBaseUrl = options.apiBaseUrl ?? 'https://api.data.gov.in';
     this.apiKey = options.apiKey ?? process.env['DATAGOVIN_API_KEY'];
-    this.cachedCatalog = options.cachedCatalog ? [...options.cachedCatalog] : [];
+    this.cachedCatalog = options.cachedCatalog
+      ? [...options.cachedCatalog]
+      : [];
     this.inspector = options.inspector ?? new BoundedInspector();
   }
 
@@ -129,7 +131,8 @@ export class DataGovInConnector implements Connector {
           source: this.source,
           status: 'partial',
           result_count: 0,
-          warning: 'data.gov.in catalog index is empty; run catalog harvest first',
+          warning:
+            'data.gov.in catalog index is empty; run catalog harvest first',
         },
         datasets: [],
       };
@@ -292,7 +295,8 @@ export class DataGovInConnector implements Connector {
           else if (payload.desc) fieldPaths['title'] = 'resource.desc';
           if (payload.desc) fieldPaths['description'] = 'resource.desc';
           if (columns.length > 0) fieldPaths['columns'] = 'resource.field';
-          if (recordCount !== null) fieldPaths['record_count'] = 'resource.total';
+          if (recordCount !== null)
+            fieldPaths['record_count'] = 'resource.total';
 
           const rawCandidate: RawCandidate = {
             source: 'datagovin',
@@ -302,9 +306,7 @@ export class DataGovInConnector implements Connector {
             description: payload.desc || null,
             license: null,
             access_type: null,
-            api_endpoint: redactUrl(
-              `${this.apiBaseUrl}/resource/${nativeId}`,
-            ),
+            api_endpoint: redactUrl(`${this.apiBaseUrl}/resource/${nativeId}`),
             file_formats: [],
             record_count: recordCount,
             columns,
@@ -441,7 +443,8 @@ export class DataGovInConnector implements Connector {
             raw['catalog_uuid'] ??
             raw['resource_id'];
           const id = typeof rawId === 'string' ? rawId.trim() : '';
-          const title = typeof raw['title'] === 'string' ? raw['title'].trim() : '';
+          const title =
+            typeof raw['title'] === 'string' ? raw['title'].trim() : '';
           const desc =
             typeof raw['desc'] === 'string'
               ? raw['desc'].trim()
@@ -544,14 +547,23 @@ export class DataGovInConnector implements Connector {
   async fetchResourceSample(
     options: FetchResourceSampleOptions,
   ): Promise<ResourceSampleResult> {
-    const { nativeId, offset = 0, limit = 100, filters, signal, timeoutMs = 8000 } = options;
+    const {
+      nativeId,
+      offset = 0,
+      limit = 100,
+      filters,
+      signal,
+      timeoutMs = 8000,
+    } = options;
 
     if (!isValidNativeId(nativeId)) {
       throw new Error(`Invalid data.gov.in native resource ID: ${nativeId}`);
     }
 
     if (!this.apiKey) {
-      throw new Error('data.gov.in API key is required to fetch resource samples');
+      throw new Error(
+        'data.gov.in API key is required to fetch resource samples',
+      );
     }
 
     const boundedLimit = Math.min(Math.max(limit, 1), 100);

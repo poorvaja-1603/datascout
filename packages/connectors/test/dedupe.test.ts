@@ -11,7 +11,8 @@ function createMockDataset(overrides: Partial<Dataset> = {}): Dataset {
     description: 'Global weather measurements',
     license: 'MIT',
     access_type: 'open',
-    api_endpoint: 'https://datasets-server.huggingface.co/rows?dataset=owner%2Fweather',
+    api_endpoint:
+      'https://datasets-server.huggingface.co/rows?dataset=owner%2Fweather',
     file_formats: ['parquet'],
     record_count: 10000,
     columns: ['temp', 'humidity'],
@@ -23,7 +24,10 @@ function createMockDataset(overrides: Partial<Dataset> = {}): Dataset {
     raw_snapshot_key: null,
     verification_level: 'metadata_only',
     provenance: {
-      title: { source_field_path: 'title', retrieved_at: '2026-10-24T10:00:00.000Z' },
+      title: {
+        source_field_path: 'title',
+        retrieved_at: '2026-10-24T10:00:00.000Z',
+      },
     },
     ...overrides,
   };

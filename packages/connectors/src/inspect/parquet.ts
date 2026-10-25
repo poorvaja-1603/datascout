@@ -4,7 +4,10 @@ import type { InspectionLimits, ParsedTable } from './types.js';
 
 function safeConvertBigInt(value: unknown): unknown {
   if (typeof value === 'bigint') {
-    if (value <= BigInt(Number.MAX_SAFE_INTEGER) && value >= BigInt(Number.MIN_SAFE_INTEGER)) {
+    if (
+      value <= BigInt(Number.MAX_SAFE_INTEGER) &&
+      value >= BigInt(Number.MIN_SAFE_INTEGER)
+    ) {
       return Number(value);
     }
     return value.toString();
@@ -18,7 +21,10 @@ export async function parseParquet(
   deadlineMs?: number,
   signal?: AbortSignal,
 ): Promise<ParsedTable> {
-  if (signal?.aborted || (deadlineMs !== undefined && Date.now() > deadlineMs)) {
+  if (
+    signal?.aborted ||
+    (deadlineMs !== undefined && Date.now() > deadlineMs)
+  ) {
     throw new DeadlineExceededError();
   }
 
@@ -31,14 +37,19 @@ export async function parseParquet(
     metadata = parquetMetadata(arrayBuffer);
   } catch (err: unknown) {
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Unsupported or malformed Parquet file: ${message}`, { cause: err });
+    throw new Error(`Unsupported or malformed Parquet file: ${message}`, {
+      cause: err,
+    });
   }
 
   // 1. Validate column count and extract names from metadata before decoding
   const schemaElements = metadata.schema ?? [];
   // schema[0] is typically the root record schema; remaining are fields
-  const columnElements = schemaElements.length > 1 ? schemaElements.slice(1) : [];
-  const rawColumnNames = columnElements.map((elem, idx) => elem.name ?? `column_${idx + 1}`);
+  const columnElements =
+    schemaElements.length > 1 ? schemaElements.slice(1) : [];
+  const rawColumnNames = columnElements.map(
+    (elem, idx) => elem.name ?? `column_${idx + 1}`,
+  );
 
   const { headers, truncated: headerTruncated } = sanitizeHeaderNames(
     rawColumnNames,
@@ -64,7 +75,10 @@ export async function parseParquet(
 
         for (let r = 0; r < rowCount; r++) {
           if (r % 50 === 0) {
-            if (signal?.aborted || (deadlineMs !== undefined && Date.now() > deadlineMs)) {
+            if (
+              signal?.aborted ||
+              (deadlineMs !== undefined && Date.now() > deadlineMs)
+            ) {
               throw new DeadlineExceededError();
             }
           }
@@ -85,7 +99,9 @@ export async function parseParquet(
       throw err;
     }
     const message = err instanceof Error ? err.message : String(err);
-    throw new Error(`Unsupported Parquet codec or data: ${message}`, { cause: err });
+    throw new Error(`Unsupported Parquet codec or data: ${message}`, {
+      cause: err,
+    });
   }
 
   return {

@@ -1,7 +1,4 @@
-import type {
-  APIGatewayProxyEvent,
-  APIGatewayProxyResult,
-} from 'aws-lambda';
+import type { APIGatewayProxyEvent, APIGatewayProxyResult } from 'aws-lambda';
 import {
   type ErrorCode,
   type ErrorObject,
@@ -35,15 +32,16 @@ function isLocalOrTestEnvironment(): boolean {
   );
 }
 
-export function extractContextInfo(event: APIGatewayProxyEvent): RequestContextInfo {
+export function extractContextInfo(
+  event: APIGatewayProxyEvent,
+): RequestContextInfo {
   const requestId =
     event.requestContext?.requestId ||
     (event.headers?.['x-request-id'] as string) ||
     randomUUID();
 
   const authorizer = event.requestContext?.authorizer as
-    | Record<string, unknown>
-    | undefined;
+    Record<string, unknown> | undefined;
   const claims = authorizer?.claims as Record<string, unknown> | undefined;
 
   let sub: string | null = null;
@@ -73,7 +71,9 @@ export function extractContextInfo(event: APIGatewayProxyEvent): RequestContextI
   return { requestId, sub, scopes };
 }
 
-export function createCorsHeaders(origin: string = '*'): Record<string, string> {
+export function createCorsHeaders(
+  origin: string = '*',
+): Record<string, string> {
   return {
     'Content-Type': 'application/json',
     'Access-Control-Allow-Origin': origin,
