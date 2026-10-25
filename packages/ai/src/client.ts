@@ -457,6 +457,7 @@ function createRemoteClient(
 
 export function createLlmClient(
   config: LlmConfig,
+  dependencies: LlmClientDependencies = {},
 ): LlmClient {
   assertConfig(config);
   switch (config.provider) {

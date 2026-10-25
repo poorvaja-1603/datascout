@@ -251,7 +251,6 @@ export function createRequirementExtractor(
       }
       const refusalCode = await safetyCheck(query, ctx);
       ensureCallActive(ctx);
-      const refusalCode = typeof safetyDecision === 'string' ? safetyDecision : null;
       if (refusalCode !== null) {
         const parsedReason = RefusalReasonCodeSchema.safeParse(refusalCode);
         if (!parsedReason.success) {
