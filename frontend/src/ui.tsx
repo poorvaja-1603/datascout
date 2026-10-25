@@ -226,19 +226,18 @@ export function App() {
     return (
       <main className="welcome">
         <div className="welcome-card">
-          <div className="brand-mark">D</div>
-          <p className="eyebrow">PUBLIC DATA, MADE FINDABLE</p>
+          <div className="welcome-top">
+            <div className="brand-mark">✳</div>
+            <div className="hero-pill">WELCOME TO DATASCOUT</div>
+          </div>
           <h1>
-            Find the right dataset.
-            <br />
-            <em>Know why it fits.</em>
+            Discover the right data for your next <span className="highlight-text">big idea.</span>
           </h1>
           <p className="welcome-copy">
-            Describe your project and DataScout will search public catalogs,
-            check evidence, and show where each recommendation came from.
+            Search public catalogs, inspect verified schemas, check evidence, and know why each recommendation fits.
           </p>
           <button
-            className="primary"
+            className="primary welcome-cta"
             onClick={() => {
               void signIn().catch((reason: unknown) =>
                 setError(
@@ -256,8 +255,22 @@ export function App() {
               {error}
             </p>
           )}
+          <div className="welcome-stats">
+            <div className="mini-stat coral">
+              <strong>50K+</strong>
+              <span>Datasets</span>
+            </div>
+            <div className="mini-stat lavender">
+              <strong>12+</strong>
+              <span>Catalogs</span>
+            </div>
+            <div className="mini-stat lime">
+              <strong>99%</strong>
+              <span>Verified</span>
+            </div>
+          </div>
           <p className="welcome-foot">
-            Secure access via your organization's identity provider
+            🔒 Secure access via your organization's Cognito identity provider
           </p>
         </div>
       </main>
@@ -270,8 +283,11 @@ export function App() {
       </a>
       <header className="topbar" id="top">
         <a className="brand" href="#top">
-          <span className="brand-mark small">D</span> DataScout{' '}
-          <span className="brand-beta">BETA</span>
+          <span className="brand-mark small">✳</span>
+          <div>
+            <span>DataScout</span> <span className="brand-beta">BETA</span>
+            <span className="brand-subtitle">Find the right data. Faster.</span>
+          </div>
         </a>
         <div className="top-actions">
           <span className="session">
@@ -292,17 +308,16 @@ export function App() {
       <main id="main-content" className="content" tabIndex={-1}>
         <section className="hero">
           <div>
-            <p className="eyebrow">DATA DISCOVERY WORKSPACE</p>
-            <h1>What are you working on?</h1>
+            <div className="hero-pill">WELCOME TO DATASCOUT</div>
+            <h1>
+              Discover the right data for your next <span className="highlight-text">big idea.</span>
+            </h1>
             <p>
-              Tell us about your project. We’ll find datasets and show the
-              evidence behind every match.
+              Search, filter and find the perfect datasets for your research, product or analysis.
             </p>
           </div>
           <div className="hero-art" aria-hidden="true">
-            <span className="orbit orbit-one" />
-            <span className="orbit orbit-two" />
-            <span className="hero-dot">✳</span>
+            <span className="spark-box">✳</span>
           </div>
         </section>
         <section className="search-panel" aria-label="Dataset search">
@@ -356,6 +371,36 @@ export function App() {
             ))}
           </div>
         </section>
+        <div className="tactile-stats-row">
+          <div className="stat-card coral">
+            <div className="stat-icon">🗄️</div>
+            <div>
+              <h3>50K+</h3>
+              <p>Datasets Available →</p>
+            </div>
+          </div>
+          <div className="stat-card lavender">
+            <div className="stat-icon">🔍</div>
+            <div>
+              <h3>12+</h3>
+              <p>Public Catalogs →</p>
+            </div>
+          </div>
+          <div className="stat-card mint">
+            <div className="stat-icon">👥</div>
+            <div>
+              <h3>5K+</h3>
+              <p>Researchers & Teams →</p>
+            </div>
+          </div>
+          <div className="stat-card lime">
+            <div className="stat-icon">⚡</div>
+            <div>
+              <h3>99%</h3>
+              <p>Fit Verified →</p>
+            </div>
+          </div>
+        </div>
         {error && (
           <div className="alert error" role="alert">
             <strong>Something needs attention</strong>
