@@ -121,17 +121,25 @@ Resources:
       CallbackURLs: !If
         - HasAmplifyOrigin
         - - http://localhost:3000
+          - http://localhost:3000/
           - http://localhost:5173
+          - http://localhost:5173/
           - !Ref AmplifyOrigin
         - - http://localhost:3000
+          - http://localhost:3000/
           - http://localhost:5173
+          - http://localhost:5173/
       LogoutURLs: !If
         - HasAmplifyOrigin
         - - http://localhost:3000
+          - http://localhost:3000/
           - http://localhost:5173
+          - http://localhost:5173/
           - !Ref AmplifyOrigin
         - - http://localhost:3000
+          - http://localhost:3000/
           - http://localhost:5173
+          - http://localhost:5173/
       ExplicitAuthFlows:
         - ALLOW_USER_SRP_AUTH
         - ALLOW_REFRESH_TOKEN_AUTH
