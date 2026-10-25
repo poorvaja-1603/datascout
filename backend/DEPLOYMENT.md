@@ -51,26 +51,42 @@ credential-like values or excluded files.
 
 ## 3. AWS identity and required permissions
 
-Configure your AWS credentials using AWS CLI profiles or IAM Identity Center (SSO):
+### AWS Academy Learner Lab (recommended path)
+
+AWS Academy provides temporary session credentials that rotate every lab session.
+All resources must be deployed to **`us-east-1`** (the only region available).
 
 ```powershell
-# Authenticate via IAM Identity Center / SSO (Recommended):
-aws sso login --profile datascout-dev
+# 1. Start your Learner Lab, then click "AWS Details" → "Show" next to "AWS CLI".
+#    Copy the three lines that look like:
+#      aws_access_key_id     = ASIA...
+#      aws_secret_access_key = ...
+#      aws_session_token     = ...
 
-# Set the active profile and default region in PowerShell session:
-$env:AWS_PROFILE = "datascout-dev"
-$env:AWS_REGION = "ap-south-1"
+# 2. Paste them into your .env (these rotate every session):
+#      AWS_ACCESS_KEY_ID=ASIA...
+#      AWS_SECRET_ACCESS_KEY=...
+#      AWS_SESSION_TOKEN=...
 
-# Verify the active caller identity and region:
+# 3. OR write them directly to your default AWS CLI profile:
+$awsDir = "$HOME\.aws"
+New-Item -ItemType Directory -Force -Path $awsDir | Out-Null
+# Edit $awsDir\credentials and add:
+# [default]
+# aws_access_key_id     = ASIA...
+# aws_secret_access_key = ...
+# aws_session_token     = ...
+
+# 4. Set region for this session:
+$env:AWS_DEFAULT_REGION = "us-east-1"
+
+# 5. Verify identity (must show LabRole in the Arn field):
 aws sts get-caller-identity
-aws configure get region --profile datascout-dev
 ```
 
-Before any change, record and compare the returned 12-digit account ID with the
-approved development account. The intended deployment target in this guide is
-environment `dev`, stack `datascout-backend-dev`, region `ap-south-1`. The caller
-identity and selected region are read-only checks; they do not prove that the
-role has every permission listed below.
+> **Important**: You cannot create new IAM roles in AWS Academy. The SAM template
+> uses the pre-provisioned `LabRole`. Do **not** pass `--capabilities CAPABILITY_IAM`
+> without also passing `--role-arn` pointing to `LabRole`. See Step 5 below.
 
 Once the account is confirmed, inspect only secret metadata (never retrieve or
 print a secret value):
@@ -78,31 +94,24 @@ print a secret value):
 ```powershell
 aws secretsmanager describe-secret `
   --secret-id datascout/dev/data-govin-api-key `
-  --region ap-south-1 `
+  --region us-east-1 `
   --query "{Name:Name,ARN:ARN}" --output table
 
 aws secretsmanager describe-secret `
   --secret-id datascout/dev/huggingface-api-token `
-  --region ap-south-1 `
+  --region us-east-1 `
   --query "{Name:Name,ARN:ARN}" --output table
 
 aws cloudformation describe-stacks `
   --stack-name datascout-backend-dev `
-  --region ap-south-1 `
+  --region us-east-1 `
   --query "Stacks[0].[StackName,StackStatus]" --output table
 ```
 
 An absent optional secret or first-time stack may return `ResourceNotFound` or
 `ValidationError`; those responses make no changes. If secrets exist, compare
 their returned ARNs with the planned `DataGovInApiSecretArn` and
-`HuggingFaceApiSecretArn` parameter values. These checks require
-`secretsmanager:DescribeSecret` and `cloudformation:DescribeStacks` respectively.
-
-To confirm the effective deployment permissions, have the AWS administrator
-review or simulate the caller's attached policies, permissions boundary, and
-organization SCP against the action list below. The account ID and identity
-check alone cannot confirm effective permissions; do not infer them from a
-successful `sts get-caller-identity` call.
+`HuggingFaceApiSecretArn` parameter values.
 
 ---
 
@@ -194,81 +203,151 @@ The `backend/template.yaml` defines:
 
 ---
 
-## 5. Deployment commands — run only after explicit approval
+## 5. Secrets Manager setup (run once before first deploy)
 
-Deploy the stack using guided deployment for the first run:
+Create the two Secrets Manager secrets that the Lambda functions will read at
+runtime. Do this **before** `sam deploy`. Store only the raw key string as the
+secret value (no JSON wrapping).
 
 ```powershell
-sam deploy --guided `
-  --stack-name datascout-backend-dev `
-  --region ap-south-1 `
-  --resolve-s3 `
-  --capabilities CAPABILITY_IAM `
-  --parameter-overrides Environment=dev CorsAllowedOrigin="*" `
-    DataGovInApiSecretArn="<secret-arn-or-empty>" `
-    HuggingFaceApiSecretArn="<secret-arn-or-empty>"
+# data.gov.in API key
+$DATAGOVIN_SECRET_ARN = (aws secretsmanager create-secret `
+  --name datascout/dev/data-govin-api-key `
+  --description "DataScout dev – data.gov.in API key" `
+  --secret-string "<PASTE_YOUR_DATAGOVIN_KEY_HERE>" `
+  --region us-east-1 `
+  --query ARN --output text)
+Write-Host "DataGovIn Secret ARN: $DATAGOVIN_SECRET_ARN"
+
+# Hugging Face token (optional — leave secret-string as empty string if unused)
+$HF_SECRET_ARN = (aws secretsmanager create-secret `
+  --name datascout/dev/huggingface-api-token `
+  --description "DataScout dev – Hugging Face API token" `
+  --secret-string "<PASTE_YOUR_HF_TOKEN_HERE>" `
+  --region us-east-1 `
+  --query ARN --output text)
+Write-Host "HuggingFace Secret ARN: $HF_SECRET_ARN"
 ```
 
-For subsequent deployments:
+Copy the two ARN values printed above into your `.env`:
+```
+DATAGOVIN_API_KEY_SECRET_ARN=arn:aws:secretsmanager:us-east-1:...
+HUGGINGFACE_API_TOKEN_SECRET_ARN=arn:aws:secretsmanager:us-east-1:...
+```
+
+> To update a secret value in a later lab session (credentials rotate, but the
+> secret ARN stays the same):
+> ```powershell
+> aws secretsmanager put-secret-value `
+>   --secret-id datascout/dev/data-govin-api-key `
+>   --secret-string "<NEW_KEY>" --region us-east-1
+> ```
+
+---
+
+## 6. Deployment commands — run only after explicit approval
+
+> **AWS Academy note**: You cannot create IAM roles. Pass the pre-provisioned
+> `LabRole` ARN via `--role-arn` so CloudFormation can create resources.
+> Replace `<ACCOUNT_ID>` with your 12-digit account ID from `sts get-caller-identity`.
+
+Deploy the stack (first run — guided):
+
 ```powershell
-sam deploy --stack-name datascout-backend-dev --region ap-south-1 --resolve-s3 --capabilities CAPABILITY_IAM
+# Get your account ID first:
+$ACCOUNT_ID = (aws sts get-caller-identity --query Account --output text)
+$LABROLE_ARN = "arn:aws:iam::${ACCOUNT_ID}:role/LabRole"
+
+sam deploy --guided `
+  --stack-name datascout-backend-dev `
+  --region us-east-1 `
+  --resolve-s3 `
+  --capabilities CAPABILITY_IAM `
+  --role-arn $LABROLE_ARN `
+  --parameter-overrides Environment=dev CorsAllowedOrigin="*" `
+    DataGovInApiSecretArn="$DATAGOVIN_SECRET_ARN" `
+    HuggingFaceApiSecretArn="$HF_SECRET_ARN"
+```
+
+For subsequent deployments (save answers from `--guided` in `samconfig.toml`):
+```powershell
+sam deploy --stack-name datascout-backend-dev --region us-east-1 --resolve-s3 --capabilities CAPABILITY_IAM --role-arn $LABROLE_ARN
 ```
 
 ---
 
-## 6. Retrieving Deployment Outputs
+## 7. Retrieving Deployment Outputs
 
 Inspect the deployed outputs to connect the frontend and configure clients:
 
 ```powershell
 aws cloudformation describe-stacks `
   --stack-name datascout-backend-dev `
+  --region us-east-1 `
   --query "Stacks[0].Outputs" `
   --output table
 ```
 
 Outputs returned:
-1. `ApiEndpoint`: The base URL for the deployed REST API (e.g., `https://<api-id>.execute-api.ap-south-1.amazonaws.com/dev`).
+1. `ApiEndpoint`: The base URL for the deployed REST API (e.g., `https://<api-id>.execute-api.us-east-1.amazonaws.com/dev`).
 2. `CognitoUserPoolId`: The user pool identifier.
 3. `CognitoUserPoolClientId`: The public SPA client ID.
-4. `ResultsTableName`: The DynamoDB table name for search results.
-5. `DatasetsTableName`: The DynamoDB table name for dataset details.
+4. `ResultsTableName`: The DynamoDB results/search-cache table name.
+5. `DatasetsTableName`: The DynamoDB normalized dataset detail table name.
 6. `SnapshotsBucketName`: The private S3 snapshots bucket name.
+
+Copy these values into `.env` (the `RESULTS_TABLE_NAME=`, `COGNITO_USER_POOL_ID=`, etc. fields).
 
 ---
 
-## 7. Verifying Deployed API (Smoke Test)
+## 8. Verifying Deployed API (Smoke Test)
 
 Verify the deployed protected API endpoints:
 
 ```powershell
-# 1. Test missing Authorization token (Expect 401 Unauthorized with ErrorObject):
-$API_URL = (aws cloudformation describe-stacks --stack-name datascout-backend-dev --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" --output text)
+# 1. Get the API endpoint from stack outputs:
+$API_URL = (aws cloudformation describe-stacks `
+  --stack-name datascout-backend-dev `
+  --region us-east-1 `
+  --query "Stacks[0].Outputs[?OutputKey=='ApiEndpoint'].OutputValue" `
+  --output text)
+Write-Host "API URL: $API_URL"
 
-Invoke-RestMethod -Uri "$API_URL/search" -Method Post -Body '{"query":"crop yield"}' -ContentType "application/json" -SkipHttpErrorCheck -StatusCodeVariable "code"
-Write-Host "Response HTTP Status: $code"
+# 2. Test unauthenticated (expect 401 with ErrorObject JSON):
+Invoke-RestMethod -Uri "$API_URL/search" -Method Post `
+  -Body '{"query":"crop yield"}' -ContentType "application/json" `
+  -SkipHttpErrorCheck -StatusCodeVariable "code"
+Write-Host "Response HTTP Status: $code"  # Should be 401
 
-# 2. Test with Cognito user token:
-# Obtain token via Cognito initiate-auth or OAuth flow, then call:
+# 3. Test with Cognito user token (obtain from Cognito initiate-auth or OAuth flow):
 $TOKEN = "<COGNITO_ACCESS_TOKEN>"
 $Headers = @{
   "Authorization" = "Bearer $TOKEN"
   "Content-Type"  = "application/json"
 }
-
-$Body = @{
-  query = "Indian crop yield dataset for Maharashtra with rainfall"
-} | ConvertTo-Json
-
+$Body = @{ query = "Indian crop yield dataset for Maharashtra with rainfall" } | ConvertTo-Json
 Invoke-RestMethod -Uri "$API_URL/search" -Method Post -Headers $Headers -Body $Body
 ```
 
 ---
 
-## 8. Cleanup & Teardown
+## 9. Cleanup & Teardown
 
-To delete all deployed AWS resources and prevent ongoing costs:
+To delete all deployed AWS resources and prevent ongoing costs (important in AWS Academy
+to avoid burning remaining credits):
 
 ```powershell
-sam delete --stack-name datascout-backend-dev --region ap-south-1
+sam delete --stack-name datascout-backend-dev --region us-east-1
+
+# Also delete the Secrets Manager secrets to stop the per-secret monthly charge:
+aws secretsmanager delete-secret `
+  --secret-id datascout/dev/data-govin-api-key `
+  --force-delete-without-recovery --region us-east-1
+
+aws secretsmanager delete-secret `
+  --secret-id datascout/dev/huggingface-api-token `
+  --force-delete-without-recovery --region us-east-1
 ```
+
+> **Tip**: In AWS Academy, credentials expire at session end. Before your next session,
+> update `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, and `AWS_SESSION_TOKEN` in `.env`.
