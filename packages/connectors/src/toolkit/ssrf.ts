@@ -2,8 +2,8 @@ import { promises as dnsPromises } from 'node:dns';
 import { isIP } from 'node:net';
 
 export class SsrfError extends Error {
-  constructor(message: string) {
-    super(message);
+  constructor(message: string, options?: ErrorOptions) {
+    super(message, options);
     this.name = 'SsrfError';
   }
 }
@@ -143,8 +143,12 @@ export async function validateUrlForSsrf(
   let records: { address: string; family: number }[];
   try {
     records = await resolver(hostname);
-  } catch (err: any) {
-    throw new SsrfError(`DNS resolution failed for host '${hostname}': ${err.message}`);
+  } catch (err: unknown) {
+    const errObj = err as Error;
+    throw new SsrfError(
+      `DNS resolution failed for host '${hostname}': ${errObj.message}`,
+      { cause: err },
+    );
   }
 
   if (!records || records.length === 0) {

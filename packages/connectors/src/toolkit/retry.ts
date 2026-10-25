@@ -4,6 +4,8 @@ export interface RetryOptions {
   maxDelayMs?: number | undefined;
   backoffFactor?: number | undefined;
   jitter?: boolean | undefined;
+  /** AbortSignal — if aborted, the retry loop stops immediately. */
+  signal?: AbortSignal | undefined;
 }
 
 export class RetryableError extends Error {
@@ -45,6 +47,25 @@ export function isTransientStatus(status: number): boolean {
   );
 }
 
+/**
+ * Abortable sleep. Resolves early if `signal` fires, but still counts as a
+ * completed delay for the caller — the caller is responsible for checking
+ * signal.aborted after the sleep.
+ */
+function abortableSleep(ms: number, signal?: AbortSignal): Promise<void> {
+  return new Promise<void>((resolve) => {
+    if (signal?.aborted) {
+      resolve();
+      return;
+    }
+    const timer = setTimeout(resolve, ms);
+    signal?.addEventListener('abort', () => {
+      clearTimeout(timer);
+      resolve();
+    }, { once: true });
+  });
+}
+
 export async function withRetry<T>(
   operation: (attempt: number) => Promise<T>,
   options: RetryOptions = {},
@@ -54,13 +75,19 @@ export async function withRetry<T>(
   const maxDelay = options.maxDelayMs ?? 5000;
   const factor = options.backoffFactor ?? 2;
   const useJitter = options.jitter ?? true;
+  const signal = options.signal;
 
   let attempt = 0;
 
   while (true) {
+    // Abort check before each attempt.
+    if (signal?.aborted) {
+      throw new Error('Operation aborted before attempt');
+    }
+
     try {
       return await operation(attempt);
-    } catch (error: any) {
+    } catch (error: unknown) {
       attempt++;
       if (attempt > maxRetries) {
         throw error;
@@ -69,22 +96,35 @@ export async function withRetry<T>(
       let shouldRetry = false;
       let explicitDelayMs: number | undefined;
 
+      const err = error as Record<string, unknown>;
+
       if (error instanceof RetryableError) {
         shouldRetry = true;
         explicitDelayMs = error.retryAfterMs;
-      } else if (error?.status && isTransientStatus(error.status)) {
+      } else if (typeof err?.['status'] === 'number' && isTransientStatus(err['status'] as number)) {
         shouldRetry = true;
       } else if (
-        error?.name === 'FetchError' ||
-        error?.code === 'ECONNRESET' ||
-        error?.code === 'ETIMEDOUT' ||
-        error?.code === 'UND_ERR_CONNECT_TIMEOUT'
+        err?.['name'] === 'FetchError' ||
+        err?.['code'] === 'ECONNRESET' ||
+        err?.['code'] === 'ETIMEDOUT' ||
+        err?.['code'] === 'UND_ERR_CONNECT_TIMEOUT'
       ) {
         shouldRetry = true;
       }
 
       if (!shouldRetry) {
         throw error;
+      }
+
+      // Clamp Retry-After: if it exceeds maxDelayMs, give up instead of
+      // sleeping for an unbounded time.
+      if (explicitDelayMs !== undefined && explicitDelayMs > maxDelay) {
+        throw error;
+      }
+
+      // Abort check after catching — don't sleep if already cancelled.
+      if (signal?.aborted) {
+        throw new Error('Operation aborted during retry backoff', { cause: error });
       }
 
       let delay = explicitDelayMs;
@@ -95,7 +135,12 @@ export async function withRetry<T>(
         }
       }
 
-      await new Promise((resolve) => setTimeout(resolve, delay));
+      await abortableSleep(delay, signal);
+
+      // If signal fired during sleep, stop retrying.
+      if (signal?.aborted) {
+        throw new Error('Operation aborted during retry backoff', { cause: error });
+      }
     }
   }
 }

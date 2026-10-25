@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  isPrivateIp,
   isPrivateIpv4,
   isPrivateIpv6,
   validateUrlForSsrf,
