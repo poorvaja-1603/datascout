@@ -5,6 +5,7 @@ import {
   DATASCOUT_ERROR_CODES,
   DataScoutError,
   FakeLlmClient,
+  redactSensitiveText,
   throwIfAborted,
 } from '@datascout/contracts';
 import type {
@@ -24,6 +25,7 @@ interface Cassette {
 interface JsonLlmClientOptions {
   provider: LlmClient['provider'];
   modelId: string;
+  safetyModelId?: string;
   config: LlmConfig;
   invoke: (
     req: LlmJsonRequest,
@@ -31,9 +33,15 @@ interface JsonLlmClientOptions {
   ) => Promise<Omit<LlmJsonResponse, 'latencyMs'>>;
 }
 
+export interface LlmClientDependencies {
+  fetch?: typeof fetch;
+}
+
 function assertConfig(config: LlmConfig): void {
   if (
-    !['fake', 'cassette'].includes(config.provider) ||
+    !['fake', 'cassette', 'gemini', 'ollama'].includes(
+      config.provider,
+    ) ||
     !Number.isSafeInteger(config.timeoutMs) ||
     config.timeoutMs < 1 ||
     config.timeoutMs > 300_000 ||
@@ -46,6 +54,14 @@ function assertConfig(config: LlmConfig): void {
       'LLM configuration contains invalid limits or model ID.',
     );
   }
+  if (
+    (config.provider === 'gemini' || config.provider === 'ollama') &&
+    (!config.baseUrl?.trim() || !config.modelId.trim())
+  ) {
+    throw new TypeError(
+      'External LLM configuration requires base URL and model ID.',
+    );
+  }
   if (!config.cassetteDirectory.trim()) {
     throw new TypeError('LLM_CASSETTE_DIR must not be empty.');
   }
@@ -53,7 +69,7 @@ function assertConfig(config: LlmConfig): void {
 
 function validateRequest(req: LlmJsonRequest, config: LlmConfig): number {
   if (
-    (req.task !== 'extract' && req.task !== 'explain') ||
+    !['extract', 'explain', 'safety_triage'].includes(req.task) ||
     typeof req.promptVersion !== 'string' ||
     !req.promptVersion.trim() ||
     typeof req.system !== 'string' ||
@@ -77,12 +93,14 @@ function validateRequest(req: LlmJsonRequest, config: LlmConfig): number {
 class ConfiguredLlmClient implements LlmClient {
   readonly provider: LlmClient['provider'];
   readonly modelId: string;
+  readonly safetyModelId: string | undefined;
   private readonly config: LlmConfig;
   private readonly invoke: JsonLlmClientOptions['invoke'];
 
   constructor(options: JsonLlmClientOptions) {
     this.provider = options.provider;
     this.modelId = options.modelId;
+    this.safetyModelId = options.safetyModelId;
     this.config = options.config;
     this.invoke = options.invoke;
   }
@@ -93,7 +111,9 @@ class ConfiguredLlmClient implements LlmClient {
   ): Promise<LlmJsonResponse> {
     throwIfAborted(ctx.signal);
     const maxOutputTokens = validateRequest(req, this.config);
-    const timeoutMs = Math.min(req.timeoutMs, this.config.timeoutMs);
+    const timeoutMs = this.provider === 'ollama' && req.task !== 'safety_triage'
+      ? this.config.timeoutMs
+      : Math.min(req.timeoutMs, this.config.timeoutMs);
     if (!Number.isFinite(ctx.deadlineMs)) {
       throw new DataScoutError(
         'invalid_request',
@@ -288,6 +308,153 @@ function createCassetteClient(config: LlmConfig): LlmClient {
   });
 }
 
+function providerError(status: number): DataScoutError {
+  if (status === 429) {
+    return new DataScoutError(
+      DATASCOUT_ERROR_CODES.llmThrottled,
+      'The LLM provider is rate limiting requests.',
+    );
+  }
+  if (status === 408 || status >= 500) {
+    return new DataScoutError(
+      status === 408 ? 'timeout' : 'upstream_unavailable',
+      'The LLM provider is temporarily unavailable.',
+    );
+  }
+  return new DataScoutError(
+    'extraction_failed',
+    'The LLM provider could not complete the request.',
+    false,
+  );
+}
+
+function parseJsonContent(content: unknown): unknown {
+  if (typeof content !== 'string') {
+    throw new DataScoutError(
+      'extraction_failed',
+      'The LLM provider returned invalid structured output.',
+      false,
+    );
+  }
+  try {
+    return JSON.parse(content) as unknown;
+  } catch {
+    throw new DataScoutError(
+      'extraction_failed',
+      'The LLM provider returned invalid structured output.',
+      false,
+    );
+  }
+}
+
+function createRemoteClient(
+  config: LlmConfig,
+  dependencies: LlmClientDependencies,
+): LlmClient {
+  const send = dependencies.fetch ?? fetch;
+  const provider = config.provider;
+  if (provider !== 'gemini' && provider !== 'ollama') {
+    throw new TypeError('A Gemini or Ollama provider is required.');
+  }
+  return new ConfiguredLlmClient({
+    provider,
+    modelId: config.modelId,
+    ...(config.safetyModelId ? { safetyModelId: config.safetyModelId } : {}),
+    config,
+    invoke: async (req, signal) => {
+      try {
+        const modelId = req.modelId ?? config.modelId;
+        const endpoint = provider === 'gemini'
+          ? `${config.baseUrl}/models/${encodeURIComponent(modelId)}:generateContent`
+          : `${config.baseUrl}/api/chat`;
+        const headers: Record<string, string> = {
+          'content-type': 'application/json',
+        };
+        const system = redactSensitiveText(req.system);
+        if (provider === 'gemini') headers['x-goog-api-key'] = config.apiKey!;
+        const body = provider === 'gemini'
+          ? {
+              systemInstruction: { parts: [{ text: system }] },
+              contents: [{ role: 'user', parts: [{ text: redactSensitiveText(req.user) }] }],
+              generationConfig: {
+                temperature: 0,
+                maxOutputTokens: req.maxOutputTokens,
+                responseMimeType: 'application/json',
+                responseJsonSchema: req.jsonSchema,
+              },
+            }
+          : {
+              model: modelId,
+              stream: false,
+              think: false,
+              messages: [
+                { role: 'system', content: `${system}\n\nReturn JSON matching this schema: ${JSON.stringify(req.jsonSchema)}` },
+                { role: 'user', content: redactSensitiveText(req.user) },
+              ],
+              format: req.jsonSchema,
+              options: { temperature: 0, num_predict: req.maxOutputTokens },
+            };
+        const response = await send(endpoint, {
+          method: 'POST',
+          headers,
+          body: JSON.stringify(body),
+          signal,
+        });
+        if (!response.ok) throw providerError(response.status);
+        const payload: unknown = await response.json();
+        if (typeof payload !== 'object' || payload === null) {
+          throw new DataScoutError(
+            'extraction_failed',
+            'The LLM provider returned an invalid response.',
+            false,
+          );
+        }
+        const data = payload as Record<string, unknown>;
+        let output: unknown;
+        let inputTokens = 0;
+        let outputTokens = 0;
+        if (provider === 'gemini') {
+          const candidates = Array.isArray(data['candidates']) ? data['candidates'] : [];
+          const content = candidates[0] && typeof candidates[0] === 'object'
+            ? (candidates[0] as Record<string, unknown>)['content'] : undefined;
+          const parts = content && typeof content === 'object'
+            ? (content as Record<string, unknown>)['parts'] : undefined;
+          const text = Array.isArray(parts) && parts[0] && typeof parts[0] === 'object'
+            ? (parts[0] as Record<string, unknown>)['text'] : undefined;
+          output = parseJsonContent(text);
+          const usage = typeof data['usageMetadata'] === 'object' && data['usageMetadata'] !== null
+            ? data['usageMetadata'] as Record<string, unknown> : {};
+          inputTokens = typeof usage['promptTokenCount'] === 'number' ? usage['promptTokenCount'] : 0;
+          outputTokens = typeof usage['candidatesTokenCount'] === 'number' ? usage['candidatesTokenCount'] : 0;
+        } else {
+          const message = typeof data['message'] === 'object' && data['message'] !== null
+            ? data['message'] as Record<string, unknown> : {};
+          output = parseJsonContent(message['content']);
+          inputTokens = typeof data['prompt_eval_count'] === 'number' ? data['prompt_eval_count'] : 0;
+          outputTokens = typeof data['eval_count'] === 'number' ? data['eval_count'] : 0;
+        }
+        return {
+          output,
+          modelId,
+          usage: {
+            inputTokens,
+            outputTokens,
+          },
+        };
+      } catch (error) {
+        if (error instanceof DataScoutError) throw error;
+        if (signal.aborted) {
+          throw new DataScoutError('timeout', 'The LLM request timed out.');
+        }
+        throw new DataScoutError(
+          'upstream_unavailable',
+          'The LLM provider is temporarily unavailable.',
+        );
+      }
+    },
+  });
+}
+
 export function createLlmClient(
   config: LlmConfig,
 ): LlmClient {
@@ -323,6 +490,9 @@ export function createLlmClient(
     }
     case 'cassette':
       return createCassetteClient(config);
+    case 'gemini':
+    case 'ollama':
+      return createRemoteClient(config, dependencies);
   }
 }
 

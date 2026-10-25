@@ -14,7 +14,7 @@ The implementation is organized as npm workspaces following the streams and cont
 
 - React frontend hosted on AWS Amplify
 - API Gateway and AWS Lambda REST backend
-- Fake and cassette LLM providers for requirement interpretation and grounded guidance
+- Gemini as the hosted LLM provider, with Ollama for local development; Bedrock is unavailable to the Learner Lab role
 - DynamoDB for dataset metadata and result cache
 - S3 for private metadata snapshots and permitted samples
 - EventBridge for bounded catalog refresh

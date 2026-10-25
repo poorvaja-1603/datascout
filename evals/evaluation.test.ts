@@ -9,7 +9,8 @@ import {
   REPORT_SCHEMA_VERSION,
   type CorpusCase,
 } from './runner.js';
-import { appendStructuralReplay } from './update-baseline.js';
+import { appendModelEvaluation, appendStructuralReplay } from './update-baseline.js';
+import { evaluateModel } from './model-runner.js';
 
 const corpusPath = fileURLToPath(
   new URL('./requirements-v0.1.jsonl', import.meta.url),
@@ -242,6 +243,26 @@ describe('extraction evaluation runner', () => {
     expect(report.metrics.all_fields_exact_match_rate).toBe(0);
   });
 
+  it('scores clarification as empty fields but does not treat a refusal as extracted fields', async () => {
+    const row = caseRow('ambiguous', 'development');
+    const clarification = await evaluate({
+      corpusText: JSON.stringify(row),
+      provider: 'fake',
+      extract: async () => ({
+        kind: 'clarification',
+        question: 'What topic should the dataset cover?',
+      }),
+    });
+    expect(clarification.metrics.all_fields_exact_match_rate).toBe(1);
+
+    const refusal = await evaluate({
+      corpusText: JSON.stringify(row),
+      provider: 'fake',
+      extract: async () => ({ kind: 'refused', reasonCode: 'unsafe_request' }),
+    });
+    expect(refusal.metrics.all_fields_exact_match_rate).toBe(0);
+  });
+
   it('replays the real A2 cassette extractor on all 40 development cases without claiming quality', async () => {
     const corpusText = await readFile(corpusPath, 'utf8');
     const report = await evaluate({ corpusText });
@@ -249,13 +270,9 @@ describe('extraction evaluation runner', () => {
     expect(report.run.provider).toBe('cassette');
     expect(report.run.model_id).toBe('development-gold-fixture-v0.1');
     expect(report.run.prompt_version).toBe('extract-v1');
-    expect(report.run.safety_check).toBe('deterministic_first_pass');
-    expect(report.metrics.safety.adversarial_cases).toBe(1);
-    expect(report.metrics.safety.adversarial_mitigated).toBe(1);
-    expect(report.metrics.safety.adversarial_misses).toBe(0);
-    expect(report.metrics.safety.benign_interferences).toBe(0);
-    expect(report.metrics.all_fields_exact_match_cases).toBe(39);
-    expect(report.metrics.all_fields_exact_match_rate).toBe(39 / 40);
+    expect(report.run.safety_check).toBe('evaluation_allow_all');
+    expect(report.metrics.all_fields_exact_match_cases).toBe(40);
+    expect(report.metrics.all_fields_exact_match_rate).toBe(1);
     expect(
       report.cases.find(({ case_id }) => case_id === 'REQE-015')?.result_kind,
     ).toBe('clarification');
@@ -299,6 +316,42 @@ describe('extraction evaluation runner', () => {
     report.metrics.per_field.topic.exact_matches += 1;
     expect(() => appendStructuralReplay('# Baseline', report, true)).toThrow(
       'metrics do not match',
+    );
+  });
+
+  it('records only verified development model reports and keeps held-out pending', async () => {
+    const corpusText = JSON.stringify(caseRow('dev', 'development'));
+    const report = await evaluateModel({
+      corpusText,
+      modelId: 'qwen3:8b',
+      timeoutMs: 120_000,
+      extract: async () => noRequirements,
+    });
+    const baseline = [
+      '# Baseline',
+      '',
+      '**Status: NOT RUN.**',
+      '',
+      'The v1 requirement contract and extraction implementation exist. No live model-quality baseline has been measured.',
+      '',
+      '| Measure | Status | Evidence needed |',
+      '| --- | --- | --- |',
+      '| Requirement extraction accuracy | Not run | Predictions needed |',
+    ].join('\n');
+    const updated = appendModelEvaluation(baseline, report, 'evals/reports/model.json');
+    expect(updated).toContain('DEVELOPMENT BASELINE RECORDED; HELD-OUT NOT RUN');
+    expect(updated).toContain('Development measured; held-out not run');
+    expect(updated).toContain('held-out quality and release gates remain unrun');
+
+    const heldOut = await evaluateModel({
+      corpusText: JSON.stringify(caseRow('held', 'held_out')),
+      split: 'held_out',
+      modelId: 'qwen3:8b',
+      timeoutMs: 120_000,
+      extract: async () => noRequirements,
+    });
+    expect(() => appendModelEvaluation(baseline, heldOut, 'held.json')).toThrow(
+      'development-only Ollama model evaluation',
     );
   });
 

@@ -58,9 +58,11 @@ divided by the selected case count. Scalar values must match exactly; arrays
 must match exactly and in order. Explicit year ranges in expected
 `time_coverage` are normalized to `YYYY-YYYY`, matching A2; no other
 normalization, semantic equivalence, evidence quality, precision/recall, or
-annotation correctness is inferred. A non-`ok` extraction has no actual field
+annotation correctness is inferred. A `clarification` result is compared as the
+canonical empty requirements object; this matches underspecified cases only
+when all expected fields are empty. A `refused` result has no actual field
 values and counts as a mismatch for every field. See `report.schema.json` for
-the versioned output contract.
+the report contract and `EVALUATOR_VERSION` in `runner.ts` for metric semantics.
 
 Held-out examples are excluded by default. To run their prompts through the
 deterministic fake provider, explicitly pass `--heldout --provider fake`. A
@@ -78,13 +80,44 @@ npx tsx evals\update-baseline.ts --accept-structural-replay evals\reports\<repor
 ```
 
 It accepts development-only fake/cassette structural reports and appends a
-separately labeled record. It refuses held-out reports, requires the explicit
-opt-in flag, and never changes the `NOT RUN` model-quality status or its
-unmeasured quality rows. Do not use it to claim accuracy.
+separately labeled record. It refuses held-out reports and requires the
+explicit opt-in flag. Structural records never change the model-quality status
+or quality rows. Do not use them to claim accuracy.
+
+## Local Ollama model evaluation
+
+After the extraction prompt and schema are frozen, run the real development
+split against local Ollama:
+
+```powershell
+npx tsx evals\model-runner.ts --model qwen3:8b --timeout-ms 120000
+```
+
+This makes local inference calls only; it does not use Gemini or AWS. The
+runner enables the application safety gate with an in-memory evaluation budget,
+uses the reviewed development split by default, and writes a report under
+`evals/reports/`. Reports contain field comparisons and safe error codes, not
+raw request text. Clarifications compare as empty requirements; refusals and
+failed calls count as extraction mismatches. The output measures this
+model/prompt run and is not by itself a release approval. Do not tune against
+held-out examples; select them only with `--heldout` after freezing the prompt,
+schema, and evaluator.
+
+To append a verified development-only model report to `BASELINE.md`:
+
+```powershell
+npx tsx evals\update-baseline.ts --accept-model-evaluation evals\reports\<model-report>.json
+```
+
+The updater rejects held-out reports and validates the recorded metrics before
+changing the baseline status.
 
 ## Baseline status
 
-The shared extraction schema and extraction implementation are present, but no live model-quality baseline has been measured. See `BASELINE.md`; do not replace `NOT RUN` with invented or structure-only metrics.
+The shared extraction schema and implementation are present. A local Ollama
+development baseline has been recorded; held-out quality and release gates
+remain unrun. See `BASELINE.md`; structural replay metrics are not model-quality
+evidence.
 
 ## Langfuse status and redaction
 
@@ -98,4 +131,4 @@ Before transmitting data to Langfuse:
 - Treat all redaction as a pre-export application responsibility; verify it with tests before enabling trace delivery.
 - Configure separate development and production projects/environments and least-privilege keys. Keep runtime trace delivery optional so Langfuse outages cannot fail searches.
 
-These are required setup controls, not evidence that trace delivery or application-side redaction has been tested. Application-side pre-export redaction must be implemented and verified before any trace can be considered production-ready.
+These are required setup controls. Unit tests cover the application redaction patterns, but do not prove every possible secret or personally identifying value will be caught. The smoke trace verifies telemetry delivery only; no production application traffic has been traced.

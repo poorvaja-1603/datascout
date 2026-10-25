@@ -128,6 +128,44 @@ describe('P0-5 matching and verdicts', () => {
     expect(verdict.status).not.toBe('PASS');
   });
 
+  it('treats minimum_records as a lower bound, not an exact count', async () => {
+    const fixture = (await loadFixtures()).find(({ dataset }) =>
+      dataset.dataset_id.includes('crop-yield-metadata'),
+    );
+    if (!fixture) throw new Error('metadata fixture missing');
+    const requirement = {
+      requirement_id: 'minimum-records-test',
+      type: 'minimum_records' as const,
+      value: 100,
+      unit: 'records',
+      priority: 'required' as const,
+      aliases: [],
+      source_span: null,
+    };
+    const evidence = [
+      {
+        evidence_id: 'record-count-test',
+        dataset_id: fixture.dataset.dataset_id,
+        field: 'record_count' as const,
+        value: 150,
+        provenance: {
+          source_field_path: 'catalog.count',
+          retrieved_at: fixture.dataset.retrieved_at,
+        },
+      },
+    ];
+    expect(
+      matchRequirement(requirement, fixture.dataset, evidence).status,
+    ).toBe('PARTIAL');
+    expect(
+      matchRequirement(
+        requirement,
+        { ...fixture.dataset, verification_level: 'sample_checked' },
+        evidence,
+      ).status,
+    ).toBe('PASS');
+  });
+
   it('does not treat missing metadata as proof of absence', async () => {
     const fixture = (await loadFixtures()).find(({ dataset }) =>
       dataset.dataset_id.includes('health-survey-unknown'),

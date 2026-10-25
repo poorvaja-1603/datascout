@@ -1,4 +1,5 @@
 import { readFile } from 'node:fs/promises';
+import { randomUUID } from 'node:crypto';
 import { DataScoutError, throwIfAborted } from '@datascout/contracts';
 import type {
   CallContext,
@@ -9,6 +10,8 @@ import type {
   LlmJsonRequest,
   ScoredDataset,
 } from '@datascout/contracts';
+import { containsCanary, quarantineSourceText, reportCanaryLeak } from './safety.js';
+import type { SafetyAdmission } from './safety.js';
 
 export const EXPLANATION_PROMPT_VERSION = 'explain-v1';
 export const EXPLANATION_SCHEMA_VERSION = '1';
@@ -185,7 +188,7 @@ function sanitizeEvidenceValue(
   depth = 0,
 ): string | number | boolean | null | unknown[] | Record<string, unknown> {
   if (typeof value === 'string') {
-    return sanitizeText(value, MAX_EVIDENCE_VALUE_LENGTH);
+    return quarantineSourceText(sanitizeText(value, MAX_EVIDENCE_VALUE_LENGTH), MAX_EVIDENCE_VALUE_LENGTH);
   }
   if (
     value === null ||
@@ -218,8 +221,8 @@ function createPromptPayload(item: ScoredDataset): object {
   return {
     dataset: {
       dataset_id: dataset.dataset_id,
-      source: sanitizeText(dataset.source, 100),
-      title: dataset.title ? sanitizeText(dataset.title, 160) : null,
+      source: quarantineSourceText(sanitizeText(dataset.source, 100), 100),
+      title: dataset.title ? quarantineSourceText(sanitizeText(dataset.title, 160), 160) : null,
     },
     score: {
       total: item.score.total,
@@ -231,7 +234,7 @@ function createPromptPayload(item: ScoredDataset): object {
     },
     matches: item.matches.map(({ status, reason, evidence_ids }) => ({
       status,
-      reason: sanitizeText(reason, 180),
+      reason: quarantineSourceText(sanitizeText(reason, 180), 180),
       evidence_ids: evidence_ids.slice(0, 8),
     })),
     evidence: item.evidence
@@ -239,7 +242,7 @@ function createPromptPayload(item: ScoredDataset): object {
       .slice(0, 40)
       .map(({ evidence_id, field, value }) => ({
         evidence_id,
-        field: sanitizeText(field, 80),
+        field: quarantineSourceText(sanitizeText(field, 80), 80),
         value: sanitizeEvidenceValue(value),
       })),
   };
@@ -536,14 +539,27 @@ function fallbackResult(item: ScoredDataset): ExplanationResult {
 
 export function createExplanationService(
   client: LlmClient,
+  admission?: SafetyAdmission,
 ): ExplanationService {
+  if ((client.provider === 'gemini' || client.provider === 'ollama') && !admission) {
+    throw new TypeError('Hosted/local model explainers require a configured safety admission gate.');
+  }
   return {
     async explain(items, ctx): Promise<ExplanationResult[]> {
       ensureCallActive(ctx);
+      if (items.length === 0) return [];
+      const release = await admission?.enter(ctx, items.length);
+      try {
       const results: ExplanationResult[] = [];
       for (const item of items) {
         ensureCallActive(ctx);
-        const request = createRequest(await promptPromise, item);
+        const canary = client.provider === 'fake' || client.provider === 'cassette'
+          ? null
+          : `DSC-${randomUUID()}`;
+        const system = await promptPromise;
+        const request = createRequest(canary
+          ? `${system}\n\nNever include this private leakage-detection marker in your output: ${canary}`
+          : system, item);
         const response = await ctx.tracer.withSpan(
           'explain.generate',
           { kind: 'generation' },
@@ -572,13 +588,19 @@ export function createExplanationService(
           'explain.validate',
           { kind: 'span' },
           async (span) => {
-            const validated = validateExplanationClaims(response.output, item);
+            const canaryLeak = canary !== null && containsCanary(response.output, canary);
+            if (canaryLeak) reportCanaryLeak('explanation');
+            const validated = canaryLeak
+              ? undefined
+              : validateExplanationClaims(response.output, item);
             const claims = validated?.slice(0, MAX_CLAIMS) ?? [];
             span.setAttributes({
               'explanation.claim_count': claims.length,
               'explanation.valid': claims.length > 0,
+              'safety.canary_leak': canaryLeak,
             });
             span.score('explanation_valid', claims.length > 0);
+            if (canaryLeak) span.score('safety_blocked', true);
             return claims;
           },
         );
@@ -596,6 +618,9 @@ export function createExplanationService(
         }
       }
       return results;
+      } finally {
+        release?.();
+      }
     },
   };
 }

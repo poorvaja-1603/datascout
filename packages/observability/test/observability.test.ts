@@ -16,6 +16,17 @@ describe('Langfuse observability', () => {
     ).toBe('Contact [REDACTED] with [REDACTED] and [REDACTED].');
     expect(redactSensitiveText('AKIA1234567890ABCDEF')).toBe('[REDACTED]');
     expect(
+      redactSensitiveText(
+        'Call +91 9876543210; Aadhaar 1234 5678 9012; PAN ABCDE1234F',
+      ),
+    ).toBe('Call [REDACTED]; Aadhaar [REDACTED]; PAN [REDACTED]');
+    expect(
+      redactSensitiveText('https://example.test/?api_key=private&ok=yes'),
+    ).toBe('https://example.test/?api_key=[REDACTED]&ok=yes');
+    expect(redactSensitiveText('JWT eyJhbGci.eyJzdWI.abc123')).toBe(
+      'JWT [REDACTED]',
+    );
+    expect(
       redactTelemetryValue({
         attributes: {
           email: 'user@example.com',

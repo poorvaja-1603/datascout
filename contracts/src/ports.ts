@@ -21,13 +21,15 @@ export type SourceId =
 
 export interface CallContext {
   requestId: string;
+  principalId?: string;
   signal: AbortSignal;
   deadlineMs: number;
   tracer: Tracer;
 }
 
 export interface LlmJsonRequest {
-  task: 'extract' | 'explain';
+  task: 'extract' | 'explain' | 'safety_triage';
+  modelId?: string;
   promptVersion: string;
   system: string;
   user: string;
@@ -44,8 +46,9 @@ export interface LlmJsonResponse {
 }
 
 export interface LlmClient {
-  readonly provider: 'fake' | 'cassette';
+  readonly provider: 'fake' | 'cassette' | 'gemini' | 'ollama';
   readonly modelId: string;
+  readonly safetyModelId?: string | undefined;
   generateJson(req: LlmJsonRequest, ctx: CallContext): Promise<LlmJsonResponse>;
 }
 

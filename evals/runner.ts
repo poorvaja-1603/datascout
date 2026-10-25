@@ -12,9 +12,9 @@ import {
 } from '../packages/ai/src/index.js';
 import { createRequestSafetyCheck } from '../packages/ai/src/safety.js';
 
-export const REPORT_SCHEMA_VERSION = 'extraction-report-v2';
+export const REPORT_SCHEMA_VERSION = 'extraction-report-v1';
 export const EVALUATOR_VERSION = 'extraction-evaluator-v2';
-export const EVALUATION_KIND = 'structural_fixture_replay_with_safety_preflight';
+export const EVALUATION_KIND = 'structural_fixture_replay';
 export const FIELD_NAMES = [
   'topic',
   'geography',
@@ -163,8 +163,20 @@ export function parseCorpus(corpusText: string): CorpusCase[] {
 function extractedFields(
   result: ExtractionResult,
 ): Record<FieldName, FieldValue> | null {
-  if (result.kind !== 'ok') return null;
-  return result.requirements;
+  if (result.kind === 'ok') return result.requirements;
+  if (result.kind === 'clarification') {
+    return {
+      topic: null,
+      geography: null,
+      time_coverage: null,
+      minimum_records: null,
+      required_features: [],
+      target: null,
+      preferences: [],
+      constraints: [],
+    };
+  }
+  return null;
 }
 
 function equalField(expected: FieldValue, actual: FieldValue): boolean {
