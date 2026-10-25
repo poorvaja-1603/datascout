@@ -18,6 +18,7 @@
     "format:check": "prettier --check ."
   },
   "dependencies": {
-    "@datascout/contracts": "0.1.0"
+    "@datascout/contracts": "0.1.0",
+    "hyparquet": "1.31.3"
   }
 }
