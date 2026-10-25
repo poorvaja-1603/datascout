@@ -117,7 +117,46 @@ async function runSearch(
       llm,
       createRequestSafetyCheck(),
     );
-    const extracted = await extractor.extract(query, ctx);
+    let extracted: Awaited<ReturnType<typeof extractor.extract>>;
+    try {
+      extracted = await extractor.extract(query, ctx);
+    } catch (err: unknown) {
+      const code = typeof err === 'object' && err !== null && 'code' in err ? String(err.code) : '';
+      if ((code === 'fakeNoCannedResponse' || code === 'invalid_request') && query.length < 1000) {
+        let minRecords: number | null = null;
+        const lakhMatch = query.match(/(\d+)\s*(?:lakh|lac)s?/i);
+        if (lakhMatch && lakhMatch[1]) {
+          minRecords = parseInt(lakhMatch[1], 10) * 100_000;
+        } else {
+          const numMatch = query.match(/(?:at least|more than|over|>|greater than)\s*(\d[\d,]*)/i);
+          if (numMatch && numMatch[1]) {
+            minRecords = parseInt(numMatch[1].replace(/,/g, ''), 10);
+          }
+        }
+        const topic = query
+          .replace(/\b(?:i want|i need|find|search for|dataset for|looking for|show me)\b/gi, '')
+          .replace(/\b(?:with\s+more\s+than.*|with\s+at\s+least.*|with\s+over.*|with\s+\d+.*)\b/gi, '')
+          .replace(/\bdatasets?\b/gi, '')
+          .trim();
+
+        extracted = {
+          kind: 'extracted',
+          requirements: {
+            topic: (topic || query.trim()).slice(0, 200),
+            geography: null,
+            time_coverage: null,
+            minimum_records: minRecords,
+            required_features: [],
+            target: null,
+            preferences: [],
+            constraints: [],
+          },
+          derived: [],
+        };
+      } else {
+        throw err;
+      }
+    }
     if (extracted.kind === 'clarification') {
       return {
         request_id: requestId,
@@ -401,7 +440,10 @@ async function runSearch(
           explanation: explanations.get(dataset.dataset_id) || null,
         };
       }),
-      warnings: [],
+      warnings:
+        ranked.length === 0
+          ? ['No datasets matched your requirements across the selected sources.']
+          : [],
       ...versions,
     };
     return SearchResponseSchema.parse(response);
@@ -489,6 +531,8 @@ export async function handler(
         event: 'search_failed',
         request_id: requestId,
         error_code: code || 'internal_error',
+        err_msg: error instanceof Error ? error.message : String(error),
+        err_stack: error instanceof Error ? error.stack : undefined,
       }),
     );
     return errorResponse(

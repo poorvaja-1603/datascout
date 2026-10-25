@@ -58,6 +58,9 @@ for (const [functionName, entryName] of handlers) {
     platform: 'node',
     target: 'node22',
     format: 'esm',
+    banner: {
+      js: "import { createRequire } from 'node:module'; const require = createRequire(import.meta.url);",
+    },
     minify: true,
     legalComments: 'none',
     sourcemap: false,
@@ -87,17 +90,13 @@ for (const [functionName, entryName] of handlers) {
       2,
     ) + '\n',
   );
-  if (functionName === 'SearchFunction') {
-    const promptSource = join(
-      repositoryDirectory,
-      'packages',
-      'ai',
-      'prompts',
-      'extract.v1.md',
-    );
-    const promptTarget = join(packageRoot, 'dist', 'prompts', 'extract.v1.md');
-    await mkdir(dirname(promptTarget), { recursive: true });
-    await copyFile(promptSource, promptTarget);
+  const promptsDir = join(repositoryDirectory, 'packages', 'ai', 'prompts');
+  for (const promptFile of await readdir(promptsDir)) {
+    if (promptFile.endsWith('.md')) {
+      const promptTarget = join(packageRoot, 'dist', 'prompts', promptFile);
+      await mkdir(dirname(promptTarget), { recursive: true });
+      await copyFile(join(promptsDir, promptFile), promptTarget);
+    }
   }
   manifest.push({
     functionName,
