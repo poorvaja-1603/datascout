@@ -11,7 +11,7 @@ function createMockContext(): CallContext {
     tracer: {
       trace: vi.fn(),
       span: vi.fn(() => ({ end: vi.fn() })),
-    } as any,
+    } as unknown as CallContext['tracer'],
   };
 }
 

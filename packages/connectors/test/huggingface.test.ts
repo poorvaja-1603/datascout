@@ -11,7 +11,7 @@ function createMockContext(): CallContext {
     tracer: {
       trace: vi.fn(),
       span: vi.fn(() => ({ end: vi.fn() })),
-    } as any,
+    } as unknown as CallContext['tracer'],
   };
 }
 
@@ -113,7 +113,7 @@ describe('HuggingFaceConnector', () => {
     expect(ds.dataset_id).toBe('huggingface:owner/crop-yield');
     expect(ds.columns).toEqual(['district', 'rainfall', 'yield']);
     expect(ds.record_count).toBe(2500);
-    expect(ds.license).toBe('mit');
+    expect(ds.license).toBe('MIT');
     expect(ds.provenance['columns']).toBeDefined();
 
     vi.restoreAllMocks();

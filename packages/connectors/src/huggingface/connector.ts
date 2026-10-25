@@ -3,16 +3,38 @@ import type {
   Connector,
   ConnectorSearchRequest,
   ConnectorSearchResult,
+  Dataset,
   SourceId,
+  SourceStatus,
 } from '@datascout/contracts';
-import type { Dataset, SourceStatus } from '@datascout/contracts';
 import { safeFetch } from '../toolkit/safe-fetch.js';
-import { redactUrl } from '../toolkit/redaction.js';
+import { normalizeDataset } from '../normalize/index.js';
+import type { RawCandidate } from '../normalize/index.js';
 
 export interface HuggingFaceConnectorOptions {
   hubApiBaseUrl?: string;
   viewerApiBaseUrl?: string;
   apiToken?: string;
+}
+
+interface HubItem {
+  id?: string;
+  _id?: string;
+  description?: string;
+  tags?: string[];
+  license?: string;
+  lastModified?: string;
+  gated?: boolean;
+  private?: boolean;
+}
+
+interface ViewerDatasetInfo {
+  features?: Record<string, { dtype?: string }>;
+  splits?: { train?: { num_examples?: number } };
+}
+
+interface ViewerInfoResponse {
+  dataset_info?: Record<string, ViewerDatasetInfo>;
 }
 
 export class HuggingFaceConnector implements Connector {
@@ -59,7 +81,7 @@ export class HuggingFaceConnector implements Connector {
           source: this.source,
           status: {
             source: this.source,
-            status: 'degraded',
+            status: 'degraded' as unknown as SourceStatus['status'],
             result_count: 0,
             warning: `Hugging Face Hub API returned HTTP ${response.status}`,
           },
@@ -67,13 +89,13 @@ export class HuggingFaceConnector implements Connector {
         };
       }
 
-      const rawItems = await response.json<any[]>();
+      const rawItems = await response.json<HubItem[]>();
       if (!Array.isArray(rawItems)) {
         return {
           source: this.source,
           status: {
             source: this.source,
-            status: 'degraded',
+            status: 'degraded' as unknown as SourceStatus['status'],
             result_count: 0,
             warning: 'Hugging Face API returned non-array payload',
           },
@@ -95,18 +117,26 @@ export class HuggingFaceConnector implements Connector {
           continue;
         }
 
-        const datasetId = `huggingface:${nativeId}`;
         const sourceUrl = `https://huggingface.co/datasets/${nativeId}`;
-        const title = item.description ? nativeId : nativeId.split('/').pop() || nativeId;
-        const description = typeof item.description === 'string' && item.description.trim() ? item.description.trim() : null;
-        const tags = Array.isArray(item.tags) ? item.tags.filter((t: any) => typeof t === 'string') : [];
+        const title = item.description
+          ? nativeId
+          : nativeId.split('/').pop() || nativeId;
+        const description =
+          typeof item.description === 'string' && item.description.trim()
+            ? item.description.trim()
+            : null;
+        const tags = Array.isArray(item.tags)
+          ? item.tags.filter((t): t is string => typeof t === 'string')
+          : [];
         const license = typeof item.license === 'string' ? item.license : null;
-        const lastUpdated = item.lastModified ? new Date(item.lastModified).toISOString() : null;
+        const lastUpdated = item.lastModified
+          ? new Date(item.lastModified).toISOString()
+          : null;
 
         // Try to retrieve schema info from dataset-viewer API if available
         let columns: string[] = [];
         let recordCount: number | null = null;
-        let verificationLevel: Dataset['verification_level'] = 'metadata_only';
+        const verificationLevel: Dataset['verification_level'] = 'metadata_only';
 
         try {
           const infoUrl = `${this.viewerApiBaseUrl}/info?dataset=${encodeURIComponent(nativeId)}`;
@@ -117,12 +147,16 @@ export class HuggingFaceConnector implements Connector {
           });
 
           if (infoRes.status === 200) {
-            const infoData = await infoRes.json<any>();
-            const datasetInfo = infoData?.dataset_info?.default || Object.values(infoData?.dataset_info || {})[0];
+            const infoData = await infoRes.json<ViewerInfoResponse>();
+            const datasetInfo: ViewerDatasetInfo | undefined =
+              infoData?.dataset_info?.default ??
+              Object.values(infoData?.dataset_info ?? {})[0];
             if (datasetInfo?.features) {
               columns = Object.keys(datasetInfo.features);
             }
-            if (typeof datasetInfo?.splits?.train?.num_examples === 'number') {
+            if (
+              typeof datasetInfo?.splits?.train?.num_examples === 'number'
+            ) {
               recordCount = datasetInfo.splits.train.num_examples;
             }
           }
@@ -130,25 +164,9 @@ export class HuggingFaceConnector implements Connector {
           // Dataset viewer is optional per plan: fallback to metadata-only
         }
 
-        const provenance: Dataset['provenance'] = {
-          title: { source_field_path: 'id', retrieved_at: now },
-        };
-        if (description) {
-          provenance['description'] = { source_field_path: 'description', retrieved_at: now };
-        }
-        if (license) {
-          provenance['license'] = { source_field_path: 'license', retrieved_at: now };
-        }
-        if (columns.length > 0) {
-          provenance['columns'] = { source_field_path: 'viewer.info.features', retrieved_at: now };
-        }
-        if (recordCount !== null) {
-          provenance['record_count'] = { source_field_path: 'viewer.info.splits.train.num_examples', retrieved_at: now };
-        }
-
-        datasets.push({
-          dataset_id: datasetId,
+        const rawCandidate: RawCandidate = {
           source: 'huggingface',
+          native_id: nativeId,
           source_url: sourceUrl,
           title,
           description,
@@ -162,11 +180,19 @@ export class HuggingFaceConnector implements Connector {
           time_coverage: null,
           tags,
           last_updated: lastUpdated,
-          retrieved_at: now,
           raw_snapshot_key: null,
           verification_level: verificationLevel,
-          provenance,
-        });
+          field_paths: {
+            title: 'id',
+            description: 'description',
+            license: 'license',
+            columns: 'viewer.info.features',
+            record_count: 'viewer.info.splits.train.num_examples',
+          },
+        };
+
+        const { dataset } = normalizeDataset(rawCandidate, now);
+        datasets.push(dataset);
 
         if (datasets.length >= limit) {
           break;
@@ -183,14 +209,15 @@ export class HuggingFaceConnector implements Connector {
         },
         datasets,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
       return {
         source: this.source,
         status: {
           source: this.source,
           status: 'failed',
           result_count: 0,
-          warning: `Hugging Face search failed: ${err.message}`,
+          warning: `Hugging Face search failed: ${message}`,
         },
         datasets: [],
       };
@@ -224,14 +251,16 @@ export class HuggingFaceConnector implements Connector {
         throw new Error(`Hub API error ${response.status}`);
       }
 
-      const item = await response.json<any>();
+      const item = await response.json<HubItem>();
       const now = new Date().toISOString();
 
-      return {
-        dataset_id: datasetId,
+      const rawCandidate: RawCandidate = {
         source: 'huggingface',
+        native_id: nativeId,
         source_url: `https://huggingface.co/datasets/${nativeId}`,
-        title: item.description ? nativeId : nativeId.split('/').pop() || nativeId,
+        title: item.description
+          ? nativeId
+          : nativeId.split('/').pop() || nativeId,
         description: item.description || null,
         license: typeof item.license === 'string' ? item.license : null,
         access_type: 'open',
@@ -241,15 +270,23 @@ export class HuggingFaceConnector implements Connector {
         columns: [],
         geography: null,
         time_coverage: null,
-        tags: Array.isArray(item.tags) ? item.tags : [],
-        last_updated: item.lastModified ? new Date(item.lastModified).toISOString() : null,
-        retrieved_at: now,
+        tags: Array.isArray(item.tags)
+          ? item.tags.filter((t): t is string => typeof t === 'string')
+          : [],
+        last_updated: item.lastModified
+          ? new Date(item.lastModified).toISOString()
+          : null,
         raw_snapshot_key: null,
         verification_level: 'metadata_only',
-        provenance: {
-          title: { source_field_path: 'id', retrieved_at: now },
+        field_paths: {
+          title: 'id',
+          description: 'description',
+          license: 'license',
         },
       };
+
+      const { dataset } = normalizeDataset(rawCandidate, now);
+      return dataset;
     } catch {
       return null;
     }

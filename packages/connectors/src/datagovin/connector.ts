@@ -3,11 +3,13 @@ import type {
   Connector,
   ConnectorSearchRequest,
   ConnectorSearchResult,
+  Dataset,
   SourceId,
 } from '@datascout/contracts';
-import type { Dataset } from '@datascout/contracts';
 import { safeFetch } from '../toolkit/safe-fetch.js';
 import { redactUrl } from '../toolkit/redaction.js';
+import { normalizeDataset } from '../normalize/index.js';
+import type { RawCandidate } from '../normalize/index.js';
 
 export interface DataGovInConnectorOptions {
   apiBaseUrl?: string;
@@ -18,7 +20,16 @@ export interface DataGovInConnectorOptions {
     desc: string;
     sector?: string;
     org?: string;
+    geography?: string;
   }>;
+}
+
+interface ResourcePayload {
+  title?: string;
+  desc?: string;
+  records?: Record<string, unknown>[];
+  field?: Array<{ name?: string; id?: string }>;
+  total?: number;
 }
 
 export class DataGovInConnector implements Connector {
@@ -31,6 +42,7 @@ export class DataGovInConnector implements Connector {
     desc: string;
     sector?: string;
     org?: string;
+    geography?: string;
   }>;
 
   constructor(options: DataGovInConnectorOptions = {}) {
@@ -66,12 +78,13 @@ export class DataGovInConnector implements Connector {
     // If local catalog matches exist, map them
     for (const item of matchedCatalog.slice(0, limit)) {
       const nativeId = item.id;
-      const datasetId = `datagovin:${nativeId}`;
-      const safeResourceUrl = redactUrl(`${this.apiBaseUrl}/resource/${nativeId}`);
+      const safeResourceUrl = redactUrl(
+        `${this.apiBaseUrl}/resource/${nativeId}`,
+      );
 
-      datasets.push({
-        dataset_id: datasetId,
+      const rawCandidate: RawCandidate = {
         source: 'datagovin',
+        native_id: nativeId,
         source_url: `https://data.gov.in/resource/${nativeId}`,
         title: item.title,
         description: item.desc || null,
@@ -81,19 +94,21 @@ export class DataGovInConnector implements Connector {
         file_formats: ['csv'],
         record_count: null,
         columns: [],
-        geography: req.requirements.geography ?? 'India',
+        geography: req.requirements.geography ?? item.geography ?? 'India',
         time_coverage: null,
         tags: item.sector ? [item.sector] : ['Government Data'],
         last_updated: null,
-        retrieved_at: now,
         raw_snapshot_key: null,
         verification_level: 'metadata_only',
-        provenance: {
-          title: { source_field_path: 'catalog.title', retrieved_at: now },
-          description: { source_field_path: 'catalog.desc', retrieved_at: now },
-          license: { source_field_path: 'ogd.license', retrieved_at: now },
+        field_paths: {
+          title: 'catalog.title',
+          description: 'catalog.desc',
+          license: 'ogd.license',
         },
-      });
+      };
+
+      const { dataset } = normalizeDataset(rawCandidate, now);
+      datasets.push(dataset);
     }
 
     // 2. If an API key is provided and an active resource query exists, fetch candidate metadata from portal API
@@ -108,24 +123,29 @@ export class DataGovInConnector implements Connector {
         });
 
         if (response.status === 200) {
-          const payload = await response.json<any>();
-          const title = payload.title || payload.desc || 'Government Data Resource';
-          const records = Array.isArray(payload.records) ? payload.records : [];
+          const payload = await response.json<ResourcePayload>();
+          const title =
+            payload.title || payload.desc || 'Government Data Resource';
+          const records = Array.isArray(payload.records)
+            ? payload.records
+            : [];
           const columns = Array.isArray(payload.field)
-            ? payload.field.map((f: any) => f.name || f.id || String(f))
+            ? payload.field.map((f) => f.name || f.id || String(f))
             : records.length > 0
-              ? Object.keys(records[0])
+              ? Object.keys(records[0] ?? {})
               : [];
 
-          datasets.push({
-            dataset_id: `datagovin:${targetResource}`,
+          const rawCandidate: RawCandidate = {
             source: 'datagovin',
+            native_id: targetResource,
             source_url: `https://data.gov.in/resource/${targetResource}`,
             title,
             description: payload.desc || null,
             license: 'Government Open Data License - India (GODL)',
             access_type: 'open',
-            api_endpoint: redactUrl(`${this.apiBaseUrl}/resource/${targetResource}`),
+            api_endpoint: redactUrl(
+              `${this.apiBaseUrl}/resource/${targetResource}`,
+            ),
             file_formats: ['csv', 'json'],
             record_count: payload.total || records.length || null,
             columns,
@@ -133,14 +153,18 @@ export class DataGovInConnector implements Connector {
             time_coverage: null,
             tags: ['OGD Platform India'],
             last_updated: null,
-            retrieved_at: now,
             raw_snapshot_key: null,
-            verification_level: records.length > 0 ? 'sample_checked' : 'metadata_only',
-            provenance: {
-              title: { source_field_path: 'resource.title', retrieved_at: now },
-              columns: { source_field_path: 'resource.field', retrieved_at: now },
+            verification_level:
+              records.length > 0 ? 'sample_checked' : 'metadata_only',
+            field_paths: {
+              title: 'resource.title',
+              columns: 'resource.field',
+              license: 'ogd.license',
             },
-          });
+          };
+
+          const { dataset } = normalizeDataset(rawCandidate, now);
+          datasets.push(dataset);
         }
       } catch {
         // Safe fail-open for source search
@@ -151,9 +175,12 @@ export class DataGovInConnector implements Connector {
       source: this.source,
       status: {
         source: this.source,
-        status: datasets.length > 0 ? 'success' : 'success',
+        status: 'success',
         result_count: datasets.length,
-        warning: datasets.length === 0 ? 'No matching data.gov.in datasets found' : null,
+        warning:
+          datasets.length === 0
+            ? 'No matching data.gov.in datasets found'
+            : null,
       },
       datasets,
     };
@@ -163,6 +190,9 @@ export class DataGovInConnector implements Connector {
     datasetId: string,
     ctx: CallContext,
   ): Promise<Dataset | null> {
+    if (ctx.signal.aborted) {
+      throw new Error('data.gov.in getDetails cancelled.');
+    }
     if (!datasetId.startsWith('datagovin:')) {
       return null;
     }
@@ -172,9 +202,9 @@ export class DataGovInConnector implements Connector {
 
     const fromCache = this.cachedCatalog.find((c) => c.id === nativeId);
     if (fromCache) {
-      return {
-        dataset_id: datasetId,
+      const rawCandidate: RawCandidate = {
         source: 'datagovin',
+        native_id: nativeId,
         source_url: `https://data.gov.in/resource/${nativeId}`,
         title: fromCache.title,
         description: fromCache.desc || null,
@@ -184,17 +214,20 @@ export class DataGovInConnector implements Connector {
         file_formats: ['csv'],
         record_count: null,
         columns: [],
-        geography: 'India',
+        geography: fromCache.geography ?? 'India',
         time_coverage: null,
         tags: fromCache.sector ? [fromCache.sector] : ['Government Data'],
         last_updated: null,
-        retrieved_at: now,
         raw_snapshot_key: null,
         verification_level: 'metadata_only',
-        provenance: {
-          title: { source_field_path: 'catalog.title', retrieved_at: now },
+        field_paths: {
+          title: 'catalog.title',
+          license: 'ogd.license',
         },
       };
+
+      const { dataset } = normalizeDataset(rawCandidate, now);
+      return dataset;
     }
 
     return null;
