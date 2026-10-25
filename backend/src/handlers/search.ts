@@ -22,6 +22,7 @@ import {
   loadLlmConfig,
 } from '@datascout/ai';
 import {
+  KaggleConnector,
   DataGovInConnector,
   HuggingFaceConnector,
 } from '@datascout/connectors';
@@ -169,7 +170,9 @@ async function runSearch(
       !requestedSources?.length || requestedSources.includes('huggingface');
     const wantsDataGovIn =
       !requestedSources?.length || requestedSources.includes('datagovin');
-    const [huggingFaceToken, dataGovInKey] = await Promise.all([
+    const wantsKaggle =
+      !requestedSources?.length || requestedSources.includes('kaggle');
+    const [huggingFaceToken, dataGovInKey, kaggleToken] = await Promise.all([
       wantsHuggingFace
         ? loadRuntimeSecret(
             'HUGGINGFACE_API_TOKEN_SECRET_ARN',
@@ -179,6 +182,9 @@ async function runSearch(
       wantsDataGovIn
         ? loadRuntimeSecret('DATAGOVIN_API_KEY_SECRET_ARN', 'DATAGOVIN_API_KEY')
         : undefined,
+      wantsKaggle
+        ? loadRuntimeSecret('KAGGLE_API_TOKEN_SECRET_ARN', 'KAGGLE_API_TOKEN')
+        : undefined,
     ]);
     const huggingFace = new HuggingFaceConnector(
       huggingFaceToken ? { apiToken: huggingFaceToken } : {},
@@ -187,7 +193,10 @@ async function runSearch(
       ...(dataGovInKey ? { apiKey: dataGovInKey } : {}),
       cachedCatalog: catalog,
     });
-    const connectors = [huggingFace, dataGovIn].filter(
+    const kaggle = new KaggleConnector(
+      kaggleToken ? { apiToken: kaggleToken } : {},
+    );
+    const connectors = [huggingFace, dataGovIn, kaggle].filter(
       (connector) =>
         !requestedSources?.length ||
         requestedSources.includes(connector.source),
@@ -271,7 +280,9 @@ async function runSearch(
           const sample =
             dataset.source === 'huggingface'
               ? await huggingFace.inspectSample(dataset, limits, ctx)
-              : await dataGovIn.inspectSample(dataset, limits, ctx);
+              : dataset.source === 'kaggle'
+                ? await kaggle.inspectSample(dataset, limits, ctx)
+                : await dataGovIn.inspectSample(dataset, limits, ctx);
           inspections.set(dataset.dataset_id, sample);
         }),
       );

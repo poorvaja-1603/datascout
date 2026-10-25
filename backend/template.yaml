@@ -26,6 +26,10 @@ Parameters:
     Default: fake
     AllowedValues: [fake, cassette]
     Description: LLM provider for fixture-backed local and deterministic replay modes.
+  KaggleApiSecretArn:
+    Type: String
+    Default: ''
+    Description: Optional ARN of a Secrets Manager secret whose SecretString is the Kaggle API token.
   DataGovInApiSecretArn:
     Type: String
     Default: ''
@@ -37,8 +41,6 @@ Parameters:
 
 Conditions:
   HasAmplifyOrigin: !Not [!Equals [!Ref AmplifyOrigin, '']]
-  HasDataGovInApiSecret: !Not [!Equals [!Ref DataGovInApiSecretArn, '']]
-  HasHuggingFaceApiSecret: !Not [!Equals [!Ref HuggingFaceApiSecretArn, '']]
 
 Globals:
   Function:
@@ -308,37 +310,10 @@ Resources:
       Description: POST /search - Natural language requirement extraction and candidate search
       Environment:
         Variables:
+          KAGGLE_API_TOKEN_SECRET_ARN: !Ref KaggleApiSecretArn
           DATAGOVIN_API_KEY_SECRET_ARN: !Ref DataGovInApiSecretArn
           HUGGINGFACE_API_TOKEN_SECRET_ARN: !Ref HuggingFaceApiSecretArn
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:PutItem
-              Resource: !GetAtt ResultsTable.Arn
-            - Effect: Allow
-              Action:
-                - dynamodb:GetItem
-                - dynamodb:BatchGetItem
-                - dynamodb:PutItem
-              Resource: !GetAtt DatasetsTable.Arn
-            - Effect: Allow
-              Action:
-                - dynamodb:Query
-                - dynamodb:GetItem
-              Resource: !GetAtt CatalogTable.Arn
-            - !If
-              - HasDataGovInApiSecret
-              - Effect: Allow
-                Action: secretsmanager:GetSecretValue
-                Resource: !Ref DataGovInApiSecretArn
-              - !Ref AWS::NoValue
-            - !If
-              - HasHuggingFaceApiSecret
-              - Effect: Allow
-                Action: secretsmanager:GetSecretValue
-                Resource: !Ref HuggingFaceApiSecretArn
-              - !Ref AWS::NoValue
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
         Search:
           Type: Api
@@ -357,12 +332,7 @@ Resources:
       CodeUri: .aws-sam/minimal/ResultsFunction
       Handler: dist/handlers/results.handler
       Description: GET /results/{request_id} - Owner-only cached search response retrieval
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:GetItem
-              Resource: !GetAtt ResultsTable.Arn
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
         Results:
           Type: Api
@@ -381,13 +351,7 @@ Resources:
       CodeUri: .aws-sam/minimal/DatasetFunction
       Handler: dist/handlers/dataset.handler
       Description: GET /dataset/{dataset_id} - Normalized public dataset detail
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:GetItem
-                - dynamodb:PutItem
-              Resource: !GetAtt DatasetsTable.Arn
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
         Dataset:
           Type: Api
@@ -406,13 +370,7 @@ Resources:
       CodeUri: .aws-sam/minimal/CompareFunction
       Handler: dist/handlers/compare.handler
       Description: POST /compare - Side-by-side comparison of 2 to 4 datasets
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:GetItem
-                - dynamodb:BatchGetItem
-              Resource: !GetAtt DatasetsTable.Arn
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
         Compare:
           Type: Api
@@ -434,22 +392,7 @@ Resources:
       Environment:
         Variables:
           DATAGOVIN_API_KEY_SECRET_ARN: !Ref DataGovInApiSecretArn
-      Policies:
-        - Statement:
-            - Effect: Allow
-              Action:
-                - dynamodb:PutItem
-                - dynamodb:Query
-                - dynamodb:BatchWriteItem
-              Resource: !GetAtt CatalogTable.Arn
-            - !If
-              - HasDataGovInApiSecret
-              - Effect: Allow
-                Action: secretsmanager:GetSecretValue
-                Resource: !Ref DataGovInApiSecretArn
-              - !Ref AWS::NoValue
-        - S3CrudPolicy:
-            BucketName: !Ref SnapshotsBucket
+      Role: !Sub "arn:aws:iam::${AWS::AccountId}:role/LabRole"
       Events:
         DailySchedule:
           Type: Schedule

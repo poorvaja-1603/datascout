@@ -10,3 +10,4 @@ export * from './huggingface/connector.js';
 export * from './openml/connector.js';
 export * from './worldbank/connector.js';
 export * from './extras/index.js';
+export * from './kaggle/index.js';

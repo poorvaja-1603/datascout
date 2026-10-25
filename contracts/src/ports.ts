@@ -10,6 +10,7 @@ import type {
 } from './schemas.js';
 
 export type SourceId =
+  | 'kaggle'
   | 'datagovin'
   | 'huggingface'
   | 'openml'
