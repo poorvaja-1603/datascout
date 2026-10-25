@@ -82,7 +82,18 @@ export class KaggleConnector implements Connector {
         };
       }
 
-      const rawItems = await response.json<KaggleDatasetItem[]>();
+      let rawItems = await response.json<KaggleDatasetItem[]>();
+      if (Array.isArray(rawItems) && rawItems.length === 0 && query.includes(' ')) {
+        const fallbackWord = query.split(/\s+/).find((w) => w.length > 3) ?? query.split(/\s+/)[0];
+        if (fallbackWord) {
+          const fallbackUrl = `${this.apiBaseUrl}/datasets/list?search=${encodeURIComponent(fallbackWord)}&page=1`;
+          const fallbackRes = await safeFetch(fallbackUrl, { headers, signal: ctx.signal, timeoutMs: 8000 }).catch(() => null);
+          if (fallbackRes && fallbackRes.status === 200) {
+            const items = await fallbackRes.json<KaggleDatasetItem[]>().catch(() => null);
+            if (Array.isArray(items) && items.length > 0) rawItems = items;
+          }
+        }
+      }
       if (!Array.isArray(rawItems)) {
         return {
           source: this.source,

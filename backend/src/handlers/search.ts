@@ -139,10 +139,33 @@ async function runSearch(
           .replace(/\bdatasets?\b/gi, '')
           .trim();
 
+        const reqTopic = (topic || query.trim()).slice(0, 200);
+        const derived = [
+          {
+            requirement_id: 'extract-topic-1',
+            type: 'topic' as const,
+            value: reqTopic,
+            unit: null,
+            priority: 'required' as const,
+            aliases: [],
+            source_span: null,
+          },
+        ];
+        if (minRecords !== null) {
+          derived.push({
+            requirement_id: 'extract-minimum_records-1',
+            type: 'minimum_records' as const,
+            value: minRecords,
+            unit: 'records',
+            priority: 'required' as const,
+            aliases: [],
+            source_span: null,
+          });
+        }
         extracted = {
           kind: 'extracted',
           requirements: {
-            topic: (topic || query.trim()).slice(0, 200),
+            topic: reqTopic,
             geography: null,
             time_coverage: null,
             minimum_records: minRecords,
@@ -151,7 +174,7 @@ async function runSearch(
             preferences: [],
             constraints: [],
           },
-          derived: [],
+          derived,
         };
       } else {
         throw err;

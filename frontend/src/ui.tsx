@@ -13,6 +13,7 @@ import { getToken, signIn, signOut } from './auth';
 const sources = [
   ['datagovin', 'data.gov.in'],
   ['huggingface', 'Hugging Face'],
+  ['kaggle', 'Kaggle'],
   ['openml', 'OpenML'],
   ['worldbank', 'World Bank'],
 ] as const;
