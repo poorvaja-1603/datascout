@@ -12,7 +12,8 @@
     "packages/verify",
     "packages/observability",
     "packages/connectors",
-    "backend"
+    "backend",
+    "frontend"
   ],
   "scripts": {
     "build": "npm run build --workspaces --if-present",
@@ -33,7 +34,8 @@
     "gemini:connectivity": "node --env-file-if-exists=evals/.env evals/gemini-connectivity.mjs --confirm-connectivity-check",
     "langfuse:dataset": "node --env-file-if-exists=evals/.env evals/upload-langfuse-dataset.mjs",
     "langfuse:experiment": "node --env-file-if-exists=evals/.env evals/run-langfuse-experiment.mjs",
-    "langfuse:dashboard": "node --env-file-if-exists=evals/.env evals/create-langfuse-dashboard.mjs"
+    "langfuse:dashboard": "node --env-file-if-exists=evals/.env evals/create-langfuse-dashboard.mjs",
+    "dev": "npm run dev --workspace=@datascout/frontend"
   },
   "dependencies": {
     "@opentelemetry/api": "1.10.0"
