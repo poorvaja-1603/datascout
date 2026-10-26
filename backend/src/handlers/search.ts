@@ -396,7 +396,7 @@ async function runSearch(
           inspection,
           matches,
           otherDatasets: allCandidateDatasets,
-          userQuery: req.query,
+          userQuery: query,
           llmClaims: llmClaimsMap.get(dataset.dataset_id),
         });
         return [dataset.dataset_id, guidance];
