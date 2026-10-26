@@ -40,6 +40,7 @@ import {
   getDatasetsStore,
   DEFAULT_RESULTS_TTL_SECONDS,
 } from '../storage/index.js';
+import { buildDatasetUsageGuidance } from '../utils/dataset-usage.js';
 
 const versions = {
   contract_version: process.env.CONTRACT_VERSION ?? '1.0.0',
@@ -368,25 +369,45 @@ async function runSearch(
       return { ...scored, evidence };
     });
     const ranked = scorer.rank(scored);
-    let explanations = new Map<string, string>();
+    const llmClaimsMap = new Map<string, string[]>();
     try {
       const explained = await createExplanationService(llm).explain(
         ranked,
         ctx,
       );
-      explanations = new Map(
-        explained.map((item) => [
-          item.datasetId,
-          item.status === 'ok' ? (item.claims[0]?.text ?? '') : '',
-        ]),
-      );
+      for (const item of explained) {
+        if (item.status === 'ok' && item.claims.length > 0) {
+          llmClaimsMap.set(
+            item.datasetId,
+            item.claims.map((c) => c.text),
+          );
+        }
+      }
     } catch {
       // Explanation is optional; deterministic matches and scores remain usable.
     }
+
+    const allCandidateDatasets = ranked.map((r) => r.dataset);
+    const datasetGuidanceMap = new Map(
+      ranked.map(({ dataset, matches }) => {
+        const inspection = inspections.get(dataset.dataset_id);
+        const guidance = buildDatasetUsageGuidance({
+          dataset,
+          inspection,
+          matches,
+          otherDatasets: allCandidateDatasets,
+          userQuery: req.query,
+          llmClaims: llmClaimsMap.get(dataset.dataset_id),
+        });
+        return [dataset.dataset_id, guidance];
+      }),
+    );
+
     const datasetsStore = getDatasetsStore();
     await Promise.all(
       ranked.map(({ dataset, score, matches, evidence }) => {
         const inspection = inspections.get(dataset.dataset_id);
+        const guidance = datasetGuidanceMap.get(dataset.dataset_id);
         const qualityChecks = [
           {
             check: 'sample_inspection',
@@ -411,12 +432,18 @@ async function runSearch(
             access_instructions: dataset.api_endpoint
               ? [`Use the source API: ${dataset.api_endpoint}`]
               : ['Open the source page for access instructions.'],
-            starter_code: null,
-            preprocessing: [
-              'Verify column types, missingness, and date formats before analysis.',
-            ],
-            next_steps: ['Review the source record and license before use.'],
-            complementary_datasets: [],
+            starter_code: guidance?.starterCode ?? null,
+            preprocessing:
+              guidance?.preprocessing && guidance.preprocessing.length > 0
+                ? guidance.preprocessing
+                : [
+                    'Verify column types, missingness, and date formats before analysis.',
+                  ],
+            next_steps:
+              guidance?.nextSteps && guidance.nextSteps.length > 0
+                ? guidance.nextSteps
+                : ['Review the source record and license before use.'],
+            complementary_datasets: guidance?.complementaryDatasets ?? [],
             ...versions,
           }),
           score.components.reduce(
@@ -434,6 +461,7 @@ async function runSearch(
       source_statuses: statuses,
       results: ranked.map(({ dataset, score, matches, evidence }) => {
         const inspection = inspections.get(dataset.dataset_id);
+        const guidance = datasetGuidanceMap.get(dataset.dataset_id);
         return {
           dataset_id: dataset.dataset_id,
           score: score.components.reduce(
@@ -460,7 +488,7 @@ async function runSearch(
           ],
           verification_level: dataset.verification_level,
           warnings: [],
-          explanation: explanations.get(dataset.dataset_id) || null,
+          explanation: guidance?.explanation || null,
         };
       }),
       warnings:

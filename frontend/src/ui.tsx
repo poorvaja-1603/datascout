@@ -539,10 +539,15 @@ export function App() {
                         {result.verification_level.replace('_', ' ')}
                       </span>
                     </div>
-                    <p>
+                    <div className="result-explanation">
                       {result.explanation ||
                         'Evidence-backed dataset candidate. Open details to review its metadata and provenance.'}
-                    </p>
+                    </div>
+                    {result.explanation?.includes('💡 Merge Opportunity') && (
+                      <div className="merge-highlight-badge">
+                        <span>⚡ AI Merge Suggestion: Multi-source join keys identified</span>
+                      </div>
+                    )}
                     <div className="match-chips">
                       {result.matches.slice(0, 5).map((match) => (
                         <span
