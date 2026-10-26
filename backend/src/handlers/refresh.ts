@@ -3,6 +3,8 @@ import { DataGovInConnector } from '@datascout/connectors';
 import type { CatalogStore } from '../storage/catalog-store.js';
 import { DynamoDbCatalogStore } from '../storage/catalog-store.js';
 import { loadRuntimeSecret } from '../secrets.js';
+import { getS3SnapshotStore } from '../storage/s3-snapshot-store.js';
+import { getEventBridgeBus } from '../storage/eventbridge-bus.js';
 
 export interface RefreshResult {
   status: 'completed' | 'failed' | 'partial';
@@ -64,6 +66,20 @@ export function createRefreshHandler(
       });
       await store.replaceSource('datagovin', harvested.rawEntries);
       recordsHarvested = harvested.rawEntries.length;
+
+      const s3Store = getS3SnapshotStore();
+      const s3HarvestKey = await s3Store.saveCatalogHarvest(
+        'datagovin',
+        harvested.rawEntries,
+      );
+      const bus = getEventBridgeBus();
+      await bus.publishDomainEvent('CatalogHarvestCompleted', {
+        source: 'datagovin',
+        recordsHarvested,
+        s3SnapshotKey: s3HarvestKey,
+        status: harvested.counts.failed ? 'partial' : 'success',
+      });
+
       sourceStatus.datagovin = {
         status: harvested.counts.failed
           ? recordsHarvested

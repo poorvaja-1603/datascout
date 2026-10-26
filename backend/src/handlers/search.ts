@@ -42,6 +42,8 @@ import {
   DEFAULT_RESULTS_TTL_SECONDS,
 } from '../storage/index.js';
 import { buildDatasetUsageGuidance } from '../utils/dataset-usage.js';
+import { getS3SnapshotStore } from '../storage/s3-snapshot-store.js';
+import { getEventBridgeBus } from '../storage/eventbridge-bus.js';
 
 const versions = {
   contract_version: process.env.CONTRACT_VERSION ?? '1.0.0',
@@ -408,7 +410,7 @@ async function runSearch(
 
     const datasetsStore = getDatasetsStore();
     await Promise.all(
-      ranked.map(({ dataset, score, matches, evidence }) => {
+      ranked.map(async ({ dataset, score, matches, evidence }) => {
         const inspection = inspections.get(dataset.dataset_id);
         const guidance = datasetGuidanceMap.get(dataset.dataset_id);
         const qualityChecks = [
@@ -426,9 +428,19 @@ async function runSearch(
               inspection?.evidence.map((item) => item.evidence_id) ?? [],
           },
         ];
+        const s3Store = getS3SnapshotStore();
+        const s3Key = await s3Store.saveDatasetSnapshot(dataset.dataset_id, {
+          dataset,
+          inspection,
+          matches,
+          evidence,
+        });
+        const datasetWithSnapshot = s3Key
+          ? { ...dataset, raw_snapshot_key: s3Key }
+          : dataset;
         return datasetsStore.putDataset(
           DatasetDetailSchema.parse({
-            dataset,
+            dataset: datasetWithSnapshot,
             evidence,
             matches,
             quality_checks: qualityChecks,
@@ -457,6 +469,12 @@ async function runSearch(
         );
       }),
     );
+    const bus = getEventBridgeBus();
+    await bus.publishDomainEvent('DatasetSearchCompleted', {
+      requestId,
+      resultCount: ranked.length,
+      topDataset: ranked[0]?.dataset.dataset_id ?? null,
+    });
     const response = {
       request_id: requestId,
       outcome: 'results' as const,
