@@ -148,11 +148,11 @@ function findSharedKeys(colsA: string[], colsB: string[]): string[] {
 
 export function buildDatasetUsageGuidance(params: {
   dataset: Dataset;
-  inspection?: SampleInspection;
+  inspection?: SampleInspection | undefined;
   matches: RequirementMatch[];
   otherDatasets: Dataset[];
-  userQuery?: string;
-  llmClaims?: string[];
+  userQuery?: string | undefined;
+  llmClaims?: string[] | undefined;
 }): DatasetUsageGuidance {
   const { dataset, inspection, otherDatasets, userQuery, llmClaims } = params;
   const analysis = analyzeColumns(dataset, inspection, userQuery);

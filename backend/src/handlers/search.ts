@@ -11,6 +11,7 @@ import type {
   CallContext,
   Dataset,
   Evidence,
+  Requirement,
   SampleInspection,
   SourceStatus,
 } from '@datascout/contracts';
@@ -141,13 +142,13 @@ async function runSearch(
           .trim();
 
         const reqTopic = (topic || query.trim()).slice(0, 200);
-        const derived = [
+        const derived: Requirement[] = [
           {
             requirement_id: 'extract-topic-1',
-            type: 'topic' as const,
+            type: 'topic',
             value: reqTopic,
             unit: null,
-            priority: 'required' as const,
+            priority: 'required',
             aliases: [],
             source_span: null,
           },
@@ -155,16 +156,16 @@ async function runSearch(
         if (minRecords !== null) {
           derived.push({
             requirement_id: 'extract-minimum_records-1',
-            type: 'minimum_records' as const,
+            type: 'minimum_records',
             value: minRecords,
             unit: 'records',
-            priority: 'required' as const,
+            priority: 'required',
             aliases: [],
             source_span: null,
           });
         }
         extracted = {
-          kind: 'extracted',
+          kind: 'ok',
           requirements: {
             topic: reqTopic,
             geography: null,
@@ -176,6 +177,8 @@ async function runSearch(
             constraints: [],
           },
           derived,
+          promptVersion: versions.prompt_version,
+          modelId: versions.model_id,
         };
       } else {
         throw err;
