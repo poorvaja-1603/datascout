@@ -40,7 +40,7 @@ const comparisonRows: {
   value: (entry: CompareEntry, index: number) => string;
 }[] = [
   { label: 'Source', value: (entry) => entry.dataset.source },
-  { label: 'Fit score', value: (entry) => `${entry.score} / 100` },
+  { label: 'Fit score', value: (entry) => `${Math.round(entry.score)} / 100` },
   {
     label: 'Verification',
     value: (entry) => entry.dataset.verification_level.replace('_', ' '),

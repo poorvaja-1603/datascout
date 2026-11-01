@@ -60,3 +60,4 @@ EOF
 # 4. Enable service on boot
 systemctl daemon-reload
 echo "==> [DataScout] EC2 Worker bootstrap complete. Ready to start."
+

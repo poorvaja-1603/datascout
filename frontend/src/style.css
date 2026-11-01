@@ -1083,6 +1083,207 @@ button:disabled {
   to { transform: rotate(360deg); }
 }
 
+/* COMPARE BAR (STICKY DOCK) */
+.compare-bar {
+  position: sticky;
+  bottom: 24px;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  background: #FFFFFF;
+  border: var(--border-width) solid var(--border-dark);
+  box-shadow: 6px 6px 0px var(--border-dark);
+  border-radius: var(--radius-lg);
+  padding: 16px 24px;
+  margin: 28px 0;
+  animation: slideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.compare-bar span {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--forest);
+}
+
+.compare-bar b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--lime);
+  color: var(--forest);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: 2px solid var(--border-dark);
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.compare-bar small {
+  color: var(--muted);
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.compare-bar button.secondary {
+  background: var(--lime);
+  color: var(--forest);
+  border: 2px solid var(--border-dark);
+  box-shadow: 3px 3px 0px var(--border-dark);
+  padding: 10px 20px;
+  font-weight: 800;
+  font-size: 14px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.compare-bar button.secondary:hover:not(:disabled) {
+  transform: translate(-1px, -1px);
+  box-shadow: 4px 4px 0px var(--border-dark);
+  background: #c8fa52;
+}
+
+.compare-bar button.secondary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
+/* DATASET COMPARISON MATRIX */
+.compare-result {
+  background: #FFFFFF;
+  border: var(--border-width) solid var(--border-dark);
+  box-shadow: var(--shadow-lg);
+  border-radius: var(--radius-lg);
+  padding: 28px 32px;
+  margin: 32px 0 40px;
+}
+
+.compare-result .section-heading {
+  border-bottom: 2px dashed #E2E8F0;
+  padding-bottom: 16px;
+  margin-bottom: 24px;
+}
+
+.compare-result .section-heading p {
+  color: var(--muted);
+  font-size: 13.5px;
+  margin: 4px 0 0;
+}
+
+.compare-result .text-button {
+  background: var(--coral);
+  color: #FFFFFF;
+  border: 2px solid var(--border-dark);
+  box-shadow: 2px 2px 0px var(--border-dark);
+  border-radius: var(--radius-pill);
+  padding: 8px 18px;
+  font-weight: 800;
+  font-size: 13px;
+  cursor: pointer;
+  transition: transform 0.1s ease, box-shadow 0.1s ease;
+}
+
+.compare-result .text-button:hover {
+  background: #E05338;
+  transform: translate(-1px, -1px);
+  box-shadow: 3px 3px 0px var(--border-dark);
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border: 2px solid var(--border-dark);
+  border-radius: var(--radius-md);
+  box-shadow: 4px 4px 0px var(--border-dark);
+  background: #FFFFFF;
+}
+
+.table-scroll table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  text-align: left;
+  font-size: 13.5px;
+}
+
+.table-scroll thead th {
+  background: var(--forest);
+  color: #FFFFFF;
+  font-weight: 800;
+  font-size: 13.5px;
+  padding: 16px 20px;
+  border-right: 1.5px solid rgba(255, 255, 255, 0.2);
+  vertical-align: bottom;
+  letter-spacing: -0.01em;
+}
+
+.table-scroll thead th:first-child {
+  width: 170px;
+  min-width: 150px;
+  background: #091D17;
+}
+
+.table-scroll thead th:last-child {
+  border-right: none;
+}
+
+.table-scroll tbody tr {
+  transition: background 0.15s ease;
+}
+
+.table-scroll tbody tr:nth-child(even) {
+  background: #FAF8F5;
+}
+
+.table-scroll tbody tr:hover {
+  background: #F1EFEA;
+}
+
+.table-scroll th[scope="row"] {
+  background: var(--sand);
+  color: var(--forest);
+  font-weight: 800;
+  font-size: 12px;
+  font-family: 'DM Mono', monospace;
+  padding: 14px 18px;
+  border-top: 1.5px solid var(--border-dark);
+  border-right: 2px solid var(--border-dark);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+
+.table-scroll td {
+  padding: 14px 20px;
+  border-top: 1.5px solid #E2E8F0;
+  border-right: 1.5px solid #E2E8F0;
+  color: var(--forest);
+  line-height: 1.5;
+  vertical-align: top;
+  word-break: break-word;
+}
+
+.table-scroll td:last-child {
+  border-right: none;
+}
+
 @media (max-width: 768px) {
   .hero {
     flex-direction: column;
