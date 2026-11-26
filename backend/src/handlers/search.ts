@@ -120,8 +120,10 @@ async function runSearch(
   try {
     const llmConfig = loadLlmConfig(process.env);
     const llm = createLlmClient(llmConfig);
+    const admissionConfig = loadSafetyAdmissionConfig(process.env);
     const admission = createSafetyAdmission({
-      ...loadSafetyAdmissionConfig(process.env),
+      ...admissionConfig,
+      enabled: process.env.LLM_ENABLED !== 'false',
       store: createInMemorySafetyBudgetStore(),
     });
     const extractor = createRequirementExtractor(
