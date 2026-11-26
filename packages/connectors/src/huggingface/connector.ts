@@ -93,13 +93,33 @@ export class HuggingFaceConnector implements Connector {
 
       let rawItems = await response.json<HubItem[]>();
       if (Array.isArray(rawItems) && rawItems.length === 0 && query.includes(' ')) {
-        const fallbackWord = query.split(/\s+/).find((w) => w.length > 3) ?? query.split(/\s+/)[0];
-        if (fallbackWord) {
-          const fallbackUrl = `${this.hubApiBaseUrl}/datasets?search=${encodeURIComponent(fallbackWord)}&limit=${limit}&full=true`;
+        const stopWords = new Set([
+          'monthly', 'daily', 'weekly', 'annual', 'yearly', 'hourly',
+          'data', 'dataset', 'datasets', 'readings', 'measurements', 'records', 'rows',
+          'with', 'from', 'for', 'the', 'and', 'that', 'this', 'have', 'has',
+          'more', 'than', 'least', 'over', 'find', 'show', 'need', 'want', 'looking', 'please',
+        ]);
+        const meaningful = query
+          .split(/\s+/)
+          .map((w) => w.replace(/[^a-zA-Z0-9._-]/g, ''))
+          .filter((w) => w.length > 2 && !stopWords.has(w.toLowerCase()));
+        const candidates: string[] = [];
+        if (meaningful.length >= 2) {
+          candidates.push(meaningful.slice(0, 2).join(' '));
+        }
+        if (meaningful.length >= 1 && meaningful[0]) {
+          candidates.push(meaningful[0]);
+        }
+        for (const fallbackQuery of candidates) {
+          if (fallbackQuery.toLowerCase() === query.toLowerCase()) continue;
+          const fallbackUrl = `${this.hubApiBaseUrl}/datasets?search=${encodeURIComponent(fallbackQuery)}&limit=${limit}&full=true`;
           const fallbackRes = await safeFetch(fallbackUrl, { headers, signal: ctx.signal, timeoutMs: 8000 }).catch(() => null);
           if (fallbackRes && fallbackRes.status === 200) {
             const items = await fallbackRes.json<HubItem[]>().catch(() => null);
-            if (Array.isArray(items) && items.length > 0) rawItems = items;
+            if (Array.isArray(items) && items.length > 0) {
+              rawItems = items;
+              break;
+            }
           }
         }
       }

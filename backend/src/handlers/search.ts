@@ -17,10 +17,13 @@ import type {
 } from '@datascout/contracts';
 import {
   createExplanationService,
+  createInMemorySafetyBudgetStore,
   createLlmClient,
   createRequestSafetyCheck,
   createRequirementExtractor,
+  createSafetyAdmission,
   loadLlmConfig,
+  loadSafetyAdmissionConfig,
 } from '@datascout/ai';
 import {
   KaggleConnector,
@@ -117,9 +120,14 @@ async function runSearch(
   try {
     const llmConfig = loadLlmConfig(process.env);
     const llm = createLlmClient(llmConfig);
+    const admission = createSafetyAdmission({
+      ...loadSafetyAdmissionConfig(process.env),
+      store: createInMemorySafetyBudgetStore(),
+    });
     const extractor = createRequirementExtractor(
       llm,
       createRequestSafetyCheck(),
+      admission,
     );
     let extracted: Awaited<ReturnType<typeof extractor.extract>>;
     try {
@@ -139,8 +147,9 @@ async function runSearch(
         }
         const topic = query
           .replace(/\b(?:i want|i need|find|search for|dataset for|looking for|show me)\b/gi, '')
-          .replace(/\b(?:with\s+more\s+than.*|with\s+at\s+least.*|with\s+over.*|with\s+\d+.*)\b/gi, '')
-          .replace(/\bdatasets?\b/gi, '')
+          .replace(/\b(?:with\s+more\s+than.*|with\s+at\s+least.*|with\s+over.*|with\s+\d+.*|with\s+.*)/gi, '')
+          .replace(/\b(?:monthly|daily|weekly|annual|yearly|hourly|datasets?|data|readings|measurements)\b/gi, '')
+          .replace(/\s+/g, ' ')
           .trim();
 
         const reqTopic = (topic || query.trim()).slice(0, 200);
